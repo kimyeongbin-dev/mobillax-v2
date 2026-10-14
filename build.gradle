@@ -67,5 +67,5 @@ tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
 }
 springBoot {
-	mainClass = 'com.example.MobilLaxApplication'
+	mainClass = 'MobilLax.MobilLaxApplication'
 }
