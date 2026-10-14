@@ -19,7 +19,10 @@ const cases = [
   ["ALLOW", bash("git add .env.example docs/ENV_SETUP.md")],
   ["ALLOW", bash('cd x; git commit -q -m "docs: .env 와 docker compose config 설명"')],
   ["ALLOW", bash('gh pr create --title "x" --body ".env 설명"')],
-  ["ALLOW", bash("cd x; git commit -q -F - <<'EOF'\nfix: .env 설명\n\ndocker compose config 언급\nEOF\ngit log --oneline -1")],
+  [
+    "ALLOW",
+    bash("cd x; git commit -q -F - <<'EOF'\nfix: .env 설명\n\ndocker compose config 언급\nEOF\ngit log --oneline -1"),
+  ],
   // 메시지 예외를 이용한 우회는 막혀야 함
   ["DENY", bash('git commit -m "x"; cat .env')],
   ["DENY", bash("git commit -q -F - <<'EOF'\nfix: x\nEOF\ncat .env")],

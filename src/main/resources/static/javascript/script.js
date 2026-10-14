@@ -6,18 +6,18 @@ let currentFocusType = null; //현재 선택 상태 저장용 변수
 function updateSuggestHeader() {
   const header = document.querySelector(".suggest-header");
   if (header) {
-    header.innerText = currentFocusType === 'from' ? '출발지 검색' : '도착지 검색';
+    header.innerText = currentFocusType === "from" ? "출발지 검색" : "도착지 검색";
   }
 }
 
 //input에 focus했을때 updateSuggestHeader() 쓰기
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("fromInput").addEventListener("focus", () => {
-    currentFocusType = 'from';
+    currentFocusType = "from";
     updateSuggestHeader();
   });
   document.getElementById("toInput").addEventListener("focus", () => {
-    currentFocusType = 'to';
+    currentFocusType = "to";
     updateSuggestHeader();
   });
 });
@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
 //검색창 박스 표시
 function showSuggestionBox() {
   const box = document.getElementById("suggestions");
-  box.style.display = 'block';
+  box.style.display = "block";
 }
 
 //카카오 장소 검색 API로 자동완성 목록 보여주기
@@ -34,44 +34,49 @@ function showSuggestions(value) {
   const suggestionsBox = document.getElementById("suggestions");
 
   if (!value.trim()) {
-    suggestionsBox.style.display = 'none';
+    suggestionsBox.style.display = "none";
     return;
   }
 
   const ps = new kakao.maps.services.Places();
   ps.keywordSearch(value, function (data, status) {
-    const header = `<div class="suggest-header">${type === 'from' ? '출발지 검색' : '도착지 검색'}</div>`;
+    const header = `<div class="suggest-header">${type === "from" ? "출발지 검색" : "도착지 검색"}</div>`;
 
     if (status !== kakao.maps.services.Status.OK) {
-        suggestionsBox.innerHTML = `
-        <div class="suggest-header">${type === 'from' ? '출발지 검색' : '도착지 검색'}</div>
+      suggestionsBox.innerHTML = `
+        <div class="suggest-header">${type === "from" ? "출발지 검색" : "도착지 검색"}</div>
         <div class="empty-result" id="empty">
             <div class="icon"><img src="https://img.icons8.com/?size=100&id=132&format=png&color=1A1A1A" alt="검색 아이콘" width="100" height="100"></div>
             <div>검색결과가 없습니다.</div>
         </div>
         `;
-        suggestionsBox.style.display = 'block';
-        return;
+      suggestionsBox.style.display = "block";
+      return;
     }
 
-    const html = data.slice(0, 5).map(place => `
+    const html = data
+      .slice(0, 5)
+      .map(
+        (place) => `
       <div class="item" onclick="selectSuggestion('${place.place_name}', '${type}', '${place.x}', '${place.y}')">
         <span>${place.place_name}</span>
         <small>${place.address_name}</small>
       </div>
-    `).join('');
+    `,
+      )
+      .join("");
 
     suggestionsBox.innerHTML = header + html;
-    suggestionsBox.style.display = 'block';
+    suggestionsBox.style.display = "block";
   });
 }
 
 //검색 결과 클릭 시 출발지/도착지 값 설정
 function selectSuggestion(name, type, x, y) {
   document.getElementById(type + "Input").value = name;
-  document.getElementById("suggestions").style.display = 'none';
+  document.getElementById("suggestions").style.display = "none";
 
-  if (type === 'from') {
+  if (type === "from") {
     selectedFrom = { name, x, y };
   } else {
     selectedTo = { name, x, y };
@@ -127,7 +132,7 @@ function formatRouteData(itinerary) {
     cost: fareText,
     transfers,
     summary,
-    legs: itinerary.legs
+    legs: itinerary.legs,
   };
 }
 
@@ -144,30 +149,30 @@ function getTransferCount(legs) {
 
 // 모드 + 노선명 요약 라벨 생성
 function getModeLabel(leg) {
-  const name = leg.route || leg.routeName || leg.airline || '';
-  const cleanName = name.replace(/undefined|null/gi, '').trim();
+  const name = leg.route || leg.routeName || leg.airline || "";
+  const cleanName = name.replace(/undefined|null/gi, "").trim();
   switch (leg.mode) {
-      case "WALK":
-        return "🚶 도보";
-      case "BUS":
-        return `${cleanName || '버스'}`;
-      case "SUBWAY":
-        return `${cleanName || '지하철'}`;
-      case "TRAIN":
-        return `${cleanName || '기차'}`;
-      case "AIRPLANE":
-        return `${cleanName || '항공편'}`;
-      case "EXPRESSBUS":
-        return `${cleanName || '고속버스'}`;
-      default:
-        return `${leg.mode}`;
+    case "WALK":
+      return "🚶 도보";
+    case "BUS":
+      return `${cleanName || "버스"}`;
+    case "SUBWAY":
+      return `${cleanName || "지하철"}`;
+    case "TRAIN":
+      return `${cleanName || "기차"}`;
+    case "AIRPLANE":
+      return `${cleanName || "항공편"}`;
+    case "EXPRESSBUS":
+      return `${cleanName || "고속버스"}`;
+    default:
+      return `${leg.mode}`;
   }
 }
 
 // 도보 제외 요약 경로 표시용 (아이콘/노선명)
 function getPathSummary(path) {
   if (!path.legs || path.legs.length === 0) return "경로 없음";
-  const parts = path.legs.filter(leg => leg.mode !== "WALK").map(leg => getModeLabel(leg));
+  const parts = path.legs.filter((leg) => leg.mode !== "WALK").map((leg) => getModeLabel(leg));
   return parts.join(" → ");
 }
 
@@ -178,9 +183,9 @@ function removeDuplicateItineraries(itineraries) {
 
   for (const route of itineraries) {
     const pathKey = route.legs
-        .filter(leg => leg.mode !== "WALK")
-        .map(leg => `${leg.mode}:${leg.route || leg.routeName || leg.busNo || ''}`)
-        .join("→");
+      .filter((leg) => leg.mode !== "WALK")
+      .map((leg) => `${leg.mode}:${leg.route || leg.routeName || leg.busNo || ""}`)
+      .join("→");
 
     const key = `${Math.round(route.totalTime / 60)}|${route.transferCount}|${pathKey}`;
 
@@ -195,81 +200,85 @@ function removeDuplicateItineraries(itineraries) {
 
 //경로 추천 결과 표시 (최단시간/최단거리/최소환승)
 async function showRouteResults() {
-   if (!selectedFrom || !selectedTo) {
-       alert("출발지와 도착지를 모두 선택해주세요.");
-       return;
-   }
+  if (!selectedFrom || !selectedTo) {
+    alert("출발지와 도착지를 모두 선택해주세요.");
+    return;
+  }
 
-   const modeItems = document.querySelectorAll('.mode-item');
+  const modeItems = document.querySelectorAll(".mode-item");
 
-   // 기존 active 제거
-   modeItems.forEach(item => item.classList.remove('active-mode'));
+  // 기존 active 제거
+  modeItems.forEach((item) => item.classList.remove("active-mode"));
 
-   // 현재 선택된 mode를 기본으로 지정하거나 특정 조건에 따라 선택
-   // 여기서는 일단 "대중교통"만 고정으로 선택한다고 가정
-   const defaultMode = document.querySelector('.mode-item[data-mode="transit"]');
-   if (defaultMode) {
-     defaultMode.classList.add('active-mode');
-   }
+  // 현재 선택된 mode를 기본으로 지정하거나 특정 조건에 따라 선택
+  // 여기서는 일단 "대중교통"만 고정으로 선택한다고 가정
+  const defaultMode = document.querySelector('.mode-item[data-mode="transit"]');
+  if (defaultMode) {
+    defaultMode.classList.add("active-mode");
+  }
 
-   //좌표 확인용 (지워도 상관없음)
-   console.log("출발지 좌표:", selectedFrom);
-   console.log("도착지 좌표:", selectedTo);
-   localStorage.setItem("selectedFrom", JSON.stringify(selectedFrom));
-   localStorage.setItem("selectedTo", JSON.stringify(selectedTo));
+  //좌표 확인용 (지워도 상관없음)
+  console.log("출발지 좌표:", selectedFrom);
+  console.log("도착지 좌표:", selectedTo);
+  localStorage.setItem("selectedFrom", JSON.stringify(selectedFrom));
+  localStorage.setItem("selectedTo", JSON.stringify(selectedTo));
 
-   const data = await getTmapRoute(selectedFrom.x, selectedFrom.y, selectedTo.x, selectedTo.y);
-       let itineraries = data?.metaData?.plan?.itineraries;
+  const data = await getTmapRoute(selectedFrom.x, selectedFrom.y, selectedTo.x, selectedTo.y);
+  let itineraries = data?.metaData?.plan?.itineraries;
 
-   if (!itineraries || itineraries.length === 0) {
-       alert("추천 경로를 찾을 수 없습니다.");
-       return;
-   }
+  if (!itineraries || itineraries.length === 0) {
+    alert("추천 경로를 찾을 수 없습니다.");
+    return;
+  }
 
-   itineraries = removeDuplicateItineraries(itineraries);
+  itineraries = removeDuplicateItineraries(itineraries);
 
-   // 디버깅용 로그
-   //여기서
-   console.log("전체 경로 itineraries:");
-   console.table(itineraries.map((route, idx) => ({
+  // 디버깅용 로그
+  //여기서
+  console.log("전체 경로 itineraries:");
+  console.table(
+    itineraries.map((route, idx) => ({
       경로: `경로 ${idx + 1}`,
       총시간_분: Math.round(route.totalTime / 60),
       총거리_km: (route.totalDistance / 1000).toFixed(1),
       환승횟수: route.transferCount,
       요금_원: `${(route.fare?.regular?.totalFare ?? getTotalFareFromLegs(route.legs)).toLocaleString()}원`,
-      이동수단: getPathSummary({ legs: route.legs })
-   })));
+      이동수단: getPathSummary({ legs: route.legs }),
+    })),
+  );
 
-   console.log("첫 번째 경로의 상세 legs 정보:");
-   console.table(itineraries[0].legs.map((leg, idx) => ({
+  console.log("첫 번째 경로의 상세 legs 정보:");
+  console.table(
+    itineraries[0].legs.map((leg, idx) => ({
       순번: idx + 1,
       이동수단: leg.mode,
       출발지: leg.start?.name,
       도착지: leg.end?.name,
       소요시간_분: Math.round(leg.sectionTime / 60),
-      요금: leg.fare?.regular?.totalFare ?? 0
-   })));
-   //여기까지
+      요금: leg.fare?.regular?.totalFare ?? 0,
+    })),
+  );
+  //여기까지
 
-   // 조건별 최적 경로 찾기
-   const shortestTime = itineraries.reduce((a, b) => a.totalTime < b.totalTime ? a : b);
-   const shortestDistance = itineraries.reduce((a, b) => a.totalDistance < b.totalDistance ? a : b);
-   const leastTransfer = itineraries.reduce((a, b) => a.transferCount < b.transferCount ? a : b);
+  // 조건별 최적 경로 찾기
+  const shortestTime = itineraries.reduce((a, b) => (a.totalTime < b.totalTime ? a : b));
+  const shortestDistance = itineraries.reduce((a, b) => (a.totalDistance < b.totalDistance ? a : b));
+  const leastTransfer = itineraries.reduce((a, b) => (a.transferCount < b.transferCount ? a : b));
 
-   const routeData = {
-     shortestTime: formatRouteData(shortestTime),
-     shortestDistance: formatRouteData(shortestDistance),
-     leastTransfer: formatRouteData(leastTransfer)
-   };
+  const routeData = {
+    shortestTime: formatRouteData(shortestTime),
+    shortestDistance: formatRouteData(shortestDistance),
+    leastTransfer: formatRouteData(leastTransfer),
+  };
 
-   const card = document.querySelector(".search-card");
-   card.classList.add("flat");
+  const card = document.querySelector(".search-card");
+  card.classList.add("flat");
 
-   const routeForm = document.getElementById("routeForm");
-   document.getElementById("routeList").innerHTML = "";
-   routeForm.style.display = "block";
+  const routeForm = document.getElementById("routeForm");
+  document.getElementById("routeList").innerHTML = "";
+  routeForm.style.display = "block";
 
-   displayRoutes(routeData);
+  displayRoutes(routeData);
 }
 
 //추천 경로 HTML 렌더링
@@ -278,7 +287,7 @@ function displayRoutes(data) {
   const labels = {
     shortestTime: "최단시간",
     shortestDistance: "최단거리",
-    leastTransfer: "최소환승"
+    leastTransfer: "최소환승",
   };
 
   container.innerHTML = "";
@@ -311,47 +320,47 @@ function displayRoutes(data) {
 
 //Tmap 대중교통 API 호출 함수 (POST)
 async function getTmapRoute(fromX, fromY, toX, toY) {
-//  const url = 'https://apis.openapi.sk.com/transit/routes';
-//
-//  const headers = {
-//    'Content-Type': 'application/json',
-//    'Accept': 'application/json',
-//    'appKey': '<TMAP_APPKEY>'
-//  };
-//
-//  const body = {
-//    startX: fromX,
-//    startY: fromY,
-//    endX: toX,
-//    endY: toY,
-//    count: 10,
-//    lang: 0,
-//    format: 'json'
-//  };
+  //  const url = 'https://apis.openapi.sk.com/transit/routes';
+  //
+  //  const headers = {
+  //    'Content-Type': 'application/json',
+  //    'Accept': 'application/json',
+  //    'appKey': '<TMAP_APPKEY>'
+  //  };
+  //
+  //  const body = {
+  //    startX: fromX,
+  //    startY: fromY,
+  //    endX: toX,
+  //    endY: toY,
+  //    count: 10,
+  //    lang: 0,
+  //    format: 'json'
+  //  };
 
   try {
-//    const response = await fetch(url, {
-//      method: 'POST',
-//      headers: headers,
-//      body: JSON.stringify(body)
-//    });
-//
-//    const data = await response.json();
-//    console.log("Tmap API 응답:", data);
-//
-//    if (!response.ok) {
-//      throw new Error(`HTTP 오류 상태: ${response.status}`);
-//    }
-//    console.log("🔥 전체 Tmap API 응답 결과:", JSON.stringify(data, null, 2)); //api 확인용
-//    return data;
-// ✅ 무조건 Mock JSON만 사용하도록 강제
-    const dummy = await fetch('javascript/dummy/route_dummy_data.json');
+    //    const response = await fetch(url, {
+    //      method: 'POST',
+    //      headers: headers,
+    //      body: JSON.stringify(body)
+    //    });
+    //
+    //    const data = await response.json();
+    //    console.log("Tmap API 응답:", data);
+    //
+    //    if (!response.ok) {
+    //      throw new Error(`HTTP 오류 상태: ${response.status}`);
+    //    }
+    //    console.log("🔥 전체 Tmap API 응답 결과:", JSON.stringify(data, null, 2)); //api 확인용
+    //    return data;
+    // ✅ 무조건 Mock JSON만 사용하도록 강제
+    const dummy = await fetch("javascript/dummy/route_dummy_data.json");
     const data = await dummy.json();
     return data;
   } catch (err) {
     console.error("Tmap API 호출 실패, 더미 데이터 사용:", err.message || err);
     try {
-      const dummy = await fetch('javascript/dummy/route_dummy_data.json');
+      const dummy = await fetch("javascript/dummy/route_dummy_data.json");
       const data = await dummy.json();
       return data;
     } catch (jsonErr) {

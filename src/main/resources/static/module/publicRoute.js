@@ -3,28 +3,28 @@
  */
 async function publicRoute() {
   const headers = {
-    accept: 'application/json',
+    accept: "application/json",
     "Content-Type": "application/json",
-    "appKey": window.TMAP_APPKEY
+    appKey: window.TMAP_APPKEY,
   };
 
-  const { s_lat, s_lon, e_lat, e_lon } = JSON.parse(localStorage.getItem('info'));
+  const { s_lat, s_lon, e_lat, e_lon } = JSON.parse(localStorage.getItem("info"));
   const params = {
     startX: Number(s_lon),
     startY: Number(s_lat),
     endX: Number(e_lon),
     endY: Number(e_lat),
     lang: 0,
-    format: 'json',
+    format: "json",
     count: 10,
-    searchDttm: '202505221000'
+    searchDttm: "202505221000",
   };
 
   try {
     const response = await fetch("https://apis.openapi.sk.com/transit/routes/", {
       method: "POST",
       headers: headers,
-      body: JSON.stringify(params)
+      body: JSON.stringify(params),
     });
 
     const data = await response.json();
@@ -39,12 +39,12 @@ async function publicRoute() {
     const totalTransfer = itinerary.transferCount + "회";
 
     // 요약 박스에 데이터 표시
-    document.querySelector('.summary-item:nth-child(1) strong').textContent = totalTime;
-    document.querySelector('.summary-item:nth-child(2) strong').textContent = totalFare;
-    document.querySelector('.summary-item:nth-child(3) strong').textContent = totalTransfer;
+    document.querySelector(".summary-item:nth-child(1) strong").textContent = totalTime;
+    document.querySelector(".summary-item:nth-child(2) strong").textContent = totalFare;
+    document.querySelector(".summary-item:nth-child(3) strong").textContent = totalTransfer;
 
-    renderSummary(data);      // 요약 박스 표시
-    renderSteps(itinerary);   // 세부 구간 리스트 렌더링
+    renderSummary(data); // 요약 박스 표시
+    renderSteps(itinerary); // 세부 구간 리스트 렌더링
 
     // 지도에 경로 렌더링
     const routeBounds = new Tmapv2.LatLngBounds();
@@ -82,7 +82,7 @@ function drawLine(latlngs, color) {
     path: latlngs,
     strokeColor: color,
     strokeWeight: 6,
-    map: map
+    map: map,
   });
   resultdrawArr.push(polyline);
 }
@@ -91,7 +91,7 @@ function drawLine(latlngs, color) {
  * 지도에서 기존 경로들을 모두 제거합니다.
  */
 function clearRoutes() {
-  resultdrawArr.forEach(polyline => polyline.setMap(null));
+  resultdrawArr.forEach((polyline) => polyline.setMap(null));
   resultdrawArr = [];
 }
 
@@ -101,10 +101,13 @@ function clearRoutes() {
  * @returns {Tmapv2.LatLng[]}
  */
 function parseLineString(line) {
-  return line.trim().split(" ").map(pair => {
-    const [lon, lat] = pair.split(",").map(Number);
-    return new Tmapv2.LatLng(lat, lon);
-  });
+  return line
+    .trim()
+    .split(" ")
+    .map((pair) => {
+      const [lon, lat] = pair.split(",").map(Number);
+      return new Tmapv2.LatLng(lat, lon);
+    });
 }
 
 /**
