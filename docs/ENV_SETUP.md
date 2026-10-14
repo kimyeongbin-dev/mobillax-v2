@@ -163,13 +163,14 @@ PORTONE_APPKEY=<V2 API Secret>
 3. **마이페이지 → 데이터활용 → Open API → 활용신청 현황**에서 해당 API를 열고, **일반 인증키(Encoding)** 값을 복사합니다.
    - 이 코드는 키를 URL에 그대로 붙이므로(`?serviceKey=%s`) **이미 인코딩된 Encoding 키**를 써야 합니다.
    - 승인 직후에는 키가 반영되지 않아 `SERVICE_KEY_IS_NOT_REGISTERED_ERROR`가 날 수 있습니다. 잠시 뒤 다시 시도하세요.
+   - `NO_OPENAPI_SERVICE_ERROR`(서비스가 없거나 폐기됨)가 나면 키가 아니라 **주소** 문제입니다. 2026년 기준 서비스 이름은 `SuburbsBusInfoService`가 아니라 `SuburbsBusInfo`이고, 오퍼레이션 이름은 대문자 `Get...`으로 시작합니다. 데이터 페이지의 "API 목록"에서 현재 주소를 확인하세요.
 
 ### `.env` 입력
 ```
 BUS_API_KEY=<일반 인증키(Encoding)>
-BUS_API_URL_CTYCODE=http://apis.data.go.kr/1613000/SuburbsBusInfoService/getCtyCodeList
-BUS_API_URL_TERMINAL=http://apis.data.go.kr/1613000/SuburbsBusInfoService/getSuberbsBusTrminlList
-BUS_API_URL_SCHEDULE=http://apis.data.go.kr/1613000/SuburbsBusInfoService/getStrtpntAlocFndSuberbsBusInfo
+BUS_API_URL_CTYCODE=https://apis.data.go.kr/1613000/SuburbsBusInfo/GetCtyCodeList
+BUS_API_URL_TERMINAL=https://apis.data.go.kr/1613000/SuburbsBusInfo/GetSuberbsBusTrminlList
+BUS_API_URL_SCHEDULE=https://apis.data.go.kr/1613000/SuburbsBusInfo/GetStrtpntAlocFndSuberbsBusInfo
 ```
 
 ---
