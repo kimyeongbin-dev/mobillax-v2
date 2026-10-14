@@ -17,7 +17,7 @@ Java 21 · Spring Boot 3.2 · Spring Security · Spring Data JPA · Thymeleaf ·
 
 ## 실행 준비
 
-1. `.env.example`을 `.env`로 복사한 뒤 DB 정보와 API 키를 입력 (키는 모두 `.env` 에서만 관리)
+1. `.env.example`을 `.env`로 복사한 뒤 DB 정보와 API 키를 입력 (키는 모두 `.env` 에서만 관리, 발급 방법: [docs/ENV_SETUP.md](docs/ENV_SETUP.md))
 2. `docker compose up -d --build` → http://localhost:8080
 
 ## 참고 API
