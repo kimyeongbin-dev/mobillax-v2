@@ -12,6 +12,13 @@ if (-not (Test-Path .env)) {
     Write-Host "• .env 이미 있음 — 그대로 둠"
 }
 
+if (Get-Command npm -ErrorAction SilentlyContinue) {
+    npm ci --no-fund --no-audit --silent
+    if ($LASTEXITCODE -eq 0) { Write-Host "✔ 린트·포맷 도구 설치 (ESLint, Prettier, lint-staged)" }
+} else {
+    Write-Host "⚠ Node.js 가 없습니다. pre-commit 훅(린트)이 동작하지 않습니다. README 의 사전 요구사항을 확인하세요."
+}
+
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     Write-Host "⚠ Docker 가 없습니다. README 의 사전 요구사항을 확인하세요."
 }

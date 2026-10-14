@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# 커밋 전 검사 — 규칙: CONTRIBUTING.md 4장
+#  1) 시크릿 검사 (.env·키 파일, 하드코딩된 키)
+#  2) 스테이징된 JS·CSS 포맷(Prettier)과 린트(ESLint) — lint-staged
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+bash .githooks/secret-scan.sh
+
+if [ ! -d node_modules/lint-staged ]; then
+  printf '\n✖ 린트 도구가 설치되지 않았습니다. ./scripts/setup.sh (또는 npm ci) 를 먼저 실행하세요.\n\n' >&2
+  exit 1
+fi
+npx --no-install lint-staged
