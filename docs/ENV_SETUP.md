@@ -12,8 +12,7 @@ MobilLax가 사용하는 환경 변수와 각 키의 발급 방법을 정리한 
 | 구분 | 변수 | 발급처 | 사용 위치 | 필수 |
 |---|---|---|---|---|
 | DB | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `DB_ROOT_PASSWORD` | 직접 정함 | docker compose MySQL, Spring datasource | ✅ |
-| TMAP | `TMAP_APPKEY` | SK open API | 서버: `RouteServiceImpl` (대중교통 경로) | ✅ |
-| TMAP | `TMAP_WEB_APPKEY` | SK open API | 브라우저: `home`/`route` 템플릿 지도 SDK, `map.html`(`/module/config.js`) 경로·POI 검색 | ✅ |
+| TMAP | `TMAP_APPKEY` | SK open API | 서버: `RouteServiceImpl` (대중교통 경로) / 브라우저: `home`·`route` 템플릿 지도 SDK, `map.html`(`/module/config.js`) POI·자동차 경로 | ✅ |
 | 카카오 | `KAKAO_JS_APPKEY` | Kakao Developers | 브라우저: `home` 템플릿 카카오 지도 SDK | ✅ |
 | 포트원 | `PORTONE_STORE_ID` | 포트원 관리자콘솔 | 결제창 호출 (`PaymentController` → `payment.js`) | ✅ |
 | 포트원 | `PORTONE_CHANNEL_KEY` | 포트원 관리자콘솔 | 결제창 호출 | ✅ |
@@ -60,7 +59,7 @@ MySQL Workbench로 접속하려면 `127.0.0.1:3306`, 사용자 `DB_USERNAME`(또
 
 ---
 
-## 3. TMAP (SK open API) — `TMAP_APPKEY`, `TMAP_WEB_APPKEY`
+## 3. TMAP (SK open API) — `TMAP_APPKEY`
 
 - 사이트: https://openapi.sk.com
 - 대중교통 API 이용 절차: https://transit.tmapmobility.com/guide/procedure
@@ -71,8 +70,10 @@ MySQL Workbench로 접속하려면 `127.0.0.1:3306`, 사용자 `DB_USERNAME`(또
 ### 발급 절차
 1. **회원가입/로그인:** openapi.sk.com에서 T아이디로 로그인하거나 회원가입합니다. 개인회원을 선택합니다.
 2. **앱 만들기:** 우측 상단 **대시보드** → 좌측 **[앱]** → **[앱 만들기]**에서 앱 이름(예: `MobilLax`)을 입력합니다.
-3. **상품 신청:** 홈의 상품 영역에서 **TMAP**을 선택하고 상품 상세 → **[API 사용 요금]** → **[사용하기]**로 들어가 무료 요금제를 선택합니다. 약관에 동의한 뒤 **[사용 신청하기]**를 누릅니다.
-   - 이 프로젝트는 **대중교통 API**(`transit/routes`)도 씁니다. 대중교통이 별도 상품으로 나뉘어 있으면 그것도 같은 앱에 신청하세요.
+3. **상품 신청:** 아래 **두 상품을 모두** 같은 앱에 신청합니다. 각 상품 상세 → **[API 사용 요금]** → **[사용하기]**로 들어가 FREE 요금제를 고르고, 약관에 동의한 뒤 **[사용 신청하기]**를 누릅니다.
+   - **TMAP:** 지도 SDK, POI 검색, 자동차 경로
+   - **TMAP 대중교통:** 대중교통 경로(`transit/routes`). **별도 상품이라 TMAP만 신청하면 대중교통 호출이 403 `INVALID_API_KEY`로 거절됩니다.**
+   - ⚠️ TMAP 대중교통 FREE 요금제는 **하루 10건**이고, 넘으면 자동으로 차단됩니다.
    - 신청 결과는 **대시보드 → 요금 조회 → 사용상품관리**에서 확인합니다.
    - 무료 제공량과 초과 과금은 상품 상세의 요금표에서 확인하세요. 대중교통 API는 무료 호출량이 적은 편이니 개발할 때 반복 호출을 조심하세요.
 4. **appKey 확인:** **대시보드 → [앱] → 만든 앱**의 상세 화면에서 appKey를 복사합니다.
@@ -80,10 +81,9 @@ MySQL Workbench로 접속하려면 `127.0.0.1:3306`, 사용자 `DB_USERNAME`(또
 ### `.env` 입력
 ```
 TMAP_APPKEY=<발급받은 appKey>
-TMAP_WEB_APPKEY=<발급받은 appKey>
 ```
-- 지금은 두 변수에 **같은 키**를 넣어도 됩니다.
-- 변수를 나눠 둔 이유는 서버용 키와 브라우저에 노출되는 키를 나중에(v2) 분리하기 위해서입니다.
+- 키 하나로 서버 호출과 브라우저 지도 SDK를 모두 처리합니다.
+- 배포(v3) 때 브라우저용 키를 도메인 제한이나 호출량 분리 목적으로 따로 두어야 하면 그때 나눕니다.
 
 ---
 
@@ -195,7 +195,7 @@ docker compose up -d --force-recreate app
 
 ## 8. 브라우저에 노출되는 키에 대해
 
-`TMAP_WEB_APPKEY`와 `KAKAO_JS_APPKEY`는 구조상 사용자 브라우저에 그대로 보입니다. `.env`로 옮긴 것은 **저장소에 키가 커밋되지 않게** 하려는 것이고, 브라우저 노출까지 막지는 않습니다.
+`TMAP_APPKEY`(지도 SDK용으로 내려가는 값)와 `KAKAO_JS_APPKEY`는 구조상 사용자 브라우저에 그대로 보입니다. `.env`로 옮긴 것은 **저장소에 키가 커밋되지 않게** 하려는 것이고, 브라우저 노출까지 막지는 않습니다.
 
 - **카카오 JavaScript 키:** 원래 공개를 전제로 한 키입니다. **JavaScript SDK 도메인 등록**으로 다른 사이트에서 쓰지 못하게 막습니다.
 - **TMAP 키:** 현재 브라우저 JS(`carRoute.js`, `LocationSearch.js` 등)가 REST API를 직접 호출하고 있어서 키가 노출됩니다. v2에서 이 호출을 서버로 옮겨(백엔드 프록시) REST 키는 서버에만 두고, 브라우저에는 지도 SDK 키만 남길 예정입니다.
