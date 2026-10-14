@@ -17,8 +17,9 @@ Java 21 · Spring Boot 3.2 · Spring Security · Spring Data JPA · Thymeleaf ·
 
 ## 실행 준비
 
-1. `.env.example`을 `.env`로 복사한 뒤 DB 정보와 API 키를 입력 (키는 모두 `.env` 에서만 관리, 발급 방법: [docs/ENV_SETUP.md](docs/ENV_SETUP.md))
-2. `docker compose up -d --build` → http://localhost:8080
+1. `./scripts/setup.sh` (Windows: `./scripts/setup.ps1`) — Git 훅 연결, `.env` 생성
+2. `.env`에 DB 정보와 API 키를 입력 (키는 모두 `.env` 에서만 관리, 발급 방법: [docs/ENV_SETUP.md](docs/ENV_SETUP.md))
+3. `docker compose up -d --build` → http://localhost:8080
 
 ## 참고 API
 
@@ -27,3 +28,7 @@ Java 21 · Spring Boot 3.2 · Spring Security · Spring Data JPA · Thymeleaf ·
 - 시외버스: https://www.data.go.kr/data/15098541/openapi.do
 - 고속버스: https://www.data.go.kr/data/15098522/openapi.do
 - 시내버스: https://www.data.go.kr/data/15098533/openapi.do
+
+## 개발 규칙
+
+커밋 컨벤션, 브랜치, Git 훅: [CONTRIBUTING.md](CONTRIBUTING.md)
