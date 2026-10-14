@@ -75,6 +75,13 @@
 | `dev` | 다음 릴리스를 통합하는 브랜치 |
 | `feature/<이름>` | 기능·수정 단위 작업. `dev`에서 갈라져 PR로 `dev`에 머지 |
 
+### 작업 흐름
+1. `git switch -c feature/<이름> dev`
+2. 컨벤션에 맞춰 커밋한 뒤 push
+3. `dev`를 대상으로 PR을 엽니다. [PR 템플릿](.github/pull_request_template.md)의 구현 내용, 트러블슈팅, 고민한 점을 채워 개발 기록으로 남깁니다.
+4. **Merge commit**으로 머지합니다 (기능 단위 커밋과 PR 연결을 보존). 머지한 feature 브랜치는 삭제합니다.
+5. 버전 목표를 달성하면 `dev` → `main` PR로 릴리스하고, `main`에 버전 태그를 답니다.
+
 ---
 
 ## 4. Git 훅이 자동으로 막는 것
