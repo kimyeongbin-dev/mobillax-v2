@@ -155,6 +155,7 @@ sequenceDiagram
 |---|---|---|
 | Docker Desktop | Docker Engine 24 이상, Compose v2 이상 | 앱(Java 21)과 MySQL 8.0이 모두 컨테이너에서 실행되므로 **로컬에 JDK나 MySQL이 필요 없음** |
 | Git | 2.9 이상 | `core.hooksPath` 지원 |
+| Node.js | 20 이상 | **개발 도구 전용** (pre-commit 훅의 ESLint·Prettier). 앱 실행에는 필요 없음 |
 | API 키 | TMAP, 카카오, PortOne (테스트), 공공데이터포털 | 발급 방법: [docs/ENV_SETUP.md](docs/ENV_SETUP.md) |
 
 ### 설치·실행
@@ -164,7 +165,7 @@ sequenceDiagram
 git clone https://github.com/kimyeongbin-dev/mobillax-v2.git
 cd mobillax-v2
 
-# 2. 초기 설정 — Git 훅 연결, .env 생성
+# 2. 초기 설정 — Git 훅 연결, .env 생성, 린트 도구 설치
 ./scripts/setup.sh          # Windows PowerShell: ./scripts/setup.ps1
 
 # 3. .env 에 DB 비밀번호와 API 키 입력 (docs/ENV_SETUP.md 참고)
@@ -210,7 +211,8 @@ docker compose --profile test run --rm --build test
 │   ├── templates/      # Thymeleaf 페이지
 │   └── static/         # JS(경로·장바구니·결제), CSS, 지도 페이지
 ├── docs/ENV_SETUP.md   # .env 키 발급 가이드
-├── .githooks/          # commit-msg, pre-push
+├── .githooks/          # pre-commit(시크릿·린트), commit-msg, pre-push
+├── .claude/           # AI 도구 하네스 (비밀값 접근 차단 훅, 권한 설정)
 ├── scripts/            # setup.sh, setup.ps1
 ├── Dockerfile          # JDK 21 멀티 스테이지 빌드
 └── docker-compose.yml  # app + MySQL (+ test)
