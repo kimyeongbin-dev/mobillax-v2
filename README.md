@@ -8,7 +8,7 @@
   - 원본 저장소: https://github.com/Abbbs2ws/MobilLax (`map` 브랜치 최종본, 2025-06-09)
   - 원본 커밋 이력과 기여자 정보는 원본 저장소에서 확인할 수 있음
 - 이 저장소는 위 결과물을 기준점으로 삼아 개인적으로 개선을 이어가는 프로젝트
-  - 첫 커밋 = 팀 프로젝트 최종 코드 (하드코딩된 API 키를 환경 변수로 분리한 것 외에는 원본과 동일)
+  - 첫 커밋 = 팀 프로젝트 최종 코드 (하드코딩된 API 키를 환경 변수로 분리한 것 외에는 원본과 동일, 태그 `v1`)
 
 ## 기술 스택
 
@@ -17,9 +17,8 @@ Java 21 · Spring Boot 3.2 · Spring Security · Spring Data JPA · Thymeleaf ·
 
 ## 실행 준비
 
-1. `.env.example`을 `.env`로 복사한 뒤 DB 정보와 API 키를 입력
-2. `src/main/resources/static/module/config.example.js`를 `config.js`로 복사한 뒤 Tmap AppKey 입력
-3. `./gradlew bootRun`
+1. `.env.example`을 `.env`로 복사한 뒤 DB 정보와 API 키를 입력 (키는 모두 `.env` 에서만 관리)
+2. `docker compose up -d --build` → http://localhost:8080
 
 ## 참고 API
 

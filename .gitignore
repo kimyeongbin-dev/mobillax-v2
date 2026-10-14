@@ -71,5 +71,3 @@ Thumbs.db
 .mtj.tmp/
 out/
 
-# 프론트엔드 로컬 키 설정
-src/main/resources/static/module/config.js
