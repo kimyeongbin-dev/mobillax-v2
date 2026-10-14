@@ -97,7 +97,7 @@ public class SecurityConfig {
 
         http.logout(logout -> logout
                 .logoutUrl("/logout")                   // 로그아웃 요청 URL
-                .logoutSuccessUrl("/member/login?logout")      // 로그아웃 성공 시 이동 페이지
+                .logoutSuccessUrl("/login?logout")             // 로그아웃 성공 시 이동 페이지
                 .permitAll());
 
         http.exceptionHandling(e -> e
