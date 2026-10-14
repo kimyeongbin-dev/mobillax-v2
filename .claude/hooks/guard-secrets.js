@@ -19,7 +19,7 @@ process.stdin.on("end", () => {
           permissionDecision: "deny",
           permissionDecisionReason: `[guard-secrets] ${reason}. 비밀값 확인은 사용자가 직접 하거나 값을 출력하지 않는 스크립트로 합니다.`,
         },
-      })
+      }),
     );
   }
 });
@@ -49,7 +49,8 @@ function check(tool, ti) {
     if (hit) return `셸 명령에서 ${basename(hit)} 참조 차단`;
 
     // 컨테이너에 주입된 비밀값을 출력하는 명령
-    if (/docker(-compose| compose)\b[^|;&]*\bconfig\b/.test(cmd)) return "docker compose config 는 .env 값을 펼쳐 출력하므로 차단";
+    if (/docker(-compose| compose)\b[^|;&]*\bconfig\b/.test(cmd))
+      return "docker compose config 는 .env 값을 펼쳐 출력하므로 차단";
     if (/\bdocker\b[^|;&]*\binspect\b/.test(cmd)) return "docker inspect 는 컨테이너 환경변수를 출력하므로 차단";
     if (/\b(exec|run)\b[^|;&]*\s(printenv|env)(\s|$)/.test(cmd)) return "컨테이너 환경변수 출력 차단";
   }

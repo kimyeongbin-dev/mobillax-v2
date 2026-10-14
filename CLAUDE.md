@@ -16,6 +16,10 @@ AI 코딩 도구(Claude Code)가 이 저장소에서 작업할 때 지키는 규
 - 작업은 `dev`에서 `feature/<이름>` 브랜치를 만들어 하고, PR 템플릿을 채워 `dev`로 머지한다.
 - 버전 릴리스는 `dev` → `main` PR과 태그(`v1.1`, `v1.2`, ...)로 한다.
 
+## 커밋 전 검사
+- pre-commit 훅이 시크릿 검사와 lint-staged(Prettier + ESLint)를 실행한다. 훅을 우회(`--no-verify`)하지 않는다.
+- 테스트용 가짜 키를 파일에 쓸 때는 실행 중에 만들거나 `FAKE_` 접두어를 쓴다.
+
 ## 실행 환경
 - 로컬 JDK 버전과 무관하게 **Docker로 빌드·실행·테스트**한다. 호스트에서 `./gradlew`를 직접 돌리지 않는다.
   - 실행: `docker compose up -d --build`

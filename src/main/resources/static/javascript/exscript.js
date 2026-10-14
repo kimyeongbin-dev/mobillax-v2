@@ -3,10 +3,10 @@ import {
   formatRouteData,
   getTransferCount,
   getModeLabel,
-  getPathSummary
-} from '/javascript/service/TmapService.js';
+  getPathSummary,
+} from "/javascript/service/TmapService.js";
 
-let currentFocusType = 'from';
+let currentFocusType = "from";
 let selectedFrom = null;
 let selectedTo = null;
 
@@ -51,18 +51,23 @@ function showSuggestions(value) {
       return;
     }
 
-    const html = data.slice(0, 5).map(place => `
+    const html = data
+      .slice(0, 5)
+      .map(
+        (place) => `
       <div class="item" data-name="${place.place_name}" data-x="${place.x}" data-y="${place.y}">
         <i class='fas fa-map-marker-alt'></i>
         <span>${place.place_name}</span>
         <small style='margin-left:auto;'>${place.address_name}</small>
       </div>
-    `).join('');
+    `,
+      )
+      .join("");
 
     const container = document.getElementById("suggestions");
     container.innerHTML = html;
 
-    container.querySelectorAll(".item").forEach(item => {
+    container.querySelectorAll(".item").forEach((item) => {
       item.addEventListener("click", () => {
         const name = item.getAttribute("data-name");
         const x = item.getAttribute("data-x");
@@ -97,7 +102,7 @@ function showRouteResults() {
   console.log("출발지 좌표:", selectedFrom);
   console.log("도착지 좌표:", selectedTo);
 
-  getTmapRoute(fromX, fromY, toX, toY).then(data => {
+  getTmapRoute(fromX, fromY, toX, toY).then((data) => {
     console.log("🔥 전체 Tmap API 응답 결과:", data);
     const list = document.getElementById("routeList");
     list.innerHTML = "";
@@ -109,7 +114,7 @@ function showRouteResults() {
       const labels = {
         time: "최단시간",
         distance: "최단거리",
-        transfer: "최소환승"
+        transfer: "최소환승",
       };
 
       li.innerHTML = `
@@ -137,7 +142,7 @@ function alertComingSoon() {
 }
 
 function selectMode(mode) {
-  document.querySelectorAll(".mode-item").forEach(item => item.classList.remove("active-mode"));
+  document.querySelectorAll(".mode-item").forEach((item) => item.classList.remove("active-mode"));
   const active = document.querySelector(`.mode-item[data-mode="${mode}"]`);
   if (active) active.classList.add("active-mode");
 }
@@ -151,13 +156,13 @@ window.addEventListener("DOMContentLoaded", () => {
   const switchBtn = document.getElementById("switchBtn");
 
   fromInput.addEventListener("focus", () => {
-    currentFocusType = 'from';
+    currentFocusType = "from";
     updateSuggestHeader();
     showSuggestionBox();
   });
 
   toInput.addEventListener("focus", () => {
-    currentFocusType = 'to';
+    currentFocusType = "to";
     updateSuggestHeader();
     showSuggestionBox();
   });
@@ -169,7 +174,7 @@ window.addEventListener("DOMContentLoaded", () => {
   if (switchBtn) switchBtn.addEventListener("click", swapInputs);
 
   // 모드 항목 클릭 이벤트 등록
-  document.querySelectorAll(".mode-item").forEach(item => {
+  document.querySelectorAll(".mode-item").forEach((item) => {
     const mode = item.dataset.mode;
     item.addEventListener("click", () => {
       if (mode === "transit") selectMode(mode);

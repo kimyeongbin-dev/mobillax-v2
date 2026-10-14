@@ -6,7 +6,7 @@ let resultDrawArr = [];
  */
 async function publicTest() {
   try {
-    const response = await fetch('https://3173cb8e-d014-4dcb-8da9-2e53ad672e15.mock.pstmn.io', {
+    const response = await fetch("https://3173cb8e-d014-4dcb-8da9-2e53ad672e15.mock.pstmn.io", {
       method: "GET",
     });
 
@@ -24,12 +24,12 @@ async function publicTest() {
     const transferCount = itinerary.transferCount + "회"; // 환승 횟수
 
     // 요약 정보 표시
-    document.querySelector('.summary-item:nth-child(1) strong').textContent = totalTime;
-    document.querySelector('.summary-item:nth-child(2) strong').textContent = totalFare;
-    document.querySelector('.summary-item:nth-child(3) strong').textContent = transferCount;
+    document.querySelector(".summary-item:nth-child(1) strong").textContent = totalTime;
+    document.querySelector(".summary-item:nth-child(2) strong").textContent = totalFare;
+    document.querySelector(".summary-item:nth-child(3) strong").textContent = transferCount;
 
-    renderSummary(data);       // 요약 박스 렌더링
-    renderSteps(itinerary);    // 상세 경로 렌더링
+    renderSummary(data); // 요약 박스 렌더링
+    renderSteps(itinerary); // 상세 경로 렌더링
 
     const routeBounds = new Tmapv2.LatLngBounds();
 
@@ -52,7 +52,6 @@ async function publicTest() {
     }
 
     map.panToBounds(routeBounds);
-
   } catch (err) {
     console.error("목업 데이터를 불러오는 중 오류:", err);
   }
@@ -68,7 +67,7 @@ function drawLine(latlngs, color) {
     path: latlngs,
     strokeColor: color,
     strokeWeight: 6,
-    map: map
+    map: map,
   });
   resultDrawArr.push(polyline);
 }
@@ -77,7 +76,7 @@ function drawLine(latlngs, color) {
  * 지도에서 그려진 모든 경로를 제거합니다.
  */
 function clearRoutes() {
-  resultDrawArr.forEach(polyline => polyline.setMap(null));
+  resultDrawArr.forEach((polyline) => polyline.setMap(null));
   resultDrawArr = [];
 }
 
@@ -87,10 +86,13 @@ function clearRoutes() {
  * @returns {Tmapv2.LatLng[]} - 변환된 좌표 배열
  */
 function parseLineString(line) {
-  return line.trim().split(" ").map(pair => {
-    const [lon, lat] = pair.split(",").map(Number);
-    return new Tmapv2.LatLng(lat, lon);
-  });
+  return line
+    .trim()
+    .split(" ")
+    .map((pair) => {
+      const [lon, lat] = pair.split(",").map(Number);
+      return new Tmapv2.LatLng(lat, lon);
+    });
 }
 
 /**
@@ -147,8 +149,8 @@ function getQueryParam(key) {
  * @returns {string} - 변환된 시간 문자열
  */
 function formatTime(sec) {
-  if (Math.floor((sec / 60) / 60)) {
-    return `${Math.floor((sec / 60) / 60)}시간 ${Math.round((sec / 60) % 60)}분`;
+  if (Math.floor(sec / 60 / 60)) {
+    return `${Math.floor(sec / 60 / 60)}시간 ${Math.round((sec / 60) % 60)}분`;
   } else {
     return `${Math.round(sec / 60)}분`;
   }

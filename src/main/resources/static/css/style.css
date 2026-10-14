@@ -1,11 +1,16 @@
 @charset "utf-8";
 body {
   margin: 0;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: "Segoe UI", sans-serif;
   background-color: #f7f9fc;
 }
-li { list-style:  none;}
-a { text-decoration: none; color: inherit;}
+li {
+  list-style: none;
+}
+a {
+  text-decoration: none;
+  color: inherit;
+}
 header {
   background-color: #1e2a38;
   color: white;
@@ -37,7 +42,9 @@ main {
   justify-content: center;
   margin-top: 40px;
 }
-main .dd { display: flex;}
+main .dd {
+  display: flex;
+}
 .search-card {
   background: white;
   border-radius: 12px;
@@ -67,7 +74,6 @@ main .dd { display: flex;}
   border-radius: 6px;
   padding: 5px 10px;
   background: #f8f8f8;
-
 }
 .input-group i {
   margin-right: 8px;
@@ -102,7 +108,7 @@ main .dd { display: flex;}
   border-radius: 8px;
   width: 100%;
   z-index: 100;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   margin-top: 4px;
 }
 .suggest-box div {
@@ -144,7 +150,7 @@ main .dd { display: flex;}
   background: white;
   border: 1px solid #ccc;
   border-radius: 10px;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
   padding: 12px;
   position: relative;
   z-index: 999;
@@ -222,8 +228,14 @@ main .dd { display: flex;}
 .mode-item:hover:not(.active-mode) {
   opacity: 0.5;
 }
-.mode-item.active-mode i {color: #1e3a8a;}
-.mode-item.active-mode span { color: #1e3a8a; font-weight: bold; font-size: 15px;}
+.mode-item.active-mode i {
+  color: #1e3a8a;
+}
+.mode-item.active-mode span {
+  color: #1e3a8a;
+  font-weight: bold;
+  font-size: 15px;
+}
 .related-links {
   font-size: 0.85em;
   color: #555;
@@ -239,13 +251,13 @@ main .dd { display: flex;}
   margin-top: 40px;
   text-align: center;
 }
-.route-results>div {
+.route-results > div {
   display: flex;
   justify-content: center;
   gap: 30px;
   flex-wrap: wrap;
 }
-.route-results>h2 {
+.route-results > h2 {
   margin-bottom: 20px;
 }
 .route-list {
@@ -330,7 +342,7 @@ legend {
   border-radius: 10px;
   margin-bottom: 20px;
   background: #fff;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   transition: box-shadow 0.2s ease;
   text-decoration: none;
   color: inherit;
@@ -339,7 +351,7 @@ legend {
 }
 
 .route-card:hover {
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   background: #f0f8ff;
 }
 
