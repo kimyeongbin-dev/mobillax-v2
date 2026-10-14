@@ -1,0 +1,117 @@
+==============================
+✅ MobilLax 팀 개발 & 협업 가이드라인
+==============================
+
+📁 1. 디렉토리 구조
+------------------------------
+- 프로젝트 루트
+    - .env               ➜ 환경 변수 정의 파일 (절대 Git에 올리지 말 것)
+    - .env.example       ➜ .env 파일 참고용 예시 (민감 정보 제거)
+    - build.gradle       ➜ 프로젝트 의존성 및 빌드 설정
+    - .gitignore         ➜ Git 관리 제외 대상 설정
+    - src/main/java/MobilLax/
+        ├── Config/
+        ├── Controller/
+        ├── Service/
+        ├── Repository/
+        └── Model/
+    - src/main/resources/
+        ├── application.properties  ➜ .env의 값을 참조하는 Spring 설정 파일
+        ├── static/                 ➜ 정적 리소스 (CSS, JS 등)
+        └── templates/              ➜ Thymeleaf HTML 템플릿
+
+📦 2. .env 파일 작성 규칙
+------------------------------
+- 위치: 프로젝트 루트에 배치
+- 역할: DB, API 키, 포트 등 환경변수를 외부에서 분리해 관리
+- 예시는 `.env.example` 참고
+- Git에 포함시키지 말고 `.gitignore`에 추가할 것
+
+예시 항목:
+DB_HOST=your-host
+SPRING_DATASOURCE_URL=...
+
+📦 3. application.properties 작성 규칙
+------------------------------
+- 실제 값은 `.env`에서 정의하고, 여기선 `${...}`으로 참조만 함
+- 중요한 값 정의(api 키, DB 계정 등) X, 참조 O
+
+예:
+spring.datasource.url=${SPRING_DATASOURCE_URL}
+
+📦 4. build.gradle 주요 의존성
+------------------------------
+- lombok: 코드 간소화
+- mysql-connector: DB 연결
+- spring-boot-starter-* : 웹, 시큐리티, JPA, WebFlux 등
+- dotenv: .env 파일을 자동으로 읽어 Spring 설정에 주입
+
+필수 의존성:
+implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+📦 5. .gitignore 구성
+------------------------------
+- 다음과 같은 파일은 Git에 올리지 않음
+  - .env, *.class, build/, .idea/, *.log 등
+- 민감정보, 로컬환경 파일, IDE 관련 파일은 제외해야 함
+
+예시 항목:
+.env
+/build
+.idea
+*.log
+
+📋 6. 코드 주석 작성 규칙
+------------------------------
+✅ Java 파일 상단 주석
+/**
+ * 파일명.java
+ * ✅ 파일 목적: (설명)
+ * 작성자: (이름)
+ * 마지막 수정일: (2025-05-13)
+ */
+
+✅ 클래스 주석
+/**
+ * ✅ 클래스 설명:
+ * 해당 클래스의 역할 요약
+ */
+
+✅ 메서드 주석
+/**
+ * ✅ 메서드 기능 설명
+ * @param ... 파라미터 설명
+ * @return 반환값 설명
+ */
+
+✅ Config 클래스 예
+/**
+ * ✅ WebClient 설정 클래스
+ * 외부 API 호출용 WebClient Bean 등록
+ */
+
+✅ HTML 파일 주석
+<!--
+  templates/파일명.html
+
+  ✅ 파일 목적: (예: 경로 시각화 HTML 렌더링)
+  ✅ 사용 위치: (예: GET /api/transit/route/html)
+  ✅ 주의 사항: (예: model에 필요한 변수 포함 여부 명시)
+
+  작성자: (이름)
+  마지막 수정일: (2025-05-13)
+-->
+
+✅ Lombok 사용 시 주의
+- `@Getter`, `@Setter`는 필요한 곳에만 사용
+- `@Data`는 되도록 사용하지 않음 (`equals`, `hashCode`에 영향 있음)
+
+==============================
+✅ 정리된 원칙
+==============================
+1. 민감 정보는 무조건 `.env`로 관리한다.
+2. `application.properties`에서는 값 정의하지 않고 참조만 한다.
+3. 코드에는 명확하고 일관된 주석을 남긴다.
+4. 모든 협업자는 `.env.example`로 환경 구성 힌트를 제공한다.
+5. `@Component`, `@Service` 등의 설정 클래스에도 주석을 단다.

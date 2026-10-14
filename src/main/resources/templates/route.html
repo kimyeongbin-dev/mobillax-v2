@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MobilLax - 상세 경로</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="/css/route.css" type="text/css" rel="stylesheet"></link>
+  <script th:src="|https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=${tmapWebAppKey}|"></script>
+  <script src="/javascript/cart.js"></script>
+  <script src="/javascript/route.js"></script>
+  <script src="/javascript/payment.js"></script>
+  <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="back-home">
+        <a href="/home" title="홈으로"><i class="fas fa-arrow-left"></i> 되돌아가기</a>
+      </div>
+      <h2 id="routeTitle">상세경로 안내</h2>
+      <div class="summary-box"></div>
+    </div>
+    <div class="sidebar-content"></div>
+    <div class="sidebar-footer">
+      <button class="btn-cart">
+        <i class="fas fa-shopping-cart"></i> 장바구니 담기
+      </button>
+      <button class="btn-direct-pay find-route-button">
+        <i class="fas fa-credit-card"></i> 결제하기
+      </button>
+    </div>
+  </div>
+  <div id="noRoutePopup" class="cart-popup hidden">
+    <h3>경로를 선택해주세요</h3>
+    <div class="popup-buttons">
+      <button class="btn-yes" onclick="closeNoRoutePopup()">확인</button>
+    </div>
+  </div>
+
+  <!-- 장바구니 담기 완료 -->
+  <div id="cartPopup" class="cart-popup hidden">
+    <h3>🛒 장바구니에 담겼습니다</h3>
+    <p>장바구니로 이동하시겠습니까?</p>
+    <div class="popup-buttons">
+      <button class="btn-yes" onclick="goToCart()">예</button>
+      <button class="btn-no" onclick="closeCartPopup()">아니오</button>
+    </div>
+  </div>
+  <div class="map-area">
+    <div id="map_div"></div>
+  </div>
+</body>
+</html>

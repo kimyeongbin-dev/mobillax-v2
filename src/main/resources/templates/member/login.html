@@ -1,0 +1,66 @@
+<!--
+  templates/member/login.html
+
+  ✅ 파일 목적: 사용자 로그인 폼을 제공하며, 로그인 실패 시 오류 메시지를 출력합니다.
+  ✅ 사용 위치: GET /login, POST /login 요청 처리 화면
+  ✅ 주요 구성:
+    - CSRF 토큰 포함 (Spring Security 연동)
+    - 오류 및 성공 메시지 출력
+    - 회원가입 링크 제공
+
+  작성자: 김영빈
+  마지막 수정일: 2025-05-12
+-->
+
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MobilLax - 로그인</title>
+  <link href="/css/login.css" type="text/css" rel="stylesheet">
+</head>
+<body>
+
+<header>
+  <h1><a href="/home">MobilLax</a></h1>
+</header>
+
+<div class="form-wrapper">
+  <div class="form-box">
+    <h2>로그인</h2>
+
+    <!-- ✅ 로그인 실패 시 오류 메시지 출력 -->
+    <div th:if="${error != null}">
+      <p style="color: red;">[[${error}]]</p>
+    </div>
+
+    <!-- ✅ 성공 메시지가 있을 경우 JavaScript 알림 출력 -->
+    <script th:if="${successMessage != null}" type="text/javascript">
+      alert([[${successMessage}]]);
+    </script>
+
+    <!-- ✅ 로그인 폼 (POST 방식) -->
+    <form action="/login" method="POST">
+      <!-- ✅ Spring Security의 CSRF 토큰 자동 삽입 -->
+      <th:block th:if="${_csrf != null}">
+        <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+      </th:block>
+
+      <!-- 이메일 입력 -->
+      <input type="email" name="email" placeholder="이메일" required class="form-input">
+
+      <!-- 비밀번호 입력 -->
+      <input type="password" name="password" placeholder="비밀번호" required class="form-input">
+
+      <!-- 로그인 버튼 -->
+      <button type="submit" class="form-btn">로그인</button>
+    </form>
+
+    <!-- 회원가입 이동 링크 -->
+    <div class="link">계정이 없으신가요? <a href="/register">회원가입</a></div>
+  </div>
+</div>
+
+</body>
+</html>

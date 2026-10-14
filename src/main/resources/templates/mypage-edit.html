@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <title>프로필 수정</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="@{/css/mypage.css}" rel="stylesheet" type="text/css">
+</head>
+<body>
+<header>
+  <h1><a href="/home" title="MobilLax">MobilLax</a></h1>
+</header>
+
+<main>
+  <section class="edit-profile-container">
+    <h2>프로필 수정</h2>
+    <form th:action="@{/mypage/edit}" th:object="${profile}" method="post">
+      <div class="form-group">
+        <label for="name">이름</label>
+        <input type="text" id="name" th:field="*{name}" required>
+      </div>
+
+      <div class="form-buttons">
+        <button type="submit">저장하기</button>
+        <a href="/mypage" class="cancel-button">취소</a>
+      </div>
+    </form>
+  </section>
+</main>
+
+<footer>
+  <div>© 2025 MobilLax. All rights reserved.</div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,136 @@
+@charset "utf-8";
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f7f9fc;
+}
+a {
+  text-decoration: none;
+  color: inherit;
+}
+header {
+  background-color: #1e2a38;
+  color: white;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h1 {
+  cursor: pointer;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 20px;
+}
+.auth-buttons a {
+  color: white;
+  text-decoration: none;
+  font-size: 0.85em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.auth-buttons img {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 3px;
+  filter: brightness(0) invert(1);
+}
+
+main {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.mypage-container {
+  width: 90%;
+  max-width: 900px;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.profile-box {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+}
+.avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-right: 20px;
+  background: #eee;
+  padding: 10px;
+}
+.profile-info strong {
+  font-size: 1.2em;
+  display: block;
+}
+.profile-info span {
+  color: #666;
+  font-size: 0.95em;
+}
+.edit-profile {
+  color: #2f80ed;
+  font-size: 0.9em;
+  text-decoration: underline;
+  margin-top: 5px;
+  display: inline-block;
+}
+
+.grid-box {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.grid-item {
+  background: #f8f8f8;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.grid-item h3 {
+  margin-top: 0;
+  color: #1e3a8a;
+  font-size: 1em;
+}
+.grid-item p {
+  font-size: 0.95em;
+  margin: 8px 0;
+}
+.grid-item a {
+  color: #2f80ed;
+  font-size: 0.9em;
+  text-decoration: underline;
+}
+.grid-item ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.grid-item li {
+  margin-bottom: 6px;
+  font-size: 0.9em;
+}
+.grid-item li a {
+  color: #2f80ed;
+  text-decoration: none;
+}
+.grid-item li a:hover {
+  text-decoration: underline;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  margin-top: 50px;
+  color: #888;
+  font-size: 14px;
+}

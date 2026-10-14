@@ -1,0 +1,11 @@
+# Gradle 관련 파일은 LF로 유지
+/gradlew text eol=lf
+
+# Windows 배치 파일 (*.bat)은 CRLF 유지
+*.bat text eol=crlf
+
+# JAR 파일은 바이너리 처리 (줄바꿈 변환 금지)
+*.jar binary
+
+# 모든 텍스트 파일 LF 강제 적용
+* text=auto eol=lf

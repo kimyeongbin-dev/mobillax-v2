@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MobilLax - 장바구니</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="css/cart.css" type="text/css" rel="stylesheet">
+    <script src="/javascript/cart.js"></script>
+    <script src="/javascript/route.js"></script>
+    <script src="/javascript/payment.js"></script>
+    <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
+</head>
+<body>
+<header>
+    <h1><a href="/home" title="MobilLax">MobilLax</a></h1>
+    <div class="auth-buttons">
+        <a href="/mypage">
+            <img src="https://img.icons8.com/ios-glyphs/30/ffffff/user.png" alt="MyPage">마이페이지
+        </a>
+        <a href="/logout">
+            <img src="https://img.icons8.com/ios-glyphs/30/ffffff/logout-rounded.png" alt="Logout">로그아웃
+        </a>
+    </div>
+</header>
+
+<main>
+    <section class="search-card flat">
+        <h2><i class="fas fa-shopping-cart"></i> 장바구니</h2>
+        <div class="cart-list"></div>
+
+        <div class="cart-actions" style="text-align: right; margin-top: 20px;">
+            <!-- 장바구니 전체 결제 버튼 -->
+            <button class="btn-cart-pay find-route-button">전체 결제하기</button>
+
+            <!-- 장바구니 전체 비우기 버튼 -->
+            <button id="clearCartBtn" class="find-route-button danger">전체 비우기</button>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <div>© 2025 MobilLax. All rights reserved.</div>
+</footer>
+
+</body>
+</html>

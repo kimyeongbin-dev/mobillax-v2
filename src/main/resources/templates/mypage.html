@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MobilLax - 마이페이지</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/css/mypage.css}" rel="stylesheet" />
+</head>
+<body>
+<header>
+    <h1><a th:href="@{/home}" title="MobilLax">MobilLax</a></h1>
+</header>
+
+<main>
+    <section class="mypage-container">
+        <div class="profile-box">
+            <img src="https://img.icons8.com/ios-glyphs/90/user--v1.png" alt="프로필" class="avatar">
+            <div class="profile-info">
+                <strong th:text="${name}">이름</strong>
+                <span th:text="${email}">이메일</span>
+                <a th:href="@{/mypage/edit}" class="edit-profile">프로필 수정하기</a>
+            </div>
+        </div>
+
+        <div class="grid-box">
+            <div class="grid-item">
+                <h3>이용 정보</h3>
+                <p th:text="'최근 경로: ' + ${recentRoute}">최근 경로: 서울역 → 강남역</p>
+            </div>
+            <div class="grid-item">
+                <h3>결제 내역</h3>
+                <p th:text="'총 결제 ₩' + ${totalPayment}">총 결제 ₩62,000</p>
+            </div>
+            <div class="grid-item">
+                <h3>장바구니</h3>
+                <p th:text="'예매 예정 ' + ${cartCount} + '건'">예매 예정 2건</p>
+                <a th:href="@{/cart}">더보기 →</a>
+            </div>
+            <div class="grid-item">
+                <h3>계정 관리 및 설정</h3>
+                <ul>
+                    <li><a th:href="@{/mypage/password}">비밀번호 변경</a></li>
+                    <li><a th:href="@{/mypage/settings}">알림 설정</a></li>
+                    <li>
+                        <form id="deleteForm" th:action="@{/mypage/delete}" method="post" style="display: inline;">
+                            <a href="#" onclick="confirmDelete()">회원 탈퇴</a>
+                        </form>
+                    </li>
+                </ul>
+
+                <script>
+                    function confirmDelete() {
+                        if (confirm("정말 탈퇴하시겠습니까?")) {
+                            document.getElementById('deleteForm').submit();
+                        }
+                    }
+                </script>
+
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <div>© 2025 MobilLax. All rights reserved.</div>
+</footer>
+</body>
+</html>

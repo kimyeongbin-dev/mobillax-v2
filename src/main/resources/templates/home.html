@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MobilLax</title>
+  <link href="css/style.css" type="text/css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" type="text/css" rel="stylesheet">
+  <script th:src="|https://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJsAppKey}&libraries=services|"></script>
+  <script th:src="|https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=${tmapWebAppKey}|"></script>
+  <script src="javascript/script.js"></script>
+</head>
+<body>
+<header>
+  <h1>MobilLax</h1>
+  <!-- 로그인 안 했을 때 -->
+  <div class="auth-buttons" th:if="${remoteUser == null}">
+    <a href="/login">
+      <img src="https://img.icons8.com/ios-filled/50/ffffff/login-rounded-right.png" alt="Login">로그인
+    </a>
+    <a href="/register">
+      <img src="https://img.icons8.com/ios-filled/50/ffffff/add-user-male.png" alt="SignUp">회원가입
+    </a>
+  </div>
+
+  <!-- 로그인 했을 때 -->
+  <div class="auth-buttons" th:if="${remoteUser != null}">
+    <a href="/mypage">
+      <img src="https://img.icons8.com/ios-glyphs/30/ffffff/user.png" alt="MyPage">마이페이지
+    </a>
+    <a href="/logout">
+      <img src="https://img.icons8.com/ios-glyphs/30/ffffff/logout-rounded.png" alt="Logout">로그아웃
+    </a>
+  </div>
+</header>
+
+<main>
+  <section class="search-card">
+    <h2>빠른길찾기</h2>
+    <div class="search-box">
+      <div class="input-group">
+        <i class="fas fa-location-arrow"></i>
+        <input type="text" id="fromInput" placeholder="출발지 입력" onfocus="currentFocusType='from'; updateSuggestHeader(); showSuggestionBox();" oninput="showSuggestions(this.value)">
+        <button aria-label="검색">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+      <button class="switch-button" onclick="swapInputs()">⇄</button>
+      <div class="input-group">
+        <i class="fas fa-map-marker-alt"></i>
+        <input type="text" id="toInput" placeholder="도착지 입력" onfocus="currentFocusType='to'; updateSuggestHeader(); showSuggestionBox();" oninput="showSuggestions(this.value)">
+        <button><i class="fas fa-search"></i></button>
+      </div>
+    </div>
+    <div class="unified-suggest-box" id="suggestions">
+      <div class="suggest-header">출발지 검색</div>
+    </div>
+    <div class="search-action">
+      <button class="find-route-button" onclick="showRouteResults()">길찾기</button>
+    </div>
+    <div class="mode-select">
+      <div class="mode-item" data-mode="transit">
+        <i class="fas fa-subway"></i><span>대중교통</span>
+      </div>
+      <div class="mode-item" data-mode="reservation" onclick="alertComingSoon()">
+        <i class="fas fa-ticket-alt"></i><span>예매확인</span>
+      </div>
+      <div class="mode-item" data-mode="fare" onclick="alertComingSoon()">
+        <i class="fas fa-receipt"></i><span>요금비교</span>
+      </div>
+      <div class="mode-item" data-mode="local" onclick="alertComingSoon()">
+        <i class="fas fa-map-marker-alt"></i><span>주변정보</span>
+      </div>
+    </div>
+    <div class="related-links">
+      관련
+      <a href="https://search.naver.com/search.naver?sm=msv_nex&where=m&query=%EC%A7%80%ED%95%98%EC%B2%A0%EB%85%B8%EC%84%A0%EB%8F%84">지하철노선도</a>
+      ·
+      <a href="#">기차승차권예매</a>
+    </div>
+  </section>
+</main>
+<form id="routeForm">
+  <fieldset>
+    <legend>추천 경로</legend>
+    <ul class="route-list" id="routeList"></ul>
+  </fieldset>
+</form>
+<footer>
+  <div>
+    © 2025 MobilLax. All rights reserved.
+  </div>
+</footer>
+</body>
+</html>

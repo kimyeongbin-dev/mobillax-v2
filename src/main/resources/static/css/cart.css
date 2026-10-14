@@ -1,0 +1,231 @@
+@charset "utf-8";
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f7f9fc;
+}
+a {
+  text-decoration: none;
+  color: inherit;
+}
+header {
+  background-color: #1e2a38;
+  color: white;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 20px;
+}
+
+.auth-buttons a {
+  color: white;
+  text-decoration: none;
+  font-size: 0.85em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.auth-buttons i {
+  margin-bottom: 4px;
+}
+
+main {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.search-card {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  width: 700px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.search-card h2 {
+  font-size: 1.4em;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cart-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cart-card {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  padding: 15px 20px;
+  margin-bottom: 20px;
+}
+
+.cart-card:hover {
+  background: #f0f8ff;
+}
+
+.cart-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.route-type {
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.total-info span {
+  margin-left: 12px;
+  font-weight: bold;
+}
+
+.cart-summary-line {
+  font-size: 0.95em;
+  color: #444;
+}
+
+.delete-button {
+  float: right;
+  margin-top: 10px;
+  background: #eee;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.delete-button:hover {
+  background: #ddd;
+}
+
+.cart-empty {
+  text-align: center;
+  padding: 80px 0;
+  color: #777;
+}
+
+.cart-empty img {
+  width: 80px;
+  opacity: 0.4;
+  margin-bottom: 16px;
+}
+
+.cart-empty p {
+  font-size: 1.1em;
+  font-weight: 500;
+}
+
+.find-route-button {
+  margin-top: 20px;
+  background-color: #2f80ed;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 25px;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+.find-route-button:hover {
+  background-color: #1d6fd4;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  margin-top: 50px;
+  color: #888;
+  font-size: 0.9em;
+}
+.cart-group {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #fff;
+  position: relative;
+}
+.cart-group h3 {
+  font-size: 1.2em;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.group-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.group-pay-button {
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+
+.group-pay-button:hover {
+  background-color: #27ae60;
+}
+
+.cart-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.total-fare {
+  text-align: right;
+  font-weight: bold;
+  font-size: 1em;
+  margin-top: 10px;
+}
+
+.group-delete-button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+
+.group-delete-button:hover {
+  background-color: #c0392b;
+}
+
+.cart-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.find-route-button.danger {
+  background-color: #e74c3c;
+}
+
+.find-route-button.danger:hover {
+  background-color: #c0392b;
+}

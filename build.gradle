@@ -1,0 +1,71 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.2.5'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'MobilLax'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// ✅ Lombok
+	implementation 'org.projectlombok:lombok:1.18.30'
+	compileOnly 'org.projectlombok:lombok:1.18.30'
+	annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+	// ✅ Spring Boot 기본 스타터
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-web-services'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+	// ✅ Thymeleaf + Spring Security 연동 (추가!)
+	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+
+	// ✅ WebClient만 사용
+	implementation 'org.springframework:spring-webflux'
+
+	// ✅ DB 드라이버
+	implementation 'mysql:mysql-connector-java:8.0.33'
+
+	// ✅ .env
+	implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+	// ✅ JSON & XML
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
+
+	// ✅ ConfigurationProperties 지원
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+	// ✅ Swagger / OpenAPI
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+
+	// ✅ 테스트 및 개발 도구
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile) {
+	options.incremental = true
+	options.encoding = 'UTF-8'
+}
+springBoot {
+	mainClass = 'com.example.MobilLaxApplication'
+}
