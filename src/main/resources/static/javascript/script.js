@@ -24,8 +24,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// 출발 일시 입력 범위: 오늘부터 30일 뒤까지 (서버 TransitRouteRequest.MAX_DAYS_AHEAD 와 같음)
-const MAX_DAYS_AHEAD = 30;
+// 출발 일시 입력 범위: 오늘부터 14일 뒤까지 (서버 TransitRouteRequest.MAX_DAYS_AHEAD 와 같음)
+const MAX_DAYS_AHEAD = 14;
 
 function initDepartInput() {
   const input = document.getElementById("departInput");

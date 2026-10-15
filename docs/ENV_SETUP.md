@@ -14,11 +14,13 @@ MobilLax가 사용하는 환경 변수와 각 키의 발급 방법을 정리한 
 | DB | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `DB_ROOT_PASSWORD` | 직접 정함 | docker compose MySQL, Spring datasource | ✅ |
 | TMAP | `TMAP_APPKEY` | SK open API | 서버: `RouteServiceImpl` (대중교통 경로) / 브라우저: `home`·`route` 템플릿 지도 SDK, `map.html`(`/module/config.js`) POI·자동차 경로 | ✅ |
 | 카카오 | `KAKAO_JS_APPKEY` | Kakao Developers | 브라우저: `home` 템플릿 카카오 지도 SDK(장소 검색) | ✅ |
+| 카카오 | `KAKAO_APPKEY` | Kakao Developers (같은 앱의 REST API 키) | 서버: `KakaoLocalClient` (장소 매칭의 좌표↔주소 변환, 결과는 저장하지 않음) | ⬜ |
 | 포트원 | `PORTONE_STORE_ID` | 포트원 관리자콘솔 | 결제창 호출 (`PaymentController` → `payment.js`) | ✅ |
 | 포트원 | `PORTONE_CHANNEL_KEY` | 포트원 관리자콘솔 | 결제창 호출 | ✅ |
 | 포트원 | `PORTONE_APPKEY` | 포트원 관리자콘솔 (V2 API Secret) | 아직 미사용 (서버 결제 검증용으로 v2에서 사용 예정) | ⬜ |
 | 공공데이터 | `BUS_API_KEY` | 공공데이터포털 | 서버: `TerminalService` (`/api/terminals`, 시외버스 터미널 조회) | ⬜ |
 | 공공데이터 | `BUS_API_URL_CTYCODE`, `BUS_API_URL_TERMINAL`, `BUS_API_URL_SCHEDULE` | 고정 URL | 위와 동일 | `.env.example` 값 그대로 |
+| 도로명주소 | `JUSO_SEARCH_KEY` | 주소기반산업지원서비스 (business.juso.go.kr) | 서버: `JusoClient` (TAGO 역·터미널·공항 주소 찾기) | ⬜ |
 
 나머지 변수(`SPRING_*`, `JPA_*`, `LOGGING_*` 등)는 `.env.example`의 값을 그대로 두면 됩니다.
 
@@ -111,7 +113,9 @@ TMAP_APPKEY=<발급받은 appKey>
 ### `.env` 입력
 ```
 KAKAO_JS_APPKEY=<JavaScript 키>
+KAKAO_APPKEY=<REST API 키>
 ```
+- `KAKAO_APPKEY`는 같은 앱 **[앱 키] → [REST API 키]**입니다. 서버가 TMAP 장거리 구간의 장소를 공공데이터 역·터미널과 맞출 때 좌표↔주소 변환에 씁니다. 카카오 정책상 좌표·검색 결과는 DB에 저장하지 않고 비교에만 씁니다. 없으면 장소 매칭만 건너뜁니다.
 
 ---
 
@@ -176,6 +180,26 @@ BUS_API_URL_SCHEDULE=https://apis.data.go.kr/1613000/SuburbsBusInfo/GetStrtpntAl
 
 ---
 
+## 6-1. 도로명주소 검색 API — `JUSO_SEARCH_KEY` (선택)
+
+- 제공: 행정안전부 주소기반산업지원서비스 https://business.juso.go.kr → **주소정보 API 연계 → 도로명주소 / 검색 API**
+- 서버가 TAGO 역·터미널·공항의 도로명·지번 주소를 찾아 기준표(`transit_place`)에 저장할 때 씁니다. 공공데이터라 저장할 수 있습니다.
+- 없으면 주소 비교 없이 거리·이름으로만 장소를 맞춥니다.
+
+### 발급 절차
+1. 회원가입·로그인 후 **주소정보 API 연계 → API 목록 → 도로명주소 "검색 API" → 신청하기**
+2. 서비스망 **인터넷 망**, 서비스 용도 **개발**(본인인증 없이 발급), URL은 `localhost:8080`
+3. 발급된 승인키를 복사합니다. 끝의 `=`까지 키입니다.
+   - 개발용 승인키는 기간이 지나면 만료됩니다(오류 코드 `E0014`). 다시 발급받으면 됩니다. 운영용 키는 실제 도메인이 생기는 배포(v3) 때 신청합니다.
+   - 좌표제공 API는 신청하지 않아도 됩니다. 거리 비교에 쓰는 좌표는 카카오에서 비교할 때만 받습니다.
+
+### `.env` 입력
+```
+JUSO_SEARCH_KEY=<승인키 전체, 끝의 = 포함>
+```
+
+---
+
 ## 7. 적용과 확인
 
 `.env`만 바꿨을 때는 다시 빌드할 필요 없이 앱 컨테이너만 다시 만들면 됩니다.
@@ -192,6 +216,7 @@ docker compose up -d --force-recreate app
 | TMAP 경로 | 로그인 → 출발지/도착지 검색 → 경로 결과 표시 |
 | 포트원 | 경로 상세 또는 장바구니에서 결제 → 테스트 결제창이 뜨는지 |
 | 시외버스 | http://localhost:8080/api/terminals?name=동서울 (로그인 불필요) |
+| 장소 매칭 | 서울 → 부산처럼 장거리 경로의 상세 화면에서 장거리 구간 아래 "기차역: 서울 (… 거리) → 부산" 표시 |
 
 ---
 

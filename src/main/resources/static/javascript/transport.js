@@ -4,7 +4,7 @@
  * - 안내 전용: 시내버스, 지하철, 도보 등 (현장 결제)
  * 규칙 문서: docs/PUBLIC_DATA_API.md
  */
-/* exported PAYABLE_MODES, isPayableLeg, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt */
+/* exported PAYABLE_MODES, isOperatingLeg, isPayableLeg, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt */
 
 const PAYABLE_MODES = ["TRAIN", "EXPRESSBUS", "AIRPLANE"];
 
@@ -12,12 +12,22 @@ const PAYABLE_MODES = ["TRAIN", "EXPRESSBUS", "AIRPLANE"];
 const EXPRESSBUS_TYPE_LABELS = { 22: "시외버스", 23: "고속버스" };
 
 /**
- * 예매할 수 있는 구간인지 (장거리 교통수단이고 구간 요금이 있는 경우)
+ * 검색 시각에 운행하는 구간인지 (TMAP service: 1 운행, 0 운행하지 않음)
+ * 예) 밤에 검색하면 막차가 끝난 항공·고속버스 구간이 0, 서울역 출발 SRT 처럼 없는 열차도 0 으로 온다
+ * @param {object} leg - TMAP 구간
+ * @returns {boolean}
+ */
+function isOperatingLeg(leg) {
+  return leg?.service !== 0;
+}
+
+/**
+ * 예매할 수 있는 구간인지 (장거리 교통수단이고, 구간 요금이 있고, 검색 시각에 운행하는 경우)
  * @param {object} leg - TMAP 구간
  * @returns {boolean}
  */
 function isPayableLeg(leg) {
-  return PAYABLE_MODES.includes(leg?.mode) && Number(leg.routePayment) > 0;
+  return PAYABLE_MODES.includes(leg?.mode) && Number(leg.routePayment) > 0 && isOperatingLeg(leg);
 }
 
 /**
