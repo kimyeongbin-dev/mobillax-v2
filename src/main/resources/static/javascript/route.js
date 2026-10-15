@@ -28,52 +28,61 @@ document.addEventListener("DOMContentLoaded", async function () {
     zoom: 16,
   });
 
-  const headers = {
-    accept: "application/json",
-    "Content-Type": "application/json",
-    appKey: "your-tmap-appkey",
-  };
-
   const selectedFrom = JSON.parse(localStorage.getItem("selectedFrom")) || {};
   const selectedTo = JSON.parse(localStorage.getItem("selectedTo")) || {};
-  const params = {
-    startX: Number(selectedFrom.x),
-    startY: Number(selectedFrom.y),
-    endX: Number(selectedTo.x),
-    endY: Number(selectedTo.y),
-    lang: 0,
-    format: "json",
-    count: 10,
-    searchDttm: "202505221000",
-  };
 
   try {
-    const response = await fetch("https://apis.openapi.sk.com/transit/routes/", {
-      method: "POST",
-      headers,
-      body: JSON.stringify(params),
-    });
-    const data = await response.json();
+    const data = await loadTransitRoute(selectedFrom, selectedTo);
+    const itineraries = data?.metaData?.plan?.itineraries;
+    if (!itineraries || itineraries.length === 0) {
+      throw new Error(data?.result?.message || "경로 정보를 찾을 수 없습니다.");
+    }
     const bestIndex = getBestItineraryIndex(type, data);
-    const itinerary = data.metaData.plan.itineraries[bestIndex];
+    const itinerary = itineraries[bestIndex];
     renderSummary(data);
     renderSteps(itinerary);
     drawRoute(itinerary.legs);
   } catch (error) {
-    try {
-      const fallback = await fetch("https://3173cb8e-d014-4dcb-8da9-2e53ad672e15.mock.pstmn.io");
-      const text = await fallback.text();
-      const data = JSON.parse(text);
-      const bestIndex = getBestItineraryIndex(type, data);
-      const itinerary = data.metaData.plan.itineraries[bestIndex];
-      renderSummary(data);
-      renderSteps(itinerary);
-      drawRoute(itinerary.legs);
-    } catch (fallbackError) {
-      document.querySelector(".sidebar-content").innerHTML = "<p>경로 정보를 불러올 수 없습니다.</p>";
-    }
+    console.error("경로 조회 실패:", error);
+    const sidebar = document.querySelector(".sidebar-content");
+    sidebar.innerHTML = "";
+    const message = document.createElement("p");
+    message.textContent = error.message || "경로 정보를 불러올 수 없습니다.";
+    sidebar.appendChild(message);
   }
 });
+
+/**
+ * 홈에서 검색한 결과(sessionStorage)를 재사용하고, 없거나 출발·도착지가 다르면 서버에 다시 요청
+ * @param {object} from - 출발지 {x, y}
+ * @param {object} to - 도착지 {x, y}
+ * @returns {Promise<object>} TMAP 대중교통 응답
+ */
+async function loadTransitRoute(from, to) {
+  const request = {
+    startX: Number(from.x),
+    startY: Number(from.y),
+    endX: Number(to.x),
+    endY: Number(to.y),
+  };
+
+  const cached = JSON.parse(sessionStorage.getItem("transitRouteResult") || "null");
+  if (cached && JSON.stringify(cached.request) === JSON.stringify(request)) {
+    return cached.data;
+  }
+
+  const response = await fetch("/api/route/transit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data?.result?.message || data?.error?.message || "경로 정보를 불러올 수 없습니다.");
+  }
+  sessionStorage.setItem("transitRouteResult", JSON.stringify({ request, data }));
+  return data;
+}
 
 /**
  * 최적 경로 인덱스를 구하는 함수

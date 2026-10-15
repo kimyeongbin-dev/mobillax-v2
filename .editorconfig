@@ -1,0 +1,10 @@
+# 편집기 공통 설정 — 줄바꿈은 LF로 통일 (CONTRIBUTING.md 4장)
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+
+[*.{bat,cmd}]
+end_of_line = crlf
