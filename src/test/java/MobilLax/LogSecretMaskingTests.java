@@ -25,10 +25,13 @@ class LogSecretMaskingTests {
         log.info("headers={\"appKey\": \"FAKE_TMAP_KEY_456\"}");
         log.info("Authorization: PortOne FAKE_PORTONE_SECRET_789");
         log.info("password=FAKE_DB_PASSWORD");
+        log.info("GET https://business.juso.go.kr/addrlink/addrLinkApi.do?confmKey=FAKE_JUSO_KEY_0%3D&keyword=x");
+        log.info("Authorization: KakaoAK FAKE_KAKAO_REST_KEY");
 
         assertThat(output.getOut())
-                .doesNotContain("FAKE_SERVICE_KEY_123", "FAKE_TMAP_KEY_456", "FAKE_PORTONE_SECRET_789", "FAKE_DB_PASSWORD")
-                .contains("serviceKey=****", "PortOne ****", "password=****")
+                .doesNotContain("FAKE_SERVICE_KEY_123", "FAKE_TMAP_KEY_456", "FAKE_PORTONE_SECRET_789", "FAKE_DB_PASSWORD",
+                        "FAKE_JUSO_KEY_0", "FAKE_KAKAO_REST_KEY")
+                .contains("serviceKey=****", "PortOne ****", "password=****", "confmKey=****", "KakaoAK ****")
                 // 키가 아닌 부분은 그대로 남아야 함
                 .contains("https://apis.data.go.kr/x?", "&_type=xml");
     }

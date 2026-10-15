@@ -259,3 +259,14 @@ body {
     transform: translate(-50%, -50%);
   }
 }
+
+/* 장거리 구간: 운행하지 않음 표시, 공공데이터 역·터미널 매칭 결과 */
+.step-warn {
+  color: #c62828;
+  font-size: 0.85rem;
+}
+
+.step-match {
+  color: #1a56db;
+  font-size: 0.8rem;
+}

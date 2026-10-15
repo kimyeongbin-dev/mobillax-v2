@@ -1,4 +1,4 @@
-/* global PAYABLE_MODES, isPayableLeg, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt -- transport.js */
+/* global PAYABLE_MODES, isOperatingLeg, isPayableLeg, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt -- transport.js */
 /**
  * 상세 경로 페이지 스크립트
  * - Tmap API를 이용하여 경로 요약, 경로 단계 표시 및 지도에 경로 렌더링
@@ -44,6 +44,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     const itinerary = itineraries[bestIndex];
     renderSummary(itinerary, departAt);
     renderSteps(itinerary, bookable);
+    renderPlaceMatches(itinerary);
     renderBookingFooter(itinerary, departAt);
     drawRoute(itinerary.legs);
   } catch (error) {
@@ -241,7 +242,9 @@ function renderSteps(itinerary, bookable) {
       stepElement.classList.add("disabled");
       stepElement.title = isPayableLeg(leg)
         ? "예매는 당일 출발편만 가능합니다."
-        : "안내 전용 구간입니다. 요금은 현장에서 냅니다.";
+        : PAYABLE_MODES.includes(mode) && !isOperatingLeg(leg)
+          ? "검색 시각에 운행하지 않는 구간입니다."
+          : "안내 전용 구간입니다. 요금은 현장에서 냅니다.";
     }
 
     stepElement.innerHTML = `
@@ -249,6 +252,8 @@ function renderSteps(itinerary, bookable) {
         <h4>${index + 1}. ${startName} → ${endName} (index)</h4>
         <p>${getTransportLabel(leg)} (${mode})</p>
         <p class="step-desc">${stepDescription}</p>
+        ${PAYABLE_MODES.includes(mode) && !isOperatingLeg(leg) ? '<p class="step-warn">검색 시각에 운행하지 않는 구간입니다</p>' : ""}
+        ${PAYABLE_MODES.includes(mode) ? '<p class="step-match">역·터미널 확인 중…</p>' : ""}
       </div>
     `;
     container.appendChild(stepElement);
@@ -341,6 +346,61 @@ function renderBookingFooter(itinerary, departAt) {
   }
 
   footer.querySelectorAll("button").forEach((button) => (button.style.display = "none"));
-  notice.textContent = "이 경로는 시내 교통(버스·지하철 등)만 있어 예매할 구간이 없습니다. 요금은 현장에서 냅니다.";
+  const hasLongDistance = itinerary.legs.some((leg) => PAYABLE_MODES.includes(leg.mode));
+  notice.textContent = hasLongDistance
+    ? "이 경로의 장거리 구간은 검색 시각에 운행하지 않아 예매할 수 없습니다. 다른 경로나 시각을 골라 주세요."
+    : "이 경로는 시내 교통(버스·지하철 등)만 있어 예매할 구간이 없습니다. 요금은 현장에서 냅니다.";
   footer.prepend(notice);
+}
+
+/**
+ * 장거리 구간의 출발·도착 장소를 공공데이터(TAGO) 역·터미널·공항과 맞춰 보여 준다 (v1.6 편 조회의 기준)
+ * @param {object} itinerary - 여정 객체
+ */
+async function renderPlaceMatches(itinerary) {
+  const steps = [...document.querySelectorAll(".route-step")];
+  const targets = itinerary.legs
+    .map((leg, index) => ({ leg, element: steps[index] }))
+    .filter(({ leg }) => PAYABLE_MODES.includes(leg.mode));
+  if (targets.length === 0) return;
+
+  const toPoint = (leg, place) => ({
+    mode: leg.mode,
+    type: leg.type ?? null,
+    route: leg.route ?? null,
+    name: place.name,
+    lat: Number(place.lat),
+    lon: Number(place.lon),
+  });
+  const points = targets.flatMap(({ leg }) => [toPoint(leg, leg.start), toPoint(leg, leg.end)]);
+
+  let results;
+  try {
+    const response = await fetch("/api/place/match", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ points }),
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    results = await response.json();
+  } catch (error) {
+    console.error("역·터미널 확인 실패:", error);
+    targets.forEach(({ element }) => setMatchText(element, "역·터미널을 확인하지 못했습니다"));
+    return;
+  }
+
+  const describe = (r) => {
+    if (r?.result?.status !== "MATCHED") return "찾지 못함";
+    const how = { ADDRESS: "주소 일치", DISTANCE: `${r.result.distanceMeters}m 거리`, NAME: "이름 일치" };
+    return `${r.result.tagoName}${how[r.result.method] ? ` (${how[r.result.method]})` : ""}`;
+  };
+  targets.forEach(({ element }, i) => {
+    const [from, to] = [results[i * 2], results[i * 2 + 1]];
+    setMatchText(element, `${from?.kindLabel || "역·터미널"}: ${describe(from)} → ${describe(to)}`);
+  });
+}
+
+function setMatchText(stepElement, text) {
+  const target = stepElement?.querySelector(".step-match");
+  if (target) target.textContent = text;
 }
