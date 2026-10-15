@@ -270,3 +270,19 @@ body {
   color: #1a56db;
   font-size: 0.8rem;
 }
+
+/* 장거리 구간 편 선택 */
+.trip-select {
+  width: 100%;
+  margin-top: 6px;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.trip-fare {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: #333;
+}
