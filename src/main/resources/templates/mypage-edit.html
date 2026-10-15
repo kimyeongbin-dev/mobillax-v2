@@ -15,7 +15,8 @@
 <main>
   <section class="edit-profile-container">
     <h2>프로필 수정</h2>
-    <form th:action="@{/mypage/edit}" th:object="${profile}" method="post">
+    <p th:if="${error != null}" style="color: red;" th:text="${error}"></p>
+    <form th:action="@{/mypage/edit}" th:object="${profile}" method="post" accept-charset="UTF-8">
       <div class="form-group">
         <label for="name">이름</label>
         <input type="text" id="name" th:field="*{name}" required>

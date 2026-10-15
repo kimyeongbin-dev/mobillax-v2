@@ -79,7 +79,12 @@ async function loadTransitRoute(from, to, departAt) {
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data?.result?.message || data?.error?.message || "경로 정보를 불러올 수 없습니다.");
+    throw new Error(
+      data?.result?.message ||
+        data?.error?.message ||
+        (typeof data?.error === "string" ? data.error : "") ||
+        "경로 정보를 불러올 수 없습니다.",
+    );
   }
   sessionStorage.setItem("transitRouteResult", JSON.stringify({ request, data }));
   return data;

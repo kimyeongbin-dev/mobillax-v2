@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 
@@ -47,10 +48,16 @@ public class MyPageController {
 
     @PostMapping("/mypage/edit")
     public String updateProfile(@AuthenticationPrincipal User user,
-                                @ModelAttribute ProfileUpdateDto dto) {
+                                @ModelAttribute ProfileUpdateDto dto,
+                                RedirectAttributes redirectAttributes) {
         if (user == null) return "redirect:/login";
 
-        myPageService.updateProfile(user.getUsername(), dto.getName(), null);
+        try {
+            myPageService.updateProfile(user.getUsername(), dto.getName(), null);
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/mypage/edit";
+        }
         return "redirect:/mypage";
     }
 
