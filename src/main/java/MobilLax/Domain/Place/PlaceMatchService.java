@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -57,7 +58,12 @@ public class PlaceMatchService {
 
         Optional<PlaceMatch> cached = matchRepository.findByKindAndTmapNameAndTmapLatAndTmapLon(kind, tmapName, keyLat, keyLon);
         if (cached.isPresent()) {
-            return MatchResult.of("CACHE", cached.get());
+            if (!cached.get().isExpired(LocalDateTime.now())) {
+                return MatchResult.of("CACHE", cached.get());
+            }
+            // 24시간이 지난 TMAP 데이터는 쓰지 않는다: 지우고 다시 맞춘다
+            matchRepository.delete(cached.get());
+            matchRepository.flush();
         }
         if (!kakaoClient.isConfigured()) {
             log.warn("KAKAO_APPKEY 가 없어 장소 매칭을 건너뜁니다");
