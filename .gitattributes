@@ -1,11 +1,21 @@
-# Gradle 관련 파일은 LF로 유지
-/gradlew text eol=lf
+# 줄바꿈 규칙 — CONTRIBUTING.md 4장
+# 뒤에 오는 줄이 앞의 같은 속성을 덮어쓰므로, 기본값을 맨 위에 두고 예외를 아래에 둔다.
 
-# Windows 배치 파일 (*.bat)은 CRLF 유지
-*.bat text eol=crlf
-
-# JAR 파일은 바이너리 처리 (줄바꿈 변환 금지)
-*.jar binary
-
-# 모든 텍스트 파일 LF 강제 적용
+# 모든 텍스트 파일은 LF
 * text=auto eol=lf
+
+# Windows 전용 스크립트는 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 바이너리 (줄바꿈 변환·diff 금지)
+*.jar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary

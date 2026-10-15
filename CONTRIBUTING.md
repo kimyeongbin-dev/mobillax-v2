@@ -90,7 +90,7 @@
 
 | 훅 | 막는 것 |
 |---|---|
-| `pre-commit` | ① **시크릿 검사**: `.env`·키 파일, 하드코딩된 키 형태(키이름=값, 따옴표 안 32자 이상 영숫자, 개인키, AWS·GitHub 토큰). ② **포맷·린트**: 스테이징된 JS는 Prettier + ESLint(오류 시 차단), CSS는 Prettier (lint-staged) |
+| `pre-commit` | ① **시크릿 검사**: `.env`·키 파일, 하드코딩된 키 형태(키이름=값, 따옴표 안 32자 이상 영숫자, 개인키, AWS·GitHub 토큰). ② **줄바꿈 검사**: CRLF(또는 CR)가 들어간 텍스트 파일. ③ **포맷·린트**: 스테이징된 JS는 Prettier + ESLint(오류 시 차단), CSS는 Prettier (lint-staged) |
 | `commit-msg` | 위 형식에 맞지 않는 첫 줄, 50자를 넘는 요약, 마침표로 끝나는 요약, 요약 다음 줄이 비어 있지 않은 경우, AI 트레일러 |
 | `pre-push` | `main`·`dev`로 push되는 커밋 중 `wip`·`fixup!`·`squash!`·`amend!` 커밋, AI 트레일러가 남은 커밋 |
 
@@ -99,6 +99,12 @@ Git이 자동으로 만드는 `Merge ...`, `Revert "..."` 메시지는 통과시
 ### 시크릿 검사 오탐
 - 키가 아닌데 걸리면 해당 줄에 `secret-scan: allow` 주석을 붙입니다.
 - `your-...`, `change-me`, `${ENV_VAR}` 같은 자리표시자와 환경 변수 참조는 자동으로 통과합니다.
+
+### 줄바꿈 (LF)
+- 저장소의 모든 텍스트 파일은 **LF**로 통일합니다. CRLF가 섞이면 diff가 줄 전체 변경으로 보이고, 셸 스크립트가 리눅스·컨테이너에서 `\r` 때문에 깨집니다.
+- `.gitattributes`(`* text=auto eol=lf`)가 커밋할 때 LF로 맞추고, `.editorconfig`가 편집기의 새 파일을 LF로 만듭니다. Windows 전용 `*.bat`·`*.cmd`만 CRLF입니다.
+- 스크립트로 파일을 쓸 때도 줄바꿈을 명시합니다. Python은 `open(..., newline="
+")`, PowerShell은 `[IO.File]::WriteAllText`에 LF 문자열을 씁니다.
 
 ### 린트·포맷 명령
 | 목적 | 명령 |
