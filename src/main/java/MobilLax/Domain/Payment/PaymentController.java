@@ -146,8 +146,13 @@ public class PaymentController {
             return "이미 결제된 주문입니다.";
         }
 
+        if (req.getPaymentId() == null || req.getPaymentId().isBlank()) {
+            throw new IllegalArgumentException("결제 번호가 없습니다.");
+        }
+
         PaymentEntity entity = PaymentEntity.builder()
                 .email(email)
+                .paymentId(req.getPaymentId())  // 빠져 있어 NOT NULL 제약으로 결제 완료가 한 번도 저장되지 않았다
                 .amount(req.getAmount())
                 .date(LocalDate.now())
                 .groupId(req.getGroupId())
