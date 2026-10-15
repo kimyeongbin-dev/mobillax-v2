@@ -211,7 +211,7 @@ docker compose --profile test run --rm --build test
 │   ├── templates/      # Thymeleaf 페이지
 │   └── static/         # JS(경로·장바구니·결제), CSS, 지도 페이지
 ├── docs/ENV_SETUP.md   # .env 키 발급 가이드
-├── .githooks/          # pre-commit(시크릿·린트), commit-msg, pre-push
+├── .githooks/          # pre-commit(시크릿·줄바꿈·린트), commit-msg, pre-push
 ├── .claude/           # AI 도구 하네스 (비밀값 접근 차단 훅, 권한 설정)
 ├── scripts/            # setup.sh, setup.ps1
 ├── Dockerfile          # JDK 21 멀티 스테이지 빌드

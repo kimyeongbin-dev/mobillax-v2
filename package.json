@@ -6,7 +6,7 @@
     "lint": "eslint src/main/resources/static .claude/hooks",
     "format": "prettier --write \"src/main/resources/static/**/*.{js,css}\" \".claude/hooks/*.js\"",
     "format:check": "prettier --check \"src/main/resources/static/**/*.{js,css}\" \".claude/hooks/*.js\"",
-    "test:hooks": "node .claude/hooks/guard-secrets.test.js && bash .githooks/secret-scan.test.sh"
+    "test:hooks": "node .claude/hooks/guard-secrets.test.js && bash .githooks/secret-scan.test.sh && bash .githooks/eol-check.test.sh"
   },
   "lint-staged": {
     "*.js": [
