@@ -12,9 +12,8 @@ MobilLax가 사용하는 환경 변수와 각 키의 발급 방법을 정리한 
 | 구분 | 변수 | 발급처 | 사용 위치 | 필수 |
 |---|---|---|---|---|
 | DB | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `DB_ROOT_PASSWORD` | 직접 정함 | docker compose MySQL, Spring datasource | ✅ |
-| TMAP | `TMAP_APPKEY` | SK open API | 서버: `RouteServiceImpl` (대중교통 경로) | ✅ |
-| TMAP | `TMAP_WEB_APPKEY` | SK open API | 브라우저: `home`/`route` 템플릿 지도 SDK, `map.html`(`/module/config.js`) 경로·POI 검색 | ✅ |
-| 카카오 | `KAKAO_JS_APPKEY` | Kakao Developers | 브라우저: `home` 템플릿 카카오 지도 SDK | ✅ |
+| TMAP | `TMAP_APPKEY` | SK open API | 서버: `RouteServiceImpl` (대중교통 경로) / 브라우저: `home`·`route` 템플릿 지도 SDK, `map.html`(`/module/config.js`) POI·자동차 경로 | ✅ |
+| 카카오 | `KAKAO_JS_APPKEY` | Kakao Developers | 브라우저: `home` 템플릿 카카오 지도 SDK(장소 검색) | ✅ |
 | 포트원 | `PORTONE_STORE_ID` | 포트원 관리자콘솔 | 결제창 호출 (`PaymentController` → `payment.js`) | ✅ |
 | 포트원 | `PORTONE_CHANNEL_KEY` | 포트원 관리자콘솔 | 결제창 호출 | ✅ |
 | 포트원 | `PORTONE_APPKEY` | 포트원 관리자콘솔 (V2 API Secret) | 아직 미사용 (서버 결제 검증용으로 v2에서 사용 예정) | ⬜ |
@@ -60,7 +59,7 @@ MySQL Workbench로 접속하려면 `127.0.0.1:3306`, 사용자 `DB_USERNAME`(또
 
 ---
 
-## 3. TMAP (SK open API) — `TMAP_APPKEY`, `TMAP_WEB_APPKEY`
+## 3. TMAP (SK open API) — `TMAP_APPKEY`
 
 - 사이트: https://openapi.sk.com
 - 대중교통 API 이용 절차: https://transit.tmapmobility.com/guide/procedure
@@ -71,8 +70,10 @@ MySQL Workbench로 접속하려면 `127.0.0.1:3306`, 사용자 `DB_USERNAME`(또
 ### 발급 절차
 1. **회원가입/로그인:** openapi.sk.com에서 T아이디로 로그인하거나 회원가입합니다. 개인회원을 선택합니다.
 2. **앱 만들기:** 우측 상단 **대시보드** → 좌측 **[앱]** → **[앱 만들기]**에서 앱 이름(예: `MobilLax`)을 입력합니다.
-3. **상품 신청:** 홈의 상품 영역에서 **TMAP**을 선택하고 상품 상세 → **[API 사용 요금]** → **[사용하기]**로 들어가 무료 요금제를 선택합니다. 약관에 동의한 뒤 **[사용 신청하기]**를 누릅니다.
-   - 이 프로젝트는 **대중교통 API**(`transit/routes`)도 씁니다. 대중교통이 별도 상품으로 나뉘어 있으면 그것도 같은 앱에 신청하세요.
+3. **상품 신청:** 아래 **두 상품을 모두** 같은 앱에 신청합니다. 각 상품 상세 → **[API 사용 요금]** → **[사용하기]**로 들어가 FREE 요금제를 고르고, 약관에 동의한 뒤 **[사용 신청하기]**를 누릅니다.
+   - **TMAP:** 지도 SDK, POI 검색, 자동차 경로
+   - **TMAP 대중교통:** 대중교통 경로(`transit/routes`). **별도 상품이라 TMAP만 신청하면 대중교통 호출이 403 `INVALID_API_KEY`로 거절됩니다.**
+   - ⚠️ TMAP 대중교통 FREE 요금제는 **하루 10건**이고, 넘으면 자동으로 차단됩니다.
    - 신청 결과는 **대시보드 → 요금 조회 → 사용상품관리**에서 확인합니다.
    - 무료 제공량과 초과 과금은 상품 상세의 요금표에서 확인하세요. 대중교통 API는 무료 호출량이 적은 편이니 개발할 때 반복 호출을 조심하세요.
 4. **appKey 확인:** **대시보드 → [앱] → 만든 앱**의 상세 화면에서 appKey를 복사합니다.
@@ -80,10 +81,9 @@ MySQL Workbench로 접속하려면 `127.0.0.1:3306`, 사용자 `DB_USERNAME`(또
 ### `.env` 입력
 ```
 TMAP_APPKEY=<발급받은 appKey>
-TMAP_WEB_APPKEY=<발급받은 appKey>
 ```
-- 지금은 두 변수에 **같은 키**를 넣어도 됩니다.
-- 변수를 나눠 둔 이유는 서버용 키와 브라우저에 노출되는 키를 나중에(v2) 분리하기 위해서입니다.
+- 키 하나로 서버 호출과 브라우저 지도 SDK를 모두 처리합니다.
+- 배포(v3) 때 브라우저용 키를 도메인 제한이나 호출량 분리 목적으로 따로 두어야 하면 그때 나눕니다.
 
 ---
 
@@ -95,7 +95,7 @@ TMAP_WEB_APPKEY=<발급받은 appKey>
 ### 발급 절차
 1. **로그인:** developers.kakao.com에 카카오 계정으로 로그인합니다. 처음이면 개발자 등록 약관에 동의합니다.
 2. **앱 생성:** 상단 **[내 애플리케이션]**(앱 관리 페이지 https://developers.kakao.com/console/app)에서 **[애플리케이션 추가하기]**를 눌러 앱 이름과 회사명(개인이면 본인 이름)을 입력합니다.
-3. **카카오맵 사용 설정 (필수):** 앱 관리 페이지에서 **[카카오맵] → [사용 설정]**으로 들어가 **[상태]를 ON**으로 켭니다. 켜지 않으면 키가 있어도 지도가 뜨지 않습니다.
+3. **카카오맵 사용 설정 (필수):** 앱 관리 페이지에서 **[카카오맵] → [사용 설정]**으로 들어가 **[상태]를 ON**으로 켭니다. 켜지 않으면 키가 있어도 SDK가 로드되지 않습니다.
 4. **JavaScript 키 확인:** **[앱] → [플랫폼 키] → [JavaScript 키]**에서 키를 복사합니다.
    - REST API 키나 네이티브 앱 키가 아니라 **JavaScript 키**여야 합니다. 지도 SDK에 다른 키를 넣으면 에러가 납니다.
 5. **JavaScript SDK 도메인 등록:** **[앱] → [플랫폼 키] → [JavaScript 키] → [JavaScript SDK 도메인]**에 `http://localhost:8080`을 등록합니다.
@@ -163,13 +163,14 @@ PORTONE_APPKEY=<V2 API Secret>
 3. **마이페이지 → 데이터활용 → Open API → 활용신청 현황**에서 해당 API를 열고, **일반 인증키(Encoding)** 값을 복사합니다.
    - 이 코드는 키를 URL에 그대로 붙이므로(`?serviceKey=%s`) **이미 인코딩된 Encoding 키**를 써야 합니다.
    - 승인 직후에는 키가 반영되지 않아 `SERVICE_KEY_IS_NOT_REGISTERED_ERROR`가 날 수 있습니다. 잠시 뒤 다시 시도하세요.
+   - `NO_OPENAPI_SERVICE_ERROR`(서비스가 없거나 폐기됨)가 나면 키가 아니라 **주소** 문제입니다. 2026년 기준 서비스 이름은 `SuburbsBusInfoService`가 아니라 `SuburbsBusInfo`이고, 오퍼레이션 이름은 대문자 `Get...`으로 시작합니다. 데이터 페이지의 "API 목록"에서 현재 주소를 확인하세요.
 
 ### `.env` 입력
 ```
 BUS_API_KEY=<일반 인증키(Encoding)>
-BUS_API_URL_CTYCODE=http://apis.data.go.kr/1613000/SuburbsBusInfoService/getCtyCodeList
-BUS_API_URL_TERMINAL=http://apis.data.go.kr/1613000/SuburbsBusInfoService/getSuberbsBusTrminlList
-BUS_API_URL_SCHEDULE=http://apis.data.go.kr/1613000/SuburbsBusInfoService/getStrtpntAlocFndSuberbsBusInfo
+BUS_API_URL_CTYCODE=https://apis.data.go.kr/1613000/SuburbsBusInfo/GetCtyCodeList
+BUS_API_URL_TERMINAL=https://apis.data.go.kr/1613000/SuburbsBusInfo/GetSuberbsBusTrminlList
+BUS_API_URL_SCHEDULE=https://apis.data.go.kr/1613000/SuburbsBusInfo/GetStrtpntAlocFndSuberbsBusInfo
 ```
 
 ---
@@ -186,7 +187,7 @@ docker compose up -d --force-recreate app
 |---|---|
 | 앱 기동 | `docker compose logs app` 에 `Started MobilLaxApplication` |
 | TMAP 브라우저 키 | http://localhost:8080/module/config.js 에 새 키가 보이는지 |
-| 카카오 지도 | http://localhost:8080/home 에서 지도 표시, 브라우저 개발자도구 콘솔에 에러가 없는지 |
+| 카카오 장소 검색 | http://localhost:8080/home 출발지 입력란에 `강남역` 입력 → 자동완성 목록 표시, 개발자도구 Network에서 `sdk.js`가 200인지 |
 | TMAP 경로 | 로그인 → 출발지/도착지 검색 → 경로 결과 표시 |
 | 포트원 | 경로 상세 또는 장바구니에서 결제 → 테스트 결제창이 뜨는지 |
 | 시외버스 | http://localhost:8080/api/terminals?name=동서울 (로그인 불필요) |
@@ -195,7 +196,7 @@ docker compose up -d --force-recreate app
 
 ## 8. 브라우저에 노출되는 키에 대해
 
-`TMAP_WEB_APPKEY`와 `KAKAO_JS_APPKEY`는 구조상 사용자 브라우저에 그대로 보입니다. `.env`로 옮긴 것은 **저장소에 키가 커밋되지 않게** 하려는 것이고, 브라우저 노출까지 막지는 않습니다.
+`TMAP_APPKEY`(지도 SDK용으로 내려가는 값)와 `KAKAO_JS_APPKEY`는 구조상 사용자 브라우저에 그대로 보입니다. `.env`로 옮긴 것은 **저장소에 키가 커밋되지 않게** 하려는 것이고, 브라우저 노출까지 막지는 않습니다.
 
 - **카카오 JavaScript 키:** 원래 공개를 전제로 한 키입니다. **JavaScript SDK 도메인 등록**으로 다른 사이트에서 쓰지 못하게 막습니다.
 - **TMAP 키:** 현재 브라우저 JS(`carRoute.js`, `LocationSearch.js` 등)가 REST API를 직접 호출하고 있어서 키가 노출됩니다. v2에서 이 호출을 서버로 옮겨(백엔드 프록시) REST 키는 서버에만 두고, 브라우저에는 지도 SDK 키만 남길 예정입니다.

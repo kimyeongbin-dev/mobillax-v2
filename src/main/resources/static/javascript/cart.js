@@ -63,7 +63,7 @@ async function loadCartList() {
 
     actionButtons.style.display = "flex";
 
-    groupIds.forEach(groupId => {
+    groupIds.forEach((groupId) => {
       const items = groupedCart[groupId];
       let totalFare = 0;
 
@@ -79,7 +79,7 @@ async function loadCartList() {
         </h3>
       `;
 
-      items.forEach(item => {
+      items.forEach((item) => {
         totalFare += item.routePayment; // 요금(routePayment)
         const itemElement = document.createElement("div");
         itemElement.className = "cart-item";
@@ -98,7 +98,6 @@ async function loadCartList() {
 
       container.appendChild(groupElement);
     });
-
   } catch (error) {
     console.error("장바구니 불러오기 실패", error);
     container.innerHTML = "<p>장바구니 정보를 불러올 수 없습니다.</p>";
@@ -126,7 +125,7 @@ async function handleAddToCart() {
 
   // 요금이 있는 경로만 필터링하여 변환
   const selectedLegs = [...document.querySelectorAll(".route-step.selected")]
-    .map(el => {
+    .map((el) => {
       try {
         return JSON.parse(el.dataset.leg); // ← dataset.leg을 JSON으로 파싱
       } catch (e) {
@@ -134,14 +133,14 @@ async function handleAddToCart() {
         return null;
       }
     })
-    .filter(leg => leg && leg.routePayment > 0 && leg.start?.name && leg.end?.name)
-    .map(leg => ({
+    .filter((leg) => leg && leg.routePayment > 0 && leg.start?.name && leg.end?.name)
+    .map((leg) => ({
       mode: leg.mode,
       route: leg.route,
       routeId: leg.routeId,
       routePayment: leg.routePayment,
       startName: leg.start.name,
-      endName: leg.end.name
+      endName: leg.end.name,
     }));
 
   if (selectedLegs.length === 0) {
@@ -153,7 +152,7 @@ async function handleAddToCart() {
     const response = await fetch("/api/cart/add", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ selectedLegs })
+      body: JSON.stringify({ selectedLegs }),
     });
 
     if (!response.ok) throw new Error("서버 응답 실패");
@@ -161,7 +160,6 @@ async function handleAddToCart() {
     const totalFare = await response.json(); // 총 결제 금액(totalFare)
     console.log("총 결제 금액:", totalFare);
     showCartPopup();
-
   } catch (error) {
     alert("장바구니 담기 실패: " + error.message);
   }

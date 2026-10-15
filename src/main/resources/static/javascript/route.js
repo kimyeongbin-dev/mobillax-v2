@@ -159,10 +159,13 @@ function drawLine(latlngs, color) {
  * @returns {Array} Tmapv2.LatLng 배열
  */
 function parseLineString(line) {
-  return line.trim().split(" ").map((pair) => {
-    const [lon, lat] = pair.split(",").map(Number);
-    return new Tmapv2.LatLng(lat, lon);
-  });
+  return line
+    .trim()
+    .split(" ")
+    .map((pair) => {
+      const [lon, lat] = pair.split(",").map(Number);
+      return new Tmapv2.LatLng(lat, lon);
+    });
 }
 /**
  * 경로 요약 정보 렌더링
@@ -211,7 +214,7 @@ function renderSteps(itinerary) {
     const stepElement = document.createElement("div");
     stepElement.classList.add("route-step");
     stepElement.dataset.index = index;
-    stepElement.dataset.leg = JSON.stringify(leg);  // ← 여기에 실제 leg 정보 저장
+    stepElement.dataset.leg = JSON.stringify(leg); // ← 여기에 실제 leg 정보 저장
 
     if (!leg.routePayment || leg.routePayment <= 0) {
       stepElement.classList.add("disabled");
@@ -221,7 +224,6 @@ function renderSteps(itinerary) {
         stepElement.classList.toggle("selected");
       });
     }
-
 
     stepElement.innerHTML = `
       <div class="step-content">

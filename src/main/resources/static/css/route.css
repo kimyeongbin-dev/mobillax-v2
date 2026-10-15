@@ -1,7 +1,7 @@
 @charset "utf-8";
 body {
   margin: 0;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: "Segoe UI", sans-serif;
   display: flex;
   height: 100vh;
 }
@@ -97,7 +97,9 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: background-color 0.3s, transform 0.2s;
+  transition:
+    background-color 0.3s,
+    transform 0.2s;
   cursor: pointer;
 }
 .btn-cart {
@@ -172,7 +174,7 @@ body {
 }
 
 .route-step.selected::after {
-  content: '✔';
+  content: "✔";
   float: right;
   color: #2f80ed;
   font-weight: bold;
@@ -229,6 +231,12 @@ body {
   background-color: #1d6fd4;
 }
 @keyframes fadeIn {
-  from { opacity: 0; transform: translate(-50%, -60%); }
-  to { opacity: 1; transform: translate(-50%, -50%); }
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
 }

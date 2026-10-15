@@ -37,25 +37,21 @@ async function handleDirectPayment() {
 
   // 사용자가 선택한 경로 중 유효한 구간(leg)을 필터링
   const selectedLegs = [...document.querySelectorAll(".route-step.selected")]
-    .map(el => {
+    .map((el) => {
       try {
         return JSON.parse(el.dataset.leg);
       } catch {
         return null;
       }
     })
-    .filter(leg =>
-      leg &&
-      leg.routePayment > 0 &&
-      leg.start?.name && leg.end?.name
-    )
-    .map(leg => ({
+    .filter((leg) => leg && leg.routePayment > 0 && leg.start?.name && leg.end?.name)
+    .map((leg) => ({
       mode: leg.mode,
       route: leg.route,
       routeId: leg.routeId,
       routePayment: leg.routePayment,
       startName: leg.start.name,
-      endName: leg.end.name
+      endName: leg.end.name,
     }));
 
   if (selectedLegs.length === 0) {
@@ -68,9 +64,9 @@ async function handleDirectPayment() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json"
+        Accept: "application/json",
       },
-      body: JSON.stringify({ selectedLegs })
+      body: JSON.stringify({ selectedLegs }),
     });
 
     if (!response.ok) {
@@ -98,7 +94,7 @@ async function handleDirectPayment() {
         orderName,
         totalAmount: amount, // 총 결제 금액(amount)
         currency: "CURRENCY_KRW",
-        payMethod: "CARD"
+        payMethod: "CARD",
       });
 
       if (paymentResponse.code === "USER_CANCEL") {
@@ -119,13 +115,12 @@ async function handleDirectPayment() {
           paymentId,
           groupId,
           amount,
-          transportType
-        })
+          transportType,
+        }),
       });
 
       alert(`${transportType} 결제가 완료되었습니다.`);
     }
-
   } catch (error) {
     alert("결제 중 오류가 발생했습니다: " + error.message);
   }
@@ -152,7 +147,7 @@ async function processGroupPayment(groupId) {
         orderName,
         totalAmount: amount, // 총 결제 금액(amount)
         currency: "CURRENCY_KRW",
-        payMethod: "CARD"
+        payMethod: "CARD",
       });
 
       if (paymentResponse.code === "USER_CANCEL") {
@@ -164,7 +159,7 @@ async function processGroupPayment(groupId) {
         await fetch("/payment/fail", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ paymentId, groupId, amount, transportType })
+          body: JSON.stringify({ paymentId, groupId, amount, transportType }),
         });
         alert(`${transportType} 결제 실패: ${paymentResponse.message}`);
         return false;
@@ -173,7 +168,7 @@ async function processGroupPayment(groupId) {
       await fetch("/payment/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentId, groupId, amount, transportType })
+        body: JSON.stringify({ paymentId, groupId, amount, transportType }),
       });
 
       alert(`${transportType} 결제가 완료되었습니다.`);
@@ -181,7 +176,6 @@ async function processGroupPayment(groupId) {
 
     await loadCart(); // 장바구니 갱신
     return true;
-
   } catch (err) {
     alert("결제 처리 중 오류: " + err.message);
     return false;
@@ -213,7 +207,6 @@ async function goToPayment() {
         return;
       }
     }
-
   } catch (err) {
     alert("전체 결제 중 오류 발생: " + err.message);
   }

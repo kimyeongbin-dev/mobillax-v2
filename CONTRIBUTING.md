@@ -75,6 +75,13 @@
 | `dev` | 다음 릴리스를 통합하는 브랜치 |
 | `feature/<이름>` | 기능·수정 단위 작업. `dev`에서 갈라져 PR로 `dev`에 머지 |
 
+### 작업 흐름
+1. `git switch -c feature/<이름> dev`
+2. 컨벤션에 맞춰 커밋한 뒤 push
+3. `dev`를 대상으로 PR을 엽니다. [PR 템플릿](.github/pull_request_template.md)의 구현 내용, 트러블슈팅, 고민한 점을 채워 개발 기록으로 남깁니다.
+4. **Merge commit**으로 머지합니다 (기능 단위 커밋과 PR 연결을 보존). 머지한 feature 브랜치는 삭제합니다.
+5. 버전 목표를 달성하면 `dev` → `main` PR로 릴리스하고, `main`에 버전 태그를 답니다.
+
 ---
 
 ## 4. Git 훅이 자동으로 막는 것
@@ -83,7 +90,22 @@
 
 | 훅 | 막는 것 |
 |---|---|
+| `pre-commit` | ① **시크릿 검사**: `.env`·키 파일, 하드코딩된 키 형태(키이름=값, 따옴표 안 32자 이상 영숫자, 개인키, AWS·GitHub 토큰). ② **포맷·린트**: 스테이징된 JS는 Prettier + ESLint(오류 시 차단), CSS는 Prettier (lint-staged) |
 | `commit-msg` | 위 형식에 맞지 않는 첫 줄, 50자를 넘는 요약, 마침표로 끝나는 요약, 요약 다음 줄이 비어 있지 않은 경우, AI 트레일러 |
 | `pre-push` | `main`·`dev`로 push되는 커밋 중 `wip`·`fixup!`·`squash!`·`amend!` 커밋, AI 트레일러가 남은 커밋 |
 
 Git이 자동으로 만드는 `Merge ...`, `Revert "..."` 메시지는 통과시킵니다.
+
+### 시크릿 검사 오탐
+- 키가 아닌데 걸리면 해당 줄에 `secret-scan: allow` 주석을 붙입니다.
+- `your-...`, `change-me`, `${ENV_VAR}` 같은 자리표시자와 환경 변수 참조는 자동으로 통과합니다.
+
+### 린트·포맷 명령
+| 목적 | 명령 |
+|---|---|
+| 전체 린트 | `npm run lint` |
+| 전체 포맷 | `npm run format` |
+| 훅 회귀 테스트 | `npm run test:hooks` |
+
+### AI 도구 하네스
+Claude Code 같은 AI 도구에는 [CLAUDE.md](CLAUDE.md)의 규칙과 `.claude/` 설정이 적용됩니다. `.claude/hooks/guard-secrets.js`가 AI 도구의 `.env` 접근과 환경변수 출력을 도구 단계에서 차단합니다.

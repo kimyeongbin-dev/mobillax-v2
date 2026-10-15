@@ -1,9 +1,9 @@
 export async function getTmapRoute(fromX, fromY, toX, toY) {
-  const url = 'https://apis.openapi.sk.com/transit/routes';
+  const url = "https://apis.openapi.sk.com/transit/routes";
 
   const headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    "Content-Type": "application/json",
+    Accept: "application/json",
     //'appKey': '<TMAP_APPKEY>'
   };
 
@@ -14,14 +14,14 @@ export async function getTmapRoute(fromX, fromY, toX, toY) {
     endY: toY,
     count: 10,
     lang: 0,
-    format: 'json'
+    format: "json",
   };
 
   try {
     const response = await fetch(url, {
-      method: 'POST',
+      method: "POST",
       headers: headers,
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
 
     const data = await response.json();
@@ -35,7 +35,7 @@ export async function getTmapRoute(fromX, fromY, toX, toY) {
   } catch (err) {
     console.error("Tmap API 호출 실패, 더미 데이터 사용:", err.message || err);
     try {
-      const dummy = await fetch('javascript/dummy/route_dummy_data.json');
+      const dummy = await fetch("javascript/dummy/route_dummy_data.json");
       const data = await dummy.json();
       return data;
     } catch (jsonErr) {
@@ -85,7 +85,7 @@ export function formatRouteData(itinerary) {
     cost: fareText,
     transfers,
     summary,
-    legs: itinerary.legs
+    legs: itinerary.legs,
   };
 }
 
@@ -102,29 +102,29 @@ export function getTransferCount(legs) {
 
 // 모드 + 노선명 요약 라벨 생성
 export function getModeLabel(leg) {
-  const name = leg.route || leg.routeName || leg.airline || '';
-  const cleanName = name.replace(/undefined|null/gi, '').trim();
+  const name = leg.route || leg.routeName || leg.airline || "";
+  const cleanName = name.replace(/undefined|null/gi, "").trim();
   switch (leg.mode) {
-      case "WALK":
-        return "🚶 도보";
-      case "BUS":
-        return `${cleanName || '버스'}`;
-      case "SUBWAY":
-        return `${cleanName || '지하철'}`;
-      case "TRAIN":
-        return `${cleanName || '기차'}`;
-      case "AIRPLANE":
-        return `${cleanName || '항공편'}`;
-      case "EXPRESSBUS":
-        return `${cleanName || '고속버스'}`;
-      default:
-        return `${leg.mode}`;
+    case "WALK":
+      return "🚶 도보";
+    case "BUS":
+      return `${cleanName || "버스"}`;
+    case "SUBWAY":
+      return `${cleanName || "지하철"}`;
+    case "TRAIN":
+      return `${cleanName || "기차"}`;
+    case "AIRPLANE":
+      return `${cleanName || "항공편"}`;
+    case "EXPRESSBUS":
+      return `${cleanName || "고속버스"}`;
+    default:
+      return `${leg.mode}`;
   }
 }
 
 // 도보 제외 요약 경로 표시용 (아이콘/노선명)
 export function getPathSummary(path) {
   if (!path.legs || path.legs.length === 0) return "경로 없음";
-  const parts = path.legs.filter(leg => leg.mode !== "WALK").map(leg => getModeLabel(leg));
+  const parts = path.legs.filter((leg) => leg.mode !== "WALK").map((leg) => getModeLabel(leg));
   return parts.join(" → ");
 }

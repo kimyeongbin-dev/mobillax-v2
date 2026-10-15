@@ -1,7 +1,7 @@
 /**
  * TerminalService.java
  *
- * ✅ 파일 목적: 공공데이터포털의 시외버스 터미널 목록 조회 API(getSuberbsBusTrminlList)를 호출하여
+ * ✅ 파일 목적: 공공데이터포털의 시외버스 터미널 목록 조회 API(GetSuberbsBusTrminlList)를 호출하여
  *              XML 데이터를 비동기로 받아오는 기능을 제공하는 서비스 클래스입니다.
  *
  * 작성자: 김영빈
@@ -59,13 +59,11 @@ public class TerminalService {
         String serviceKey = busApiProperties.getKey();
 
         // URI 직접 구성 (UriComponentsBuilder 사용 시 인코딩 중복 이슈 있음)
+        // 주소는 .env 의 BUS_API_URL_TERMINAL 에서 읽음
         URI uri = URI.create(String.format(
-                "https://apis.data.go.kr/1613000/SuburbsBusInfoService/getSuberbsBusTrminlList" +
-                        "?serviceKey=%s&_type=xml&terminalNm=%s",
-                serviceKey, encodedTerminalName
+                "%s?serviceKey=%s&_type=xml&terminalNm=%s",
+                busApiProperties.getUrl().getTerminal(), serviceKey, encodedTerminalName
         ));
-
-        System.out.println("✅ 최종 URI: " + uri);
 
         // WebClient를 이용해 비동기 HTTP GET 요청
         return webClient.get()

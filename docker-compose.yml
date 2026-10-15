@@ -1,4 +1,5 @@
-# 로컬 실행용: docker compose up -d --build
+# 로컬 실행: docker compose up -d --build
+# 테스트:    docker compose --profile test run --rm --build test
 services:
   db:
     image: mysql:8.0
@@ -27,6 +28,21 @@ services:
       DB_PORT: 3306
     ports:
       - "127.0.0.1:8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # 테스트 실행용 (평소에는 뜨지 않음): docker compose --profile test run --rm test
+  test:
+    profiles: ["test"]
+    build:
+      context: .
+      target: build
+    env_file: .env
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+    command: ["./gradlew", "test", "--no-daemon"]
     depends_on:
       db:
         condition: service_healthy
