@@ -20,12 +20,10 @@
     </div>
 
     <!-- 성공 메시지 출력 -->
-    <script th:if="${successMessage != null}" type="text/javascript">
-      alert([[${successMessage}]]);
-    </script>
+    <p th:if="${successMessage != null}" class="success-message" style="color: #1a7f37;" th:text="${successMessage}"></p>
 
     <!-- 회원가입 폼 -->
-    <form action="/register" method="POST">
+    <form action="/register" method="POST" accept-charset="UTF-8">
       <!-- CSRF 토큰 필드 추가 -->
       <th:block th:if="${_csrf != null}">
         <input type="hidden" name="_csrf" th:value="${_csrf.token}" />

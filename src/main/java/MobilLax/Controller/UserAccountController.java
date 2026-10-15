@@ -14,6 +14,7 @@ import MobilLax.Service.UserAccountService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * ✅ 클래스 설명:
@@ -85,10 +86,12 @@ public class UserAccountController {
     public String register(@RequestParam String name,
                            @RequestParam String email,
                            @RequestParam String password,
-                           Model model) {
+                           Model model,
+                           RedirectAttributes redirectAttributes) {
         try {
             userAccountService.registerUser(name, email, password);
-            model.addAttribute("successMessage", "회원가입에 성공했습니다.");
+            // 리다이렉트하면 Model 값은 사라지므로 한 번만 쓰는 flash 속성으로 넘긴다
+            redirectAttributes.addFlashAttribute("successMessage", "회원가입에 성공했습니다. 로그인해 주세요.");
             return "redirect:/login";
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", e.getMessage());

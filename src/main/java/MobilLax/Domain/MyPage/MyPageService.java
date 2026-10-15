@@ -1,5 +1,7 @@
 package MobilLax.Domain.MyPage;
 
+import MobilLax.Service.UserAccountService;
+
 import MobilLax.Domain.Cart.CartService;
 import MobilLax.Domain.Payment.PaymentService;
 import MobilLax.Model.UserAccount;
@@ -44,6 +46,7 @@ public class MyPageService implements MyPageServiceInterface {
         UserAccount user = userRepo.findByEmail(email).orElseThrow();
 
         if (name != null && !name.isBlank()) {
+            UserAccountService.validateName(name);
             user.setName(name);
         }
 

@@ -32,13 +32,11 @@
 
     <!-- ✅ 로그인 실패 시 오류 메시지 출력 -->
     <div th:if="${error != null}">
-      <p style="color: red;">[[${error}]]</p>
+      <p style="color: red;" th:text="${error}"></p>
     </div>
 
     <!-- ✅ 성공 메시지가 있을 경우 JavaScript 알림 출력 -->
-    <script th:if="${successMessage != null}" type="text/javascript">
-      alert([[${successMessage}]]);
-    </script>
+    <p th:if="${successMessage != null}" class="success-message" style="color: #1a7f37;" th:text="${successMessage}"></p>
 
     <!-- ✅ 로그인 폼 (POST 방식) -->
     <form action="/login" method="POST">
