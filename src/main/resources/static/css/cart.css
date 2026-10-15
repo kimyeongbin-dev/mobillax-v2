@@ -229,3 +229,15 @@ footer {
 .find-route-button.danger:hover {
   background-color: #c0392b;
 }
+
+/* 출발 시각이 지난 편이 있는 묶음 */
+.departed-warning {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: #c62828;
+}
+
+.group-pay-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
