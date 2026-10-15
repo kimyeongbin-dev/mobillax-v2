@@ -1,3 +1,4 @@
+/* global getTransportLabel -- transport.js */
 /**
  * cart.js
  *
@@ -85,7 +86,7 @@ async function loadCartList() {
         itemElement.className = "cart-item";
         itemElement.innerHTML = `
           <div><strong>${item.startName} → ${item.endName}</strong></div>
-          <div>${item.mode} / ${item.route}</div>
+          <div>${getTransportLabel(item)} / ${item.route}</div>
           <div>(요금: ￦${item.routePayment.toLocaleString()}원)</div>
         `;
         groupElement.appendChild(itemElement);

@@ -1,3 +1,4 @@
+/* global hasPayableLeg -- transport.js */
 let selectedFrom = null; //출발지 선택 상태 저장용 변수
 let selectedTo = null; //도착지 선택 상태 저장용 변수
 let currentFocusType = null; //현재 선택 상태 저장용 변수
@@ -312,6 +313,7 @@ function displayRoutes(data) {
             <span class="time">⏱ ${route.time}분</span>
             <span class="price">💸 ${route.cost}원</span>
             <span class="transfer-info">🔁 환승 ${route.transfers}회</span>
+            ${hasPayableLeg(route) ? '<span class="bookable">🎫 예매 가능</span>' : ""}
           </div>
         </div>
         <div class="route-summary-line">

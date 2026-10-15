@@ -402,3 +402,13 @@ footer {
   color: #888;
   font-size: 20px;
 }
+
+/* 예매 가능한 장거리 구간이 있는 경로 표시 */
+.bookable {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1a56db;
+  background-color: #e8f0fe;
+}

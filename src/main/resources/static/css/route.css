@@ -6,6 +6,20 @@ body {
   height: 100vh;
 }
 
+.booking-notice {
+  margin: 0;
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #555;
+  background-color: #f5f7fa;
+}
+
+.sidebar-footer .booking-notice {
+  padding: 0;
+  background: none;
+}
+
 .route-step.disabled {
   opacity: 0.5;
   pointer-events: none;
