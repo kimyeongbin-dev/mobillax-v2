@@ -1,4 +1,4 @@
-/* global getTransportLabel -- transport.js */
+/* global getTransportLabel, collectBookingLegs -- transport.js */
 /**
  * cart.js
  *
@@ -125,27 +125,11 @@ async function handleAddToCart() {
   }
 
   // 요금이 있는 경로만 필터링하여 변환
-  const selectedLegs = [...document.querySelectorAll(".route-step.selected")]
-    .map((el) => {
-      try {
-        return JSON.parse(el.dataset.leg); // ← dataset.leg을 JSON으로 파싱
-      } catch (e) {
-        console.warn("❌ JSON 파싱 실패:", el, e);
-        return null;
-      }
-    })
-    .filter((leg) => leg && leg.routePayment > 0 && leg.start?.name && leg.end?.name)
-    .map((leg) => ({
-      mode: leg.mode,
-      route: leg.route,
-      routeId: leg.routeId,
-      routePayment: leg.routePayment,
-      startName: leg.start.name,
-      endName: leg.end.name,
-    }));
+  // 편을 고른 장거리 구간만, 고른 편의 운임으로 (transport.js)
+  const selectedLegs = collectBookingLegs();
 
   if (selectedLegs.length === 0) {
-    alert("요금이 있는 경로만 장바구니에 담을 수 있습니다.");
+    alert("예매할 편을 고른 구간이 없습니다.");
     return;
   }
 

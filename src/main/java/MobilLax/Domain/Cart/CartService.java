@@ -45,6 +45,7 @@ public class CartService {
                     .routePayment(leg.getRoutePayment())
                     .startName(leg.getStartName())
                     .endName(leg.getEndName())
+                    .departureTime(leg.getDepartureTime())
                     .totalFareGroupId(groupId)
                     .isDeleted(false)  // 신규 저장 시 isDeleted는 false
                     .build();

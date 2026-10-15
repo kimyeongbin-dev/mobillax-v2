@@ -15,5 +15,6 @@ public class CartItemRequestDTO {
         private int routePayment;     // 각 구간의 결제 금액
         private String startName;
         private String endName;
+        private String departureTime; // 고른 편의 출발 일시 yyyyMMddHHmm (v1.6, TAGO 편)
     }
 }

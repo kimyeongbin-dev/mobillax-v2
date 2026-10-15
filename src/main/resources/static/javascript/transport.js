@@ -4,7 +4,7 @@
  * - 안내 전용: 시내버스, 지하철, 도보 등 (현장 결제)
  * 규칙 문서: docs/PUBLIC_DATA_API.md
  */
-/* exported PAYABLE_MODES, isOperatingLeg, isPayableLeg, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt */
+/* exported PAYABLE_MODES, isOperatingLeg, isPayableLeg, preferOperating, nowStamp, formatHm, collectBookingLegs, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt */
 
 const PAYABLE_MODES = ["TRAIN", "EXPRESSBUS", "AIRPLANE"];
 
@@ -95,4 +95,60 @@ function isBookableDate(departAt) {
 function formatDepartAt(departAt) {
   if (!departAt) return "지금";
   return `${Number(departAt.slice(4, 6))}월 ${Number(departAt.slice(6, 8))}일 ${departAt.slice(8, 10)}:${departAt.slice(10, 12)}`;
+}
+
+/**
+ * 장거리 구간이 모두 운행하는 경로만 (없으면 전체). 최단시간·최소환승 등을 고를 때 운행하지 않는 경로를 피한다
+ * @param {Array} itineraries - TMAP 경로 목록
+ * @returns {Array}
+ */
+function preferOperating(itineraries) {
+  const operating = itineraries.filter((it) =>
+    it.legs.every((leg) => !PAYABLE_MODES.includes(leg.mode) || isOperatingLeg(leg)),
+  );
+  return operating.length > 0 ? operating : itineraries;
+}
+
+/**
+ * 지금 시각 yyyyMMddHHmm (브라우저 시간)
+ * @returns {string}
+ */
+function nowStamp() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}${p(d.getHours())}${p(d.getMinutes())}`;
+}
+
+/**
+ * yyyyMMddHHmm → HH:mm
+ * @param {string} stamp
+ * @returns {string}
+ */
+function formatHm(stamp) {
+  return stamp ? `${stamp.slice(8, 10)}:${stamp.slice(10, 12)}` : "";
+}
+
+/**
+ * 선택한 구간 중 예매할 편을 고른 구간만 장바구니·결제 요청 형식으로 (금액은 고른 편의 운임)
+ * @returns {Array}
+ */
+function collectBookingLegs() {
+  return [...document.querySelectorAll(".route-step.selected")]
+    .map((el) => {
+      try {
+        return { leg: JSON.parse(el.dataset.leg), trip: JSON.parse(el.dataset.trip || "null") };
+      } catch {
+        return null;
+      }
+    })
+    .filter((x) => x && x.trip && x.trip.bookable && x.trip.fare > 0)
+    .map(({ leg, trip }) => ({
+      mode: leg.mode,
+      route: `${getTransportLabel(leg)}:${leg.start.name}-${leg.end.name} · ${trip.grade} ${formatHm(trip.departAt)} 출발`,
+      routeId: trip.no,
+      routePayment: trip.fare,
+      startName: leg.start.name,
+      endName: leg.end.name,
+      departureTime: trip.departAt,
+    }));
 }
