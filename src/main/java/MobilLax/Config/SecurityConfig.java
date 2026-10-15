@@ -82,7 +82,7 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/", "/home", "/route", "/css/**", "/javascript/**", "/images/**",
-                        "/module/**", "/login", "/member/login", "/register", "/api/**").permitAll()  // 인증 없이 접근 허용
+                        "/login", "/member/login", "/register", "/api/**").permitAll()  // 인증 없이 접근 허용
                 .requestMatchers("/admin/**").hasRole("ADMIN")         // 관리자 권한 필요
                 .requestMatchers("/user/**").hasRole("USER")           // 사용자 권한 필요
                 .anyRequest().authenticated());                        // 그 외 모든 요청은 인증 필요
