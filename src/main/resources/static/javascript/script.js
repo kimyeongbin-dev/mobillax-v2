@@ -1,4 +1,4 @@
-/* global hasPayableLeg, buildRouteRequest, isBookableDate -- transport.js */
+/* global hasPayableLeg, buildRouteRequest, isBookableDate, preferOperating -- transport.js */
 let selectedFrom = null; //출발지 선택 상태 저장용 변수
 let selectedTo = null; //도착지 선택 상태 저장용 변수
 let currentFocusType = null; //현재 선택 상태 저장용 변수
@@ -295,9 +295,11 @@ async function showRouteResults() {
   //여기까지
 
   // 조건별 최적 경로 찾기
-  const shortestTime = itineraries.reduce((a, b) => (a.totalTime < b.totalTime ? a : b));
-  const shortestDistance = itineraries.reduce((a, b) => (a.totalDistance < b.totalDistance ? a : b));
-  const leastTransfer = itineraries.reduce((a, b) => (a.transferCount < b.transferCount ? a : b));
+  // 장거리 구간이 운행하지 않는 경로는 다른 경로가 있으면 고르지 않는다 (상세 route.js 와 같은 기준)
+  const candidates = preferOperating(itineraries);
+  const shortestTime = candidates.reduce((a, b) => (a.totalTime < b.totalTime ? a : b));
+  const shortestDistance = candidates.reduce((a, b) => (a.totalDistance < b.totalDistance ? a : b));
+  const leastTransfer = candidates.reduce((a, b) => (a.transferCount < b.transferCount ? a : b));
 
   const routeData = {
     shortestTime: formatRouteData(shortestTime),

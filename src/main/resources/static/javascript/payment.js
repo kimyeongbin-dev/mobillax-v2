@@ -1,3 +1,4 @@
+/* global collectBookingLegs -- transport.js */
 /**
  * payment.js
  *
@@ -36,26 +37,11 @@ async function handleDirectPayment() {
   }
 
   // 사용자가 선택한 경로 중 유효한 구간(leg)을 필터링
-  const selectedLegs = [...document.querySelectorAll(".route-step.selected")]
-    .map((el) => {
-      try {
-        return JSON.parse(el.dataset.leg);
-      } catch {
-        return null;
-      }
-    })
-    .filter((leg) => leg && leg.routePayment > 0 && leg.start?.name && leg.end?.name)
-    .map((leg) => ({
-      mode: leg.mode,
-      route: leg.route,
-      routeId: leg.routeId,
-      routePayment: leg.routePayment,
-      startName: leg.start.name,
-      endName: leg.end.name,
-    }));
+  // 편을 고른 장거리 구간만, 고른 편의 운임으로 (transport.js)
+  const selectedLegs = collectBookingLegs();
 
   if (selectedLegs.length === 0) {
-    alert("요금이 있는 경로만 결제할 수 있습니다.");
+    alert("예매할 편을 고른 구간이 없습니다.");
     return;
   }
 
