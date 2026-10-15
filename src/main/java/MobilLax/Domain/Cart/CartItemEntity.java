@@ -23,6 +23,9 @@ public class CartItemEntity {
     private int routePayment;
     private String startName;
     private String endName;
+    // 고른 편의 출발 일시 yyyyMMddHHmm (v1.6, TAGO 편)
+    @Column(length = 12)
+    private String departureTime;
     @Column(nullable = false)
     private String totalFareGroupId;
     @Column(name = "is_deleted", nullable = false)
