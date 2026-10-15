@@ -1,3 +1,4 @@
+/* global PAYABLE_MODES, isPayableLeg, hasPayableLeg, getTransportLabel -- transport.js */
 /**
  * 상세 경로 페이지 스크립트
  * - Tmap API를 이용하여 경로 요약, 경로 단계 표시 및 지도에 경로 렌더링
@@ -39,8 +40,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
     const bestIndex = getBestItineraryIndex(type, data);
     const itinerary = itineraries[bestIndex];
-    renderSummary(data);
+    renderSummary(itinerary);
     renderSteps(itinerary);
+    renderBookingFooter(itinerary);
     drawRoute(itinerary.legs);
   } catch (error) {
     console.error("경로 조회 실패:", error);
@@ -177,11 +179,10 @@ function parseLineString(line) {
     });
 }
 /**
- * 경로 요약 정보 렌더링
- * @param {object} data - API 응답 데이터
+ * 경로 요약 정보 렌더링 (상세로 보여 주는 경로 기준)
+ * @param {object} itinerary - 여정 객체
  */
-function renderSummary(data) {
-  const itinerary = data.metaData.plan.itineraries[0];
+function renderSummary(itinerary) {
   const summaryBox = document.querySelector(".summary-box");
 
   const totalTimeMin = Math.round(itinerary.totalTime / 60); // 총 소요 시간(분)
@@ -225,19 +226,22 @@ function renderSteps(itinerary) {
     stepElement.dataset.index = index;
     stepElement.dataset.leg = JSON.stringify(leg); // ← 여기에 실제 leg 정보 저장
 
-    if (!leg.routePayment || leg.routePayment <= 0) {
-      stepElement.classList.add("disabled");
-      stepElement.title = "요금이 없는 구간은 선택할 수 없습니다.";
-    } else {
+    // 예매 대상(기차·고속·시외버스·항공)은 처음부터 선택해 두고, 나머지는 안내 전용
+    if (isPayableLeg(leg)) {
+      stepElement.classList.add("selected");
+      stepElement.title = "클릭해서 예매할 구간을 고르거나 뺄 수 있습니다.";
       stepElement.addEventListener("click", () => {
         stepElement.classList.toggle("selected");
       });
+    } else {
+      stepElement.classList.add("disabled");
+      stepElement.title = "안내 전용 구간입니다. 요금은 현장에서 냅니다.";
     }
 
     stepElement.innerHTML = `
       <div class="step-content">
         <h4>${index + 1}. ${startName} → ${endName} (index)</h4>
-        <p>${getModeKorean(mode)} (${mode})</p>
+        <p>${getTransportLabel(leg)} (${mode})</p>
         <p class="step-desc">${stepDescription}</p>
       </div>
     `;
@@ -268,23 +272,6 @@ function getIcon(mode) {
 }
 
 /**
- * 교통 수단을 한글로 반환
- * @param {string} mode - 교통 수단 코드
- * @returns {string} 한글 명칭
- */
-function getModeKorean(mode) {
-  const map = {
-    BUS: "버스",
-    SUBWAY: "지하철",
-    TRAIN: "기차",
-    EXPRESSBUS: "고속버스",
-    WALK: "도보",
-    TAXI: "택시",
-  };
-  return map[mode] || "이동수단";
-}
-
-/**
  * 각 구간에 대한 설명 생성
  * @param {object} leg - 구간 객체
  * @returns {string} 설명 텍스트
@@ -303,7 +290,7 @@ function getStepDescription(leg) {
     return [timeText, countText].filter(Boolean).join(", ") || "정보 없음";
   }
 
-  if (mode === "EXPRESSBUS" || mode === "TRAIN") {
+  if (PAYABLE_MODES.includes(mode)) {
     const fareText = paymentWon ? `요금 약 ${paymentWon}` : null;
     return [timeText, fareText].filter(Boolean).join(", ") || "정보 없음";
   }
@@ -320,4 +307,26 @@ function getStepDescription(leg) {
   }
 
   return timeText || "정보 없음";
+}
+
+/**
+ * 예매할 구간이 있는 경로에만 장바구니 담기·결제 버튼을 보여 주고, 없으면 안내 문구로 바꾼다
+ * @param {object} itinerary - 여정 객체
+ */
+function renderBookingFooter(itinerary) {
+  const footer = document.querySelector(".sidebar-footer");
+  if (!footer) return;
+
+  const notice = document.createElement("p");
+  notice.classList.add("booking-notice");
+
+  if (hasPayableLeg(itinerary)) {
+    notice.textContent = "기차·고속버스·시외버스·항공 구간을 예매할 수 있습니다. 구간을 눌러 고르거나 뺄 수 있습니다.";
+    footer.before(notice);
+    return;
+  }
+
+  footer.querySelectorAll("button").forEach((button) => (button.style.display = "none"));
+  notice.textContent = "이 경로는 시내 교통(버스·지하철 등)만 있어 예매할 구간이 없습니다. 요금은 현장에서 냅니다.";
+  footer.prepend(notice);
 }
