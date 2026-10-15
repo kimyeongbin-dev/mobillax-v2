@@ -12,7 +12,7 @@ MobilLax가 사용하는 환경 변수와 각 키의 발급 방법을 정리한 
 | 구분 | 변수 | 발급처 | 사용 위치 | 필수 |
 |---|---|---|---|---|
 | DB | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `DB_ROOT_PASSWORD` | 직접 정함 | docker compose MySQL, Spring datasource | ✅ |
-| TMAP | `TMAP_APPKEY` | SK open API | 서버: `RouteServiceImpl` (대중교통 경로) / 브라우저: `home`·`route` 템플릿 지도 SDK, `map.html`(`/module/config.js`) POI·자동차 경로 | ✅ |
+| TMAP | `TMAP_APPKEY` | SK open API | 서버: `RouteServiceImpl` (대중교통 경로) / 브라우저: `home`·`route` 템플릿 지도 SDK | ✅ |
 | 카카오 | `KAKAO_JS_APPKEY` | Kakao Developers | 브라우저: `home` 템플릿 카카오 지도 SDK(장소 검색) | ✅ |
 | 카카오 | `KAKAO_APPKEY` | Kakao Developers (같은 앱의 REST API 키) | 서버: `KakaoLocalClient` (장소 매칭의 좌표↔주소 변환, 결과는 저장하지 않음) | ⬜ |
 | 포트원 | `PORTONE_STORE_ID` | 포트원 관리자콘솔 | 결제창 호출 (`PaymentController` → `payment.js`) | ✅ |
@@ -211,7 +211,6 @@ docker compose up -d --force-recreate app
 | 확인 항목 | 방법 |
 |---|---|
 | 앱 기동 | `docker compose logs app` 에 `Started MobilLaxApplication` |
-| TMAP 브라우저 키 | http://localhost:8080/module/config.js 에 새 키가 보이는지 |
 | 카카오 장소 검색 | http://localhost:8080/home 출발지 입력란에 `강남역` 입력 → 자동완성 목록 표시, 개발자도구 Network에서 `sdk.js`가 200인지 |
 | TMAP 경로 | 로그인 → 출발지/도착지 검색 → 경로 결과 표시 |
 | 포트원 | 경로 상세 또는 장바구니에서 결제 → 테스트 결제창이 뜨는지 |
@@ -225,5 +224,5 @@ docker compose up -d --force-recreate app
 `TMAP_APPKEY`(지도 SDK용으로 내려가는 값)와 `KAKAO_JS_APPKEY`는 구조상 사용자 브라우저에 그대로 보입니다. `.env`로 옮긴 것은 **저장소에 키가 커밋되지 않게** 하려는 것이고, 브라우저 노출까지 막지는 않습니다.
 
 - **카카오 JavaScript 키:** 원래 공개를 전제로 한 키입니다. **JavaScript SDK 도메인 등록**으로 다른 사이트에서 쓰지 못하게 막습니다.
-- **TMAP 키:** 현재 브라우저 JS(`carRoute.js`, `LocationSearch.js` 등)가 REST API를 직접 호출하고 있어서 키가 노출됩니다. v2에서 이 호출을 서버로 옮겨(백엔드 프록시) REST 키는 서버에만 두고, 브라우저에는 지도 SDK 키만 남길 예정입니다.
+- **TMAP 키:** REST API 호출(대중교통 경로)은 서버가 합니다. 브라우저에서 REST를 직접 부르던 옛 지도 페이지는 v1.8에서 지웠습니다. 다만 지도 SDK(`/tmap/jsv2?appKey=`)가 같은 `TMAP_APPKEY`를 쓰므로 키는 브라우저에 보입니다. 배포(v3) 전에 SDK용 키를 분리하거나 허용 도메인을 제한합니다.
 - **포트원 `storeId`·`channelKey`:** 공개해도 되는 식별자입니다. `PORTONE_APPKEY`(API Secret)는 절대 브라우저로 보내면 안 됩니다.

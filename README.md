@@ -92,8 +92,8 @@ flowchart LR
     UI -- "결제창" --> PortOne
 ```
 
-- 모든 키는 `.env` 한 곳에서 관리합니다. 브라우저가 쓰는 지도 SDK 키는 서버가 템플릿(`FrontendKeyAdvice`)과 `/module/config.js`(`FrontendConfigController`)로 내려줍니다.
-- 브라우저가 TMAP REST API를 직접 호출하는 부분은 v2에서 서버 프록시로 옮길 예정입니다. → [알려진 이슈](#알려진-이슈)
+- 모든 키는 `.env` 한 곳에서 관리합니다. 브라우저가 쓰는 지도 SDK 키는 서버가 템플릿(`FrontendKeyAdvice`)으로 내려줍니다.
+- 경로·편·장소 매칭 같은 REST API 호출은 모두 서버가 하고, 브라우저는 지도 SDK만 씁니다. → [알려진 이슈](#알려진-이슈)
 
 ### 예매·결제 흐름
 
@@ -245,7 +245,7 @@ docker compose --profile test run --rm --build test
 
 - **결제 검증 없음:** `/payment/complete`가 PortOne에 결제 결과를 확인하지 않고 클라이언트가 보낸 값으로 결제 완료를 기록합니다.
 - **CSRF 보호 비활성화:** 세션 로그인 구조인데 CSRF 보호가 꺼져 있습니다.
-- **TMAP REST 키 브라우저 노출:** 브라우저 JS가 REST API를 직접 호출하므로 서버 프록시로 옮겨야 합니다.
+- **TMAP 키 브라우저 노출:** 브라우저에서 TMAP REST를 직접 부르던 옛 지도 페이지(`map.html` 계열)는 v1.8에서 지웠지만, 지도 SDK가 같은 `TMAP_APPKEY`를 쓰므로 키는 여전히 브라우저에 보입니다. 배포 전에 SDK용 키를 분리하거나 도메인을 제한해야 합니다.
 - **비로그인 장바구니:** `/api/**`가 전체 공개라 로그인하지 않은 사용자의 장바구니가 하나로 섞입니다.
 - **내부 정보 노출:** 예외 메시지를 응답에 그대로 내보내고, SQL 바인딩 값까지 로그에 남깁니다.
 
