@@ -156,6 +156,7 @@ PORTONE_APPKEY=<V2 API Secret>
 - 데이터: [국토교통부_(TAGO)_시외버스정보](https://www.data.go.kr/data/15098541/openapi.do) (제공: 국토교통부)
 - 활용신청은 **자동승인**이고, 개발계정 트래픽은 **10,000**입니다.
 - 이 키가 없어도 앱은 뜹니다. 시외버스 터미널 조회(`/api/terminals`)만 동작하지 않습니다.
+- 인증키는 계정마다 하나라서, 같은 키로 열차·고속버스·항공 API도 씁니다. API마다 활용신청만 따로 합니다. 신청할 목록은 [PUBLIC_DATA_API.md](PUBLIC_DATA_API.md)에 있습니다.
 
 ### 발급 절차
 1. https://www.data.go.kr에 회원가입하고 로그인합니다.
