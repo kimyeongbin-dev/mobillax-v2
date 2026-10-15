@@ -60,7 +60,7 @@ body {
   background-color: #e3f2fd;
   border: 2px solid #90caf9;
   border-radius: 16px;
-  padding: 15px;
+  padding: 15px 8px;
   margin-bottom: 25px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
@@ -68,11 +68,16 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: 1rem;
+  font-size: 0.85rem;
   color: #1a237e;
-  width: 120px;
+  flex: 1;
+  min-width: 0;
+  text-align: center;
   height: 80px;
   justify-content: space-around;
+}
+.summary-item span {
+  white-space: nowrap;
 }
 .summary-item i {
   font-size: 1.6em;

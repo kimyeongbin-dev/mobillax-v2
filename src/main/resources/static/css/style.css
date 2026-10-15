@@ -412,3 +412,31 @@ footer {
   color: #1a56db;
   background-color: #e8f0fe;
 }
+
+.bookable.view-only {
+  color: #555;
+  background-color: #eee;
+}
+
+/* 출발 일시 입력 */
+.depart-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.depart-group input {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.depart-hint {
+  font-size: 0.8rem;
+  color: #777;
+}
