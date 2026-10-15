@@ -286,3 +286,24 @@ body {
   font-size: 0.8rem;
   color: #333;
 }
+
+/* 환승 여유 선택, 현장 결제 예상 금액 */
+.transfer-option {
+  display: block;
+  margin: -12px 0 12px;
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.transfer-option select {
+  margin-left: 6px;
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.onsite-fare {
+  margin: -12px 0 12px;
+  font-size: 0.85rem;
+  color: #555;
+}

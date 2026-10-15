@@ -4,7 +4,7 @@
  * - 안내 전용: 시내버스, 지하철, 도보 등 (현장 결제)
  * 규칙 문서: docs/PUBLIC_DATA_API.md
  */
-/* exported PAYABLE_MODES, isOperatingLeg, isPayableLeg, preferOperating, nowStamp, formatHm, collectBookingLegs, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt */
+/* exported TRANSFER_OPTIONS, getTransferMinutes, setTransferMinutes, PAYABLE_MODES, isOperatingLeg, isPayableLeg, preferOperating, nowStamp, formatHm, collectBookingLegs, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt */
 
 const PAYABLE_MODES = ["TRAIN", "EXPRESSBUS", "AIRPLANE"];
 
@@ -13,12 +13,14 @@ const EXPRESSBUS_TYPE_LABELS = { 22: "시외버스", 23: "고속버스" };
 
 /**
  * 검색 시각에 운행하는 구간인지 (TMAP service: 1 운행, 0 운행하지 않음)
- * 예) 밤에 검색하면 막차가 끝난 항공·고속버스 구간이 0, 서울역 출발 SRT 처럼 없는 열차도 0 으로 온다
+ * - 열차는 TMAP 의 열차 종류·운행 여부를 믿지 않는다: TMAP 은 서울역 → 부산역 직통을 "SRT:서울-부산"(service 0)으로 주지만
+ *   같은 역 쌍에 KTX·ITX·무궁화가 있다. 열차는 역 쌍으로 TAGO 편을 조회해 판단한다
+ * - 항공·고속·시외버스는 TMAP 값을 따른다 (밤에 검색하면 막차가 끝난 구간이 0)
  * @param {object} leg - TMAP 구간
  * @returns {boolean}
  */
 function isOperatingLeg(leg) {
-  return leg?.service !== 0;
+  return leg?.mode === "TRAIN" || leg?.service !== 0;
 }
 
 /**
@@ -151,4 +153,29 @@ function collectBookingLegs() {
       endName: leg.end.name,
       departureTime: trip.departAt,
     }));
+}
+
+/** 장거리 구간 사이 환승 여유(분) 선택지와 기본값 */
+const TRANSFER_OPTIONS = [10, 20, 30];
+const DEFAULT_TRANSFER_MINUTES = 20;
+
+/**
+ * 사용자가 고른 환승 여유(분). 브라우저에 저장, 없거나 읽을 수 없으면 20분
+ * @returns {number}
+ */
+function getTransferMinutes() {
+  try {
+    const saved = Number(localStorage.getItem("transferMinutes"));
+    return TRANSFER_OPTIONS.includes(saved) ? saved : DEFAULT_TRANSFER_MINUTES;
+  } catch {
+    return DEFAULT_TRANSFER_MINUTES;
+  }
+}
+
+function setTransferMinutes(minutes) {
+  try {
+    localStorage.setItem("transferMinutes", String(minutes));
+  } catch {
+    // 저장할 수 없으면 이번 화면에서만 적용
+  }
 }
