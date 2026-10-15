@@ -1,4 +1,4 @@
-/* global PAYABLE_MODES, isOperatingLeg, isPayableLeg, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt, preferOperating, nowStamp, formatHm -- transport.js */
+/* global PAYABLE_MODES, isOperatingLeg, isPayableLeg, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt, preferOperating, nowStamp, formatHm, TRANSFER_OPTIONS, getTransferMinutes, setTransferMinutes -- transport.js */
 /**
  * 상세 경로 페이지 스크립트
  * - Tmap API를 이용하여 경로 요약, 경로 단계 표시 및 지도에 경로 렌더링
@@ -380,6 +380,8 @@ function refreshBookingFooter(departAt) {
   const bookableLegs = document.querySelectorAll('.trip-leg[data-trip-bookable="true"]').length;
   if (bookableLegs > 0) {
     setBookingNotice("고른 편의 운임으로 예매합니다. 구간을 눌러 빼거나 넣을 수 있습니다.", true);
+  } else if (document.querySelector('.trip-leg[data-trip-error="true"]')) {
+    setBookingNotice("편 정보를 불러오지 못해 지금은 예매할 수 없습니다. 잠시 후 다시 시도해 주세요.", false);
   } else {
     setBookingNotice("오늘 예매할 수 있는 편이 없습니다. 편 정보를 찾지 못했거나 오늘 출발편이 끝났습니다.", false);
   }
@@ -419,7 +421,7 @@ async function renderPlaceMatches(itinerary, departAt) {
   } catch (error) {
     console.error("역·터미널 확인 실패:", error);
     targets.forEach(({ element }) => setMatchText(element, "역·터미널을 확인하지 못했습니다"));
-    targets.forEach(({ element }) => setTripMessage(element, "편 정보를 찾을 수 없어 예매할 수 없습니다"));
+    targets.filter(({ leg }) => isPayableLeg(leg)).forEach(({ element, leg }) => markOnsite(element, leg));
     refreshBookingFooter(departAt);
     return;
   }
@@ -438,23 +440,81 @@ async function renderPlaceMatches(itinerary, departAt) {
     setMatchText(element, `${from?.kindLabel || "역·터미널"}: ${describe(from)} → ${describe(to)}`);
     if (!isPayableLeg(leg)) continue;
     if (from?.result?.status !== "MATCHED" || to?.result?.status !== "MATCHED" || from.kind !== to.kind) {
-      setTripMessage(element, "역·터미널을 찾지 못해 편을 조회할 수 없습니다");
+      markOnsite(element, leg);
       continue;
     }
     const between = itinerary.legs
       .slice(previous ? previous.index + 1 : 0, index)
       .reduce((sum, l) => sum + Number(l.sectionTime || 0), 0);
     const reference = previous
-      ? addMinutes(previous.trip.arriveAt, Math.ceil(between / 60) + TRANSFER_MINUTES)
+      ? addMinutes(previous.trip.arriveAt, Math.ceil(between / 60) + getTransferMinutes())
       : addMinutes(start, Math.ceil(between / 60));
     const trip = await loadTrips(element, from.kind, from.result.tagoId, to.result.tagoId, reference, departAt);
     if (trip) previous = { index, trip };
   }
   refreshBookingFooter(departAt);
+  renderTransferOption();
+  renderOnsiteFare(itinerary);
 }
 
-/** 장거리 구간 사이 환승 여유(분) */
-const TRANSFER_MINUTES = 10;
+/**
+ * 예매 정보(TAGO 편)가 없는 장거리 구간: 공항 리무진·일부 심야 시외버스 등. 예매하지 않고 현장 결제로 안내한다
+ */
+function markOnsite(element, leg) {
+  element.dataset.onsite = "true";
+  const fare = Number(leg.routePayment) > 0 ? ` (예상 ${Number(leg.routePayment).toLocaleString()}원)` : "";
+  setTripMessage(element, `예매 정보가 없는 구간입니다. 탑승할 때 현장에서 결제하세요${fare}`);
+}
+
+/**
+ * 현장에서 낼 예상 금액 = 시내 교통(경로 전체 요금 − 장거리 구간 요금 합) + 예매 정보가 없는 장거리 구간 요금
+ */
+function renderOnsiteFare(itinerary) {
+  const steps = [...document.querySelectorAll(".route-step")];
+  const longFare = itinerary.legs
+    .filter((leg) => PAYABLE_MODES.includes(leg.mode))
+    .reduce((sum, leg) => sum + Number(leg.routePayment || 0), 0);
+  const localFare = Math.max(0, Number(itinerary.fare?.regular?.totalFare || 0) - longFare);
+  const onsiteLongFare = itinerary.legs.reduce(
+    (sum, leg, i) => sum + (steps[i]?.dataset.onsite === "true" ? Number(leg.routePayment || 0) : 0),
+    0,
+  );
+  const total = localFare + onsiteLongFare;
+  if (total <= 0) return;
+
+  const parts = [];
+  if (localFare > 0) parts.push(`시내 교통 ${localFare.toLocaleString()}원`);
+  if (onsiteLongFare > 0) parts.push(`예매 정보 없는 구간 ${onsiteLongFare.toLocaleString()}원`);
+  const line = document.createElement("p");
+  line.classList.add("onsite-fare");
+  line.textContent = `현장 결제 예상 ${total.toLocaleString()}원 (${parts.join(" + ")})`;
+  document.querySelector(".summary-box")?.after(line);
+}
+
+/**
+ * 장거리 구간이 둘 이상이면 환승 여유(10·20·30분)를 고를 수 있게 한다. 바꾸면 기본 편을 다시 고른다
+ */
+function renderTransferOption() {
+  if (document.querySelectorAll(".trip-leg .trip-select").length < 2) return;
+  const wrapper = document.createElement("label");
+  wrapper.classList.add("transfer-option");
+  wrapper.textContent = "환승 여유 ";
+  const select = document.createElement("select");
+  TRANSFER_OPTIONS.forEach((minutes) => {
+    const option = document.createElement("option");
+    option.value = String(minutes);
+    option.textContent = `${minutes}분`;
+    select.appendChild(option);
+  });
+  select.value = String(getTransferMinutes());
+  select.addEventListener("change", () => {
+    setTransferMinutes(Number(select.value));
+    // 경로는 sessionStorage 에서 다시 읽으므로 TMAP 을 다시 부르지 않는다
+    window.location.reload();
+  });
+  wrapper.appendChild(select);
+  document.querySelector(".summary-box")?.after(wrapper);
+}
 
 /** yyyyMMddHHmm 에 분을 더한다 */
 function addMinutes(stamp, minutes) {
@@ -488,13 +548,14 @@ async function loadTrips(element, kind, depId, arrId, reference, departAt) {
     if (!response.ok) throw new Error(data?.message || `HTTP ${response.status}`);
   } catch (error) {
     console.error("편 조회 실패:", error);
-    setTripMessage(element, "편 정보를 불러오지 못했습니다");
+    element.dataset.tripError = "true";
+    setTripMessage(element, "편 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요");
     return null;
   }
 
   const trips = data.trips || [];
   if (trips.length === 0) {
-    setTripMessage(element, `${Number(date.slice(4, 6))}월 ${Number(date.slice(6, 8))}일 편 정보가 없습니다`);
+    markOnsite(element, JSON.parse(element.dataset.leg));
     return null;
   }
 
