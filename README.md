@@ -86,7 +86,7 @@ flowchart LR
     App -- "경로 조회" --> TmapREST
     App -- "터미널 조회" --> DataGo
     UI -- "지도 표시·장소 검색" --> TmapSDK
-    UI -- "지도 표시" --> KakaoSDK
+    UI -- "장소 검색" --> KakaoSDK
     UI -- "결제창" --> PortOne
 ```
 
@@ -139,7 +139,7 @@ sequenceDiagram
 | 데이터 | **Spring Data JPA + MySQL 8.0** | 회원·장바구니·결제처럼 관계와 정합성이 중요한 데이터라 RDBMS를 씀. JPA로 반복 SQL을 줄임 |
 | 외부 API 호출 | **WebClient / RestTemplate** | 공공데이터 API를 비동기(WebClient)로 호출. XML 응답은 Jackson XML로 매핑 |
 | 경로 | **TMAP 대중교통 API** | 여러 교통수단을 엮은 경로와 **구간별 요금**을 함께 주는 공개 API여서 "통합 예매"라는 목표에 직접 맞음 |
-| 지도 | **TMAP 지도 SDK, 카카오 지도 SDK** | TMAP은 경로 시각화와 POI 검색, 카카오는 홈 화면 지도 표시에 사용 |
+| 지도 | **TMAP 지도 SDK, 카카오 지도 SDK** | TMAP은 경로 시각화와 POI 검색, 카카오는 홈 화면 출발지·도착지 장소 검색(자동완성)에 사용 |
 | 결제 | **PortOne V2** | 여러 PG사를 하나의 SDK와 API로 연동할 수 있고, 계약 없이 **테스트 채널**로 전체 결제 흐름을 검증할 수 있음 |
 | 공공데이터 | **공공데이터포털 TAGO** | 시외·고속버스 등 국토교통부 공식 데이터. 자동 승인이라 바로 연동할 수 있음 |
 | 설정 | **spring-dotenv** | DB 접속 정보와 API 키를 코드에서 분리해 `.env` 하나로 관리 |

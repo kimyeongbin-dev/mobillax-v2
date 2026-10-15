@@ -13,7 +13,7 @@ MobilLax가 사용하는 환경 변수와 각 키의 발급 방법을 정리한 
 |---|---|---|---|---|
 | DB | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `DB_ROOT_PASSWORD` | 직접 정함 | docker compose MySQL, Spring datasource | ✅ |
 | TMAP | `TMAP_APPKEY` | SK open API | 서버: `RouteServiceImpl` (대중교통 경로) / 브라우저: `home`·`route` 템플릿 지도 SDK, `map.html`(`/module/config.js`) POI·자동차 경로 | ✅ |
-| 카카오 | `KAKAO_JS_APPKEY` | Kakao Developers | 브라우저: `home` 템플릿 카카오 지도 SDK | ✅ |
+| 카카오 | `KAKAO_JS_APPKEY` | Kakao Developers | 브라우저: `home` 템플릿 카카오 지도 SDK(장소 검색) | ✅ |
 | 포트원 | `PORTONE_STORE_ID` | 포트원 관리자콘솔 | 결제창 호출 (`PaymentController` → `payment.js`) | ✅ |
 | 포트원 | `PORTONE_CHANNEL_KEY` | 포트원 관리자콘솔 | 결제창 호출 | ✅ |
 | 포트원 | `PORTONE_APPKEY` | 포트원 관리자콘솔 (V2 API Secret) | 아직 미사용 (서버 결제 검증용으로 v2에서 사용 예정) | ⬜ |
@@ -95,7 +95,7 @@ TMAP_APPKEY=<발급받은 appKey>
 ### 발급 절차
 1. **로그인:** developers.kakao.com에 카카오 계정으로 로그인합니다. 처음이면 개발자 등록 약관에 동의합니다.
 2. **앱 생성:** 상단 **[내 애플리케이션]**(앱 관리 페이지 https://developers.kakao.com/console/app)에서 **[애플리케이션 추가하기]**를 눌러 앱 이름과 회사명(개인이면 본인 이름)을 입력합니다.
-3. **카카오맵 사용 설정 (필수):** 앱 관리 페이지에서 **[카카오맵] → [사용 설정]**으로 들어가 **[상태]를 ON**으로 켭니다. 켜지 않으면 키가 있어도 지도가 뜨지 않습니다.
+3. **카카오맵 사용 설정 (필수):** 앱 관리 페이지에서 **[카카오맵] → [사용 설정]**으로 들어가 **[상태]를 ON**으로 켭니다. 켜지 않으면 키가 있어도 SDK가 로드되지 않습니다.
 4. **JavaScript 키 확인:** **[앱] → [플랫폼 키] → [JavaScript 키]**에서 키를 복사합니다.
    - REST API 키나 네이티브 앱 키가 아니라 **JavaScript 키**여야 합니다. 지도 SDK에 다른 키를 넣으면 에러가 납니다.
 5. **JavaScript SDK 도메인 등록:** **[앱] → [플랫폼 키] → [JavaScript 키] → [JavaScript SDK 도메인]**에 `http://localhost:8080`을 등록합니다.
@@ -187,7 +187,7 @@ docker compose up -d --force-recreate app
 |---|---|
 | 앱 기동 | `docker compose logs app` 에 `Started MobilLaxApplication` |
 | TMAP 브라우저 키 | http://localhost:8080/module/config.js 에 새 키가 보이는지 |
-| 카카오 지도 | http://localhost:8080/home 에서 지도 표시, 브라우저 개발자도구 콘솔에 에러가 없는지 |
+| 카카오 장소 검색 | http://localhost:8080/home 출발지 입력란에 `강남역` 입력 → 자동완성 목록 표시, 개발자도구 Network에서 `sdk.js`가 200인지 |
 | TMAP 경로 | 로그인 → 출발지/도착지 검색 → 경로 결과 표시 |
 | 포트원 | 경로 상세 또는 장바구니에서 결제 → 테스트 결제창이 뜨는지 |
 | 시외버스 | http://localhost:8080/api/terminals?name=동서울 (로그인 불필요) |
