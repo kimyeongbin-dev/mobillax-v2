@@ -223,11 +223,17 @@ async function showRouteResults() {
   localStorage.setItem("selectedFrom", JSON.stringify(selectedFrom));
   localStorage.setItem("selectedTo", JSON.stringify(selectedTo));
 
-  const data = await getTmapRoute(selectedFrom.x, selectedFrom.y, selectedTo.x, selectedTo.y);
+  let data;
+  try {
+    data = await getTmapRoute(selectedFrom.x, selectedFrom.y, selectedTo.x, selectedTo.y);
+  } catch (err) {
+    alert(err.message);
+    return;
+  }
   let itineraries = data?.metaData?.plan?.itineraries;
 
   if (!itineraries || itineraries.length === 0) {
-    alert("추천 경로를 찾을 수 없습니다.");
+    alert(getRouteErrorMessage(data) || "추천 경로를 찾을 수 없습니다.");
     return;
   }
 
@@ -318,56 +324,36 @@ function displayRoutes(data) {
   }
 }
 
-//Tmap 대중교통 API 호출 함수 (POST)
-async function getTmapRoute(fromX, fromY, toX, toY) {
-  //  const url = 'https://apis.openapi.sk.com/transit/routes';
-  //
-  //  const headers = {
-  //    'Content-Type': 'application/json',
-  //    'Accept': 'application/json',
-  //    'appKey': '<TMAP_APPKEY>'
-  //  };
-  //
-  //  const body = {
-  //    startX: fromX,
-  //    startY: fromY,
-  //    endX: toX,
-  //    endY: toY,
-  //    count: 10,
-  //    lang: 0,
-  //    format: 'json'
-  //  };
+// 대중교통 경로 검색 (서버가 TMAP 대중교통 API를 대신 호출)
+// 결과는 상세 페이지(route.js)가 다시 호출하지 않도록 sessionStorage 에 저장
+const TRANSIT_ROUTE_CACHE_KEY = "transitRouteResult";
 
-  try {
-    //    const response = await fetch(url, {
-    //      method: 'POST',
-    //      headers: headers,
-    //      body: JSON.stringify(body)
-    //    });
-    //
-    //    const data = await response.json();
-    //    console.log("Tmap API 응답:", data);
-    //
-    //    if (!response.ok) {
-    //      throw new Error(`HTTP 오류 상태: ${response.status}`);
-    //    }
-    //    console.log("🔥 전체 Tmap API 응답 결과:", JSON.stringify(data, null, 2)); //api 확인용
-    //    return data;
-    // ✅ 무조건 Mock JSON만 사용하도록 강제
-    const dummy = await fetch("javascript/dummy/route_dummy_data.json");
-    const data = await dummy.json();
-    return data;
-  } catch (err) {
-    console.error("Tmap API 호출 실패, 더미 데이터 사용:", err.message || err);
-    try {
-      const dummy = await fetch("javascript/dummy/route_dummy_data.json");
-      const data = await dummy.json();
-      return data;
-    } catch (jsonErr) {
-      console.error("더미 JSON 불러오기 실패:", jsonErr);
-      return { metaData: { plan: { itineraries: [] } } };
-    }
+async function getTmapRoute(fromX, fromY, toX, toY) {
+  const request = {
+    startX: Number(fromX),
+    startY: Number(fromY),
+    endX: Number(toX),
+    endY: Number(toY),
+  };
+
+  const response = await fetch("/api/route/transit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(getRouteErrorMessage(data) || `경로 검색에 실패했습니다. (${response.status})`);
   }
+
+  sessionStorage.setItem(TRANSIT_ROUTE_CACHE_KEY, JSON.stringify({ request, data }));
+  return data;
+}
+
+// TMAP 오류 응답({result: {message}}, {error: {message}})에서 안내 문구 추출
+function getRouteErrorMessage(data) {
+  return data?.result?.message || data?.error?.message || "";
 }
 
 function alertComingSoon() {
