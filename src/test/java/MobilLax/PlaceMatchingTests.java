@@ -2,10 +2,13 @@ package MobilLax;
 
 import MobilLax.Domain.Place.JusoAddress;
 import MobilLax.Domain.Place.KakaoAddress;
+import MobilLax.Domain.Place.PlaceMatch;
 import MobilLax.Domain.Place.PlaceMatching;
 import MobilLax.Domain.Place.TransitKind;
 import MobilLax.Domain.Place.TransitPlace;
 import org.junit.jupiter.api.Test;
+
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -92,5 +95,15 @@ class PlaceMatchingTests {
         assertThat(TransitKind.fromTmapLeg("EXPRESSBUS", 23, null)).isEqualTo(TransitKind.EXPRESS_BUS);
         assertThat(TransitKind.fromTmapLeg("EXPRESSBUS", null, "시외버스:김해공항-부전시장")).isEqualTo(TransitKind.INTERCITY_BUS);
         assertThat(TransitKind.fromTmapLeg("BUS", 11, null)).isNull();
+    }
+
+    @Test
+    void expiresTmapMatchesAfterTwentyFourHours() {
+        // TMAP 대중교통 API 약관: 저장 후 24시간 이상 사용할 수 없음
+        PlaceMatch match = new PlaceMatch(TransitKind.TRAIN, "서울", 37.5546, 126.9706,
+                new TransitPlace(TransitKind.TRAIN, "NAT010000", "서울", "서울특별시"), PlaceMatch.Method.DISTANCE, 64);
+        LocalDateTime now = LocalDateTime.now();
+        assertThat(match.isExpired(now.plusHours(23))).isFalse();
+        assertThat(match.isExpired(now.plusHours(25))).isTrue();
     }
 }
