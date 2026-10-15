@@ -18,7 +18,7 @@ public record TransitRouteRequest(double startX, double startY, double endX, dou
             DateTimeFormatter.ofPattern("uuuuMMddHHmm").withResolverStyle(ResolverStyle.STRICT);
 
     /** 조회할 수 있는 가장 먼 날짜 (오늘부터 며칠 뒤까지) */
-    public static final int MAX_DAYS_AHEAD = 30;
+    public static final int MAX_DAYS_AHEAD = 14;
 
     /** 출발지·도착지가 모두 대한민국 범위 안의 좌표인지 */
     public boolean isInKorea() {
