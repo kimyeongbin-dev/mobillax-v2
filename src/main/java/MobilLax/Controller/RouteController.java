@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+
 /**
  * 대중교통 경로 검색 API
  * - 브라우저 대신 서버가 TMAP 을 호출해 REST 키가 브라우저에 노출되지 않게 함
@@ -23,12 +26,18 @@ import org.springframework.web.client.ResourceAccessException;
 @RequiredArgsConstructor
 public class RouteController {
 
+    private static final ZoneId KOREA = ZoneId.of("Asia/Seoul");
+
     private final RouteService routeService;
 
     @PostMapping(value = "/transit", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> searchTransit(@RequestBody TransitRouteRequest request) {
         if (!request.isInKorea()) {
             return error(HttpStatus.BAD_REQUEST, "출발지와 도착지 좌표가 올바르지 않습니다.");
+        }
+        if (!request.isDepartAtValid(LocalDate.now(KOREA))) {
+            return error(HttpStatus.BAD_REQUEST,
+                    "출발 일시가 올바르지 않습니다. 오늘부터 " + TransitRouteRequest.MAX_DAYS_AHEAD + "일 안에서 선택해 주세요.");
         }
 
         try {

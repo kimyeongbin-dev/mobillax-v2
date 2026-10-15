@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +39,7 @@ public class RouteServiceImpl implements RouteService {
         headers.set("appKey", tmapAppKey);
 
         // 좌표는 TMAP 문서 예시와 같이 문자열로 전달. searchDttm 을 생략하면 현재 시각 기준으로 검색됨
-        Map<String, Object> body = Map.of(
+        Map<String, Object> body = new HashMap<>(Map.of(
                 "startX", String.valueOf(request.startX()),
                 "startY", String.valueOf(request.startY()),
                 "endX", String.valueOf(request.endX()),
@@ -46,7 +47,10 @@ public class RouteServiceImpl implements RouteService {
                 "count", ROUTE_COUNT,
                 "lang", 0,
                 "format", "json"
-        );
+        ));
+        if (request.hasDepartAt()) {
+            body.put("searchDttm", request.departAt());
+        }
 
         return restTemplate.postForObject(TRANSIT_URL, new HttpEntity<>(body, headers), String.class);
     }

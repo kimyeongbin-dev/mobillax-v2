@@ -1,4 +1,4 @@
-/* global hasPayableLeg -- transport.js */
+/* global hasPayableLeg, buildRouteRequest, isBookableDate -- transport.js */
 let selectedFrom = null; //출발지 선택 상태 저장용 변수
 let selectedTo = null; //도착지 선택 상태 저장용 변수
 let currentFocusType = null; //현재 선택 상태 저장용 변수
@@ -13,6 +13,7 @@ function updateSuggestHeader() {
 
 //input에 focus했을때 updateSuggestHeader() 쓰기
 document.addEventListener("DOMContentLoaded", () => {
+  initDepartInput();
   document.getElementById("fromInput").addEventListener("focus", () => {
     currentFocusType = "from";
     updateSuggestHeader();
@@ -22,6 +23,30 @@ document.addEventListener("DOMContentLoaded", () => {
     updateSuggestHeader();
   });
 });
+
+// 출발 일시 입력 범위: 오늘부터 30일 뒤까지 (서버 TransitRouteRequest.MAX_DAYS_AHEAD 와 같음)
+const MAX_DAYS_AHEAD = 30;
+
+function initDepartInput() {
+  const input = document.getElementById("departInput");
+  if (!input) return;
+  const toLocalInput = (date) => {
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 16);
+  };
+  const now = new Date();
+  const max = new Date(now);
+  max.setDate(max.getDate() + MAX_DAYS_AHEAD);
+  max.setHours(23, 59, 0, 0);
+  input.min = toLocalInput(now);
+  input.max = toLocalInput(max);
+}
+
+// 입력값(2026-10-22T14:30) → TMAP searchDttm 형식(202610221430), 비어 있으면 ""
+function getDepartAt() {
+  const value = document.getElementById("departInput")?.value || "";
+  return value.replace(/[-T:]/g, "");
+}
 
 //검색창 박스 표시
 function showSuggestionBox() {
@@ -223,10 +248,12 @@ async function showRouteResults() {
   console.log("도착지 좌표:", selectedTo);
   localStorage.setItem("selectedFrom", JSON.stringify(selectedFrom));
   localStorage.setItem("selectedTo", JSON.stringify(selectedTo));
+  const departAt = getDepartAt();
+  localStorage.setItem("selectedDepartAt", departAt);
 
   let data;
   try {
-    data = await getTmapRoute(selectedFrom.x, selectedFrom.y, selectedTo.x, selectedTo.y);
+    data = await getTmapRoute(selectedFrom, selectedTo, departAt);
   } catch (err) {
     alert(err.message);
     return;
@@ -285,11 +312,11 @@ async function showRouteResults() {
   document.getElementById("routeList").innerHTML = "";
   routeForm.style.display = "block";
 
-  displayRoutes(routeData);
+  displayRoutes(routeData, isBookableDate(departAt));
 }
 
 //추천 경로 HTML 렌더링
-function displayRoutes(data) {
+function displayRoutes(data, bookableDate) {
   const container = document.getElementById("routeList");
   const labels = {
     shortestTime: "최단시간",
@@ -313,7 +340,7 @@ function displayRoutes(data) {
             <span class="time">⏱ ${route.time}분</span>
             <span class="price">💸 ${route.cost}원</span>
             <span class="transfer-info">🔁 환승 ${route.transfers}회</span>
-            ${hasPayableLeg(route) ? '<span class="bookable">🎫 예매 가능</span>' : ""}
+            ${hasPayableLeg(route) ? (bookableDate ? '<span class="bookable">🎫 예매 가능</span>' : '<span class="bookable view-only">🗓 조회 전용 (예매는 당일만)</span>') : ""}
           </div>
         </div>
         <div class="route-summary-line">
@@ -330,13 +357,8 @@ function displayRoutes(data) {
 // 결과는 상세 페이지(route.js)가 다시 호출하지 않도록 sessionStorage 에 저장
 const TRANSIT_ROUTE_CACHE_KEY = "transitRouteResult";
 
-async function getTmapRoute(fromX, fromY, toX, toY) {
-  const request = {
-    startX: Number(fromX),
-    startY: Number(fromY),
-    endX: Number(toX),
-    endY: Number(toY),
-  };
+async function getTmapRoute(from, to, departAt) {
+  const request = buildRouteRequest(from, to, departAt);
 
   const response = await fetch("/api/route/transit", {
     method: "POST",

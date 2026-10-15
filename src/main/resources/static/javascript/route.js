@@ -1,4 +1,4 @@
-/* global PAYABLE_MODES, isPayableLeg, hasPayableLeg, getTransportLabel -- transport.js */
+/* global PAYABLE_MODES, isPayableLeg, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt -- transport.js */
 /**
  * 상세 경로 페이지 스크립트
  * - Tmap API를 이용하여 경로 요약, 경로 단계 표시 및 지도에 경로 렌더링
@@ -31,18 +31,20 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   const selectedFrom = JSON.parse(localStorage.getItem("selectedFrom")) || {};
   const selectedTo = JSON.parse(localStorage.getItem("selectedTo")) || {};
+  const departAt = localStorage.getItem("selectedDepartAt") || "";
+  const bookable = isBookableDate(departAt);
 
   try {
-    const data = await loadTransitRoute(selectedFrom, selectedTo);
+    const data = await loadTransitRoute(selectedFrom, selectedTo, departAt);
     const itineraries = data?.metaData?.plan?.itineraries;
     if (!itineraries || itineraries.length === 0) {
       throw new Error(data?.result?.message || "경로 정보를 찾을 수 없습니다.");
     }
     const bestIndex = getBestItineraryIndex(type, data);
     const itinerary = itineraries[bestIndex];
-    renderSummary(itinerary);
-    renderSteps(itinerary);
-    renderBookingFooter(itinerary);
+    renderSummary(itinerary, departAt);
+    renderSteps(itinerary, bookable);
+    renderBookingFooter(itinerary, departAt);
     drawRoute(itinerary.legs);
   } catch (error) {
     console.error("경로 조회 실패:", error);
@@ -58,15 +60,11 @@ document.addEventListener("DOMContentLoaded", async function () {
  * 홈에서 검색한 결과(sessionStorage)를 재사용하고, 없거나 출발·도착지가 다르면 서버에 다시 요청
  * @param {object} from - 출발지 {x, y}
  * @param {object} to - 도착지 {x, y}
+ * @param {string} departAt - 출발 일시 yyyyMMddHHmm, 비어 있으면 현재 시각
  * @returns {Promise<object>} TMAP 대중교통 응답
  */
-async function loadTransitRoute(from, to) {
-  const request = {
-    startX: Number(from.x),
-    startY: Number(from.y),
-    endX: Number(to.x),
-    endY: Number(to.y),
-  };
+async function loadTransitRoute(from, to, departAt) {
+  const request = buildRouteRequest(from, to, departAt);
 
   const cached = JSON.parse(sessionStorage.getItem("transitRouteResult") || "null");
   if (cached && JSON.stringify(cached.request) === JSON.stringify(request)) {
@@ -181,8 +179,9 @@ function parseLineString(line) {
 /**
  * 경로 요약 정보 렌더링 (상세로 보여 주는 경로 기준)
  * @param {object} itinerary - 여정 객체
+ * @param {string} departAt - 출발 일시 yyyyMMddHHmm
  */
-function renderSummary(itinerary) {
+function renderSummary(itinerary, departAt) {
   const summaryBox = document.querySelector(".summary-box");
 
   const totalTimeMin = Math.round(itinerary.totalTime / 60); // 총 소요 시간(분)
@@ -190,6 +189,10 @@ function renderSummary(itinerary) {
   const transferCount = itinerary.transferCount; // 환승 횟수
 
   summaryBox.innerHTML = `
+    <div class="summary-item">
+      <span>출발</span>
+      <strong>${formatDepartAt(departAt)}</strong>
+    </div>
     <div class="summary-item">
       <span>총 소요 시간</span>
       <strong>${Math.floor(totalTimeMin / 60)}시간 ${totalTimeMin % 60}분</strong>
@@ -208,8 +211,9 @@ function renderSummary(itinerary) {
 /**
  * 상세 경로 단계 렌더링
  * @param {object} itinerary - 여정 객체
+ * @param {boolean} bookable - 예매할 수 있는 날짜인지 (당일 출발)
  */
-function renderSteps(itinerary) {
+function renderSteps(itinerary, bookable) {
   const container = document.querySelector(".sidebar-content");
   container.innerHTML = "";
 
@@ -227,7 +231,7 @@ function renderSteps(itinerary) {
     stepElement.dataset.leg = JSON.stringify(leg); // ← 여기에 실제 leg 정보 저장
 
     // 예매 대상(기차·고속·시외버스·항공)은 처음부터 선택해 두고, 나머지는 안내 전용
-    if (isPayableLeg(leg)) {
+    if (isPayableLeg(leg) && bookable) {
       stepElement.classList.add("selected");
       stepElement.title = "클릭해서 예매할 구간을 고르거나 뺄 수 있습니다.";
       stepElement.addEventListener("click", () => {
@@ -235,7 +239,9 @@ function renderSteps(itinerary) {
       });
     } else {
       stepElement.classList.add("disabled");
-      stepElement.title = "안내 전용 구간입니다. 요금은 현장에서 냅니다.";
+      stepElement.title = isPayableLeg(leg)
+        ? "예매는 당일 출발편만 가능합니다."
+        : "안내 전용 구간입니다. 요금은 현장에서 냅니다.";
     }
 
     stepElement.innerHTML = `
@@ -312,13 +318,21 @@ function getStepDescription(leg) {
 /**
  * 예매할 구간이 있는 경로에만 장바구니 담기·결제 버튼을 보여 주고, 없으면 안내 문구로 바꾼다
  * @param {object} itinerary - 여정 객체
+ * @param {string} departAt - 출발 일시 yyyyMMddHHmm
  */
-function renderBookingFooter(itinerary) {
+function renderBookingFooter(itinerary, departAt) {
   const footer = document.querySelector(".sidebar-footer");
   if (!footer) return;
 
   const notice = document.createElement("p");
   notice.classList.add("booking-notice");
+
+  if (hasPayableLeg(itinerary) && !isBookableDate(departAt)) {
+    footer.querySelectorAll("button").forEach((button) => (button.style.display = "none"));
+    notice.textContent = `${formatDepartAt(departAt)} 출발 경로는 조회만 할 수 있습니다. 예매는 당일 출발편만 가능합니다.`;
+    footer.prepend(notice);
+    return;
+  }
 
   if (hasPayableLeg(itinerary)) {
     notice.textContent = "기차·고속버스·시외버스·항공 구간을 예매할 수 있습니다. 구간을 눌러 고르거나 뺄 수 있습니다.";
