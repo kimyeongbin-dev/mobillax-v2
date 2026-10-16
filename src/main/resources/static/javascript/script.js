@@ -379,7 +379,7 @@ async function getTmapRoute(from, to, departAt) {
 
 // TMAP 오류 응답({result: {message}}, {error: {message}})에서 안내 문구 추출
 function getRouteErrorMessage(data) {
-  return data?.result?.message || data?.error?.message || "";
+  return data?.result?.message || data?.error?.message || (typeof data?.error === "string" ? data.error : "");
 }
 
 function alertComingSoon() {

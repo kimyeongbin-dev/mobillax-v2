@@ -1,4 +1,4 @@
-/* global getTransportLabel, collectBookingLegs -- transport.js */
+/* global getTransportLabel, collectBookingLegs, nowStamp -- transport.js */
 /**
  * cart.js
  *
@@ -7,6 +7,8 @@
  */
 
 document.addEventListener("DOMContentLoaded", async () => {
+  // 상세 화면(route.html)도 담기 기능 때문에 이 파일을 불러오므로, 장바구니 목록은 장바구니 화면에서만 그린다
+  if (!document.querySelector(".cart-list")) return;
   await loadCartList();
 
   // 장바구니 전체 비우기 버튼
@@ -64,9 +66,12 @@ async function loadCartList() {
 
     actionButtons.style.display = "flex";
 
+    const now = nowStamp();
     groupIds.forEach((groupId) => {
       const items = groupedCart[groupId];
       let totalFare = 0;
+      // 출발 일시가 없거나(편을 고르기 전 방식의 예전 항목) 이미 지난 편이 있으면 결제할 수 없다
+      const departed = items.some((item) => !/^\d{12}$/.test(item.departureTime || "") || item.departureTime <= now);
 
       const groupElement = document.createElement("div");
       groupElement.className = "cart-group";
@@ -74,7 +79,7 @@ async function loadCartList() {
         <h3>
           경로 묶음
           <div>
-            <button class="group-pay-button" data-groupid="${groupId}">결제하기</button>
+            <button class="group-pay-button" data-groupid="${groupId}" ${departed ? 'disabled title="출발 시각이 지났거나 알 수 없는 편이 있습니다"' : ""}>결제하기</button>
             <button class="group-delete-button" data-groupid="${groupId}">삭제</button>
           </div>
         </h3>
@@ -87,10 +92,18 @@ async function loadCartList() {
         itemElement.innerHTML = `
           <div><strong>${item.startName} → ${item.endName}</strong></div>
           <div>${getTransportLabel(item)} / ${item.route}</div>
-          <div>(요금: ￦${item.routePayment.toLocaleString()}원)</div>
+          <div>(요금: ￦${item.routePayment.toLocaleString()}원)${item.departureTime ? ` · ${Number(item.departureTime.slice(4, 6))}월 ${Number(item.departureTime.slice(6, 8))}일 ${item.departureTime.slice(8, 10)}:${item.departureTime.slice(10, 12)} 출발` : ""}</div>
         `;
         groupElement.appendChild(itemElement);
       });
+
+      if (departed) {
+        const warn = document.createElement("p");
+        warn.className = "departed-warning";
+        warn.textContent =
+          "출발 시각이 지났거나 알 수 없는 편이 있어 결제할 수 없습니다. 묶음을 삭제하고 편을 다시 골라 주세요.";
+        groupElement.appendChild(warn);
+      }
 
       const totalElement = document.createElement("div");
       totalElement.className = "total-fare";

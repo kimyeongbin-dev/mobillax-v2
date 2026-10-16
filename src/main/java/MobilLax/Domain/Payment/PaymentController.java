@@ -3,6 +3,7 @@ package MobilLax.Domain.Payment;
 import MobilLax.Domain.Cart.CartItemEntity;
 import MobilLax.Domain.Cart.CartItemRepository;
 import MobilLax.Domain.Cart.CartItemRequestDTO;
+import MobilLax.Domain.Cart.DepartureCheck;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -36,8 +37,13 @@ public class PaymentController {
     public Map<String, Map<String, Object>> prepareSdkPayments(@PathVariable UUID groupId) {
         String email = getCurrentUserEmail();
 
-        List<CartItemEntity> items = cartItemRepository.findByEmailAndTotalFareGroupId(email, groupId.toString());
+        // 삭제했거나 이미 결제한 묶음은 다시 결제 준비하지 않는다
+        List<CartItemEntity> items = cartItemRepository.findActiveByGroupId(email, groupId.toString());
         if (items.isEmpty()) throw new IllegalArgumentException("결제할 항목이 없습니다.");
+        String now = DepartureCheck.now();
+        if (items.stream().anyMatch(i -> DepartureCheck.isDeparted(i.getDepartureTime(), now))) {
+            throw new IllegalArgumentException("출발 시각이 지났거나 알 수 없는 편이 있어 결제할 수 없습니다. 이 묶음을 삭제하고 편을 다시 골라 주세요.");
+        }
 
         Map<String, List<CartItemEntity>> groupedByTransport = items.stream()
                 .collect(Collectors.groupingBy(CartItemEntity::getMode));
@@ -90,6 +96,10 @@ public class PaymentController {
         if (validLegs.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "요금이 있는 구간만 결제할 수 있습니다."));
         }
+        String now = DepartureCheck.now();
+        if (validLegs.stream().anyMatch(leg -> DepartureCheck.isDeparted(leg.getDepartureTime(), now))) {
+            return ResponseEntity.badRequest().body(Map.of("error", "출발 시각이 지났거나 알 수 없는 편이 있어 결제할 수 없습니다. 편을 다시 골라 주세요."));
+        }
 
         // ✅ 교통수단별로 구간 그룹화
         Map<String, List<CartItemRequestDTO.LegDTO>> groupedByTransport = validLegs.stream()
@@ -137,8 +147,13 @@ public class PaymentController {
             return "이미 결제된 주문입니다.";
         }
 
+        if (req.getPaymentId() == null || req.getPaymentId().isBlank()) {
+            throw new IllegalArgumentException("결제 번호가 없습니다.");
+        }
+
         PaymentEntity entity = PaymentEntity.builder()
                 .email(email)
+                .paymentId(req.getPaymentId())  // 빠져 있어 NOT NULL 제약으로 결제 완료가 한 번도 저장되지 않았다
                 .amount(req.getAmount())
                 .date(LocalDate.now())
                 .groupId(req.getGroupId())

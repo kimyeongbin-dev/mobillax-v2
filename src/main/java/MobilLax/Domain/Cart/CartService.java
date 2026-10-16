@@ -30,6 +30,14 @@ public class CartService {
         String groupId = UUID.randomUUID().toString();  // 새 그룹 ID 생성
         int totalFare = 0;
 
+        String now = DepartureCheck.now();
+        for (CartItemRequestDTO.LegDTO leg : legs) {
+            if (leg.getRoutePayment() > 0 && DepartureCheck.isDeparted(leg.getDepartureTime(), now)) {
+                throw new IllegalArgumentException("이미 출발했거나 출발 시각을 알 수 없는 편은 담을 수 없습니다: "
+                        + leg.getStartName() + " → " + leg.getEndName());
+            }
+        }
+
         for (CartItemRequestDTO.LegDTO leg : legs) {
             // 도보이거나 요금이 0 이하인 구간은 저장하지 않음
             if (leg.getRoutePayment() <= 0) {
@@ -113,7 +121,8 @@ public class CartService {
      * 로그인된 사용자의 장바구니 그룹 수 반환
      */
     public int getCartGroupCount(String email) {
-        List<CartItemEntity> items = cartItemRepository.findByEmail(email);
+        // 삭제했거나 결제한(isDeleted) 묶음은 세지 않는다
+        List<CartItemEntity> items = cartItemRepository.findByEmailAndIsDeletedFalse(email);
         return (int) items.stream()
                 .map(CartItemEntity::getTotalFareGroupId)
                 .distinct()

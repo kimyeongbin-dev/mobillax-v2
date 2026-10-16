@@ -3,4 +3,3 @@ out/
 node_modules/
 package-lock.json
 **/jquery-*.js
-src/main/resources/static/javascript/dummy/
