@@ -37,7 +37,8 @@ public class PaymentController {
     public Map<String, Map<String, Object>> prepareSdkPayments(@PathVariable UUID groupId) {
         String email = getCurrentUserEmail();
 
-        List<CartItemEntity> items = cartItemRepository.findByEmailAndTotalFareGroupId(email, groupId.toString());
+        // 삭제했거나 이미 결제한 묶음은 다시 결제 준비하지 않는다
+        List<CartItemEntity> items = cartItemRepository.findActiveByGroupId(email, groupId.toString());
         if (items.isEmpty()) throw new IllegalArgumentException("결제할 항목이 없습니다.");
         String now = DepartureCheck.now();
         if (items.stream().anyMatch(i -> DepartureCheck.isDeparted(i.getDepartureTime(), now))) {

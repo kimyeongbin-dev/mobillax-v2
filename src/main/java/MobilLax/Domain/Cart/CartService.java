@@ -121,7 +121,8 @@ public class CartService {
      * 로그인된 사용자의 장바구니 그룹 수 반환
      */
     public int getCartGroupCount(String email) {
-        List<CartItemEntity> items = cartItemRepository.findByEmail(email);
+        // 삭제했거나 결제한(isDeleted) 묶음은 세지 않는다
+        List<CartItemEntity> items = cartItemRepository.findByEmailAndIsDeletedFalse(email);
         return (int) items.stream()
                 .map(CartItemEntity::getTotalFareGroupId)
                 .distinct()
