@@ -10,6 +10,7 @@
 
 > 2025-1학기 졸업 캡스톤디자인 3인 팀 프로젝트([원본 저장소](https://github.com/kimyeongbin-dev/MobilLax))를
 > 팀 대표였던 본인이 **개인 프로젝트로 이어받아 개선**하고 있는 저장소입니다. → [버전 로드맵](#-버전-로드맵)
+> v1.x(원본을 로컬에서 실제 데이터로 동작시키기)를 마쳤습니다. 원본 대비 문제점·개선점·바뀐 점: [docs/V1_SUMMARY.md](docs/V1_SUMMARY.md)
 
 ---
 
@@ -216,6 +217,7 @@ docker compose --profile test run --rm --build test
 │   └── static/         # JS(경로·장바구니·결제), CSS, 지도 페이지
 ├── docs/ENV_SETUP.md   # .env 키 발급 가이드
 ├── docs/PUBLIC_DATA_API.md  # 공공데이터포털(기차·고속·시외버스·항공) API 정리
+├── docs/V1_SUMMARY.md       # v1.x 총평 (원본 대비 문제점·개선점·바뀐 점)
 ├── .githooks/          # pre-commit(시크릿·줄바꿈·린트), commit-msg, pre-push
 ├── .claude/           # AI 도구 하네스 (비밀값 접근 차단 훅, 권한 설정)
 ├── scripts/            # setup.sh, setup.ps1
@@ -232,7 +234,7 @@ docker compose --profile test run --rm --build test
 | 버전 | 목표 | 상태 |
 |---|---|---|
 | **v1** | 팀 프로젝트 최종 코드를 그대로 가져온 기준점 (하드코딩된 키만 분리) | ✅ 태그 `v1` |
-| **v1.x** | 키 전면 재발급, 로컬 Docker에서 빌드·실행되는 상태 만들기 | 🔄 진행 중 |
+| **v1.x** | 키 전면 재발급, 로컬 Docker에서 원본 기능이 실제 데이터로 동작하는 상태 만들기 | ✅ `v1.8` · [총평](docs/V1_SUMMARY.md) |
 | **v2** | 실제로 동작하는 서비스를 개선 (보안 수정, 코드 품질, 미구현 기능) | ⏳ |
 | **v3** | 실제 배포 | ⏳ |
 
