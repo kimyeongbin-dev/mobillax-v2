@@ -185,6 +185,7 @@ http://localhost:8080 에 접속합니다.
 ```bash
 docker compose --profile test run --rm --build test   # 앱 테스트 (보안 회귀 테스트 포함)
 npm run test:infra                                     # 컨테이너 보안 규칙 (Dockerfile·compose)
+npm run test:web                                       # 화면 출력 이스케이프 규칙
 ```
 
 상태 확인: `curl localhost:8080/health` → `{"status":"UP"}` (이상이 있으면 503)
@@ -250,6 +251,7 @@ npm run test:infra                                     # 컨테이너 보안 규
 - CSRF 보호 비활성화, 비로그인 장바구니 → v2.1에서 해결 (CSRF 보호·POST 로그아웃, 모든 API 로그인 필요)
 - 결제 검증 없음 → v2.2에서 해결 (운임은 서버가 TAGO에서 다시 확인, 결제 완료는 PortOne 조회로 확인)
 - TMAP 키 브라우저 노출 → v2.3에서 해결 (경로 지도를 카카오맵으로 바꾸고 TMAP 키는 서버 전용)
+- 입력값을 서버가 검증하지 않음, 장바구니 표시 문자열 그대로 저장·출력 → v2.4에서 해결 (요청 형식 검증, TAGO 값으로 표시, 화면 이스케이프)
 - 내부 정보 노출, SQL 로그, root 컨테이너 → v2.3에서 해결 (오류 응답 정리, 로그 수준 고정, `/health` 헬스체크, 비root 실행)
 
 ---

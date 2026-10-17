@@ -18,6 +18,7 @@
 | S7  | 헬스체크: 실패하면 503, 로그인 없이 상태만 응답(데이터·내부 정보 없음), DB와 외부 API를 모두 확인          | ✅ v2.3                                       | `HealthRegressionTests`, `HealthServiceTests`                  |
 | S8  | 컨테이너는 root가 아닌 사용자로 실행하고, 비밀번호를 명령 인자에 넣지 않는다                               | ✅ v2.3                                       | `npm run test:infra` (`scripts/infra-rules.test.js`)           |
 | S9  | 서버용 키는 브라우저로 보내지 않는다. 브라우저에는 도메인 제한된 카카오 JavaScript 키만 허용한다          | ✅ v2.3                                       | `KeyExposureRegressionTests`                                   |
+| S10 | 브라우저에서 오는 모든 값은 서버가 형식·길이·범위를 검증하고, 화면에는 이스케이프해서 그린다              | ✅ v2.4                                       | `InputValidationRegressionTests`, `npm run test:web`           |
 
 ## S1. 결제 금액과 결제 완료 확인 (v2.2)
 
@@ -131,3 +132,37 @@
 - 카카오 JavaScript SDK 도메인에 운영 도메인 추가 (현재 `http://localhost:8080`만 등록)
 - SK appKey의 IP 허용 목록에 서버 IP만 등록 (현재 "Any IP allowed")
 - 필요하면 카카오 REST 키에도 호출 허용 IP 등록
+
+## S10. 입력값 검증과 출력 이스케이프 (v2.4)
+
+요청 본문, 경로, 폼 값은 개발자도구로 얼마든지 바꿀 수 있습니다. 화면의 `maxlength`, `required`, 선택 상자는 안내일 뿐이고, **서버가 모든 값을 다시 검사**합니다.
+
+**원칙**
+1. **형식 검사:** 요청 DTO에 Bean Validation 제약(`@Pattern`, `@Size`, `@Min`, `@Max`, `@DecimalMin` 등)을 걸고 `@Valid`로 검사합니다. 규칙은 `Config/InputRules`에 모았습니다. 실패하면 400 `"입력값이 올바르지 않습니다."`이고, 보낸 값은 응답에 되돌려 싣지 않습니다(S5).
+2. **서버 값으로 바꾸기:** 화면에 다시 보여 줄 문자열은 브라우저 값을 저장하지 않고 서버가 만듭니다. 장바구니·결제의 역 이름은 TAGO 마스터(`transit_place`)에서, 노선 표시는 TAGO 편 정보로 만듭니다. 운임도 TAGO 값입니다(S1).
+3. **출력 이스케이프:** 서버·외부 API(TMAP·카카오)·사용자 문자열을 `innerHTML`에 넣을 때는 `escapeHtml`(transport.js)을 거칩니다. 인라인 이벤트(`onclick="...${값}..."`)에는 값을 넣지 않고 `addEventListener`를 씁니다.
+4. **쓰지 않는 입구 없애기:** 화면에서 쓰지 않던 `/api/terminals`(TAGO 응답 XML을 그대로 넘김)를 지웠습니다.
+
+**입력별 검사**
+
+| 입력 | 검사 |
+| --- | --- |
+| 장바구니 담기·바로 결제 (`selectedLegs`) | 1-10개. `mode`는 TRAIN·EXPRESSBUS·AIRPLANE, `kind`는 TransitKind, `depId`·`arrId`는 영숫자 40자, `routeId`는 영숫자·`_-` 40자, `departureTime`은 숫자 12자리, `routePayment`는 1원 이상 100만 원 이하. 그다음 TAGO 재조회로 편·운임·당일 여부 확인. `route`·`startName`·`endName`은 저장하지 않음 |
+| 장바구니 묶음 삭제 경로 | UUID |
+| 결제 완료·실패 (`paymentId`) | `payment-` 형식, 80자 이하. 그다음 자기 결제 기록인지 확인(S4) |
+| 장소 매칭 (`points`) | 1-20개. 이름은 1-40자이고 꺾쇠·따옴표·제어 문자 없음, 노선명 60자, 위도 33-39, 경도 124-132(국내) |
+| 경로 검색 | 국내 좌표, 출발 일시 형식과 14일 범위(v1.4) |
+| 편 조회 | 교통수단, ID 형식, 날짜 형식과 14일 범위(v1.6) |
+| 회원가입 | 이름 1-30자(깨진 글자·제어 문자 없음), 이메일 형식과 100자, **비밀번호 8-64자이고 UTF-8 72바이트 이하**(BCrypt는 72바이트 뒤를 버림) |
+| 프로필 수정 | 이름 규칙 동일 |
+
+**회귀 테스트**
+- `InputValidationRegressionTests`:
+  - 개발자도구로 바꾼 값(교통수단·ID·시각·운임 위조, 구간 0개·11개·null, 없는 역, UUID 아닌 묶음 번호, SQL·스크립트 모양의 결제 번호, 너무 긴 장소 이름·국외 좌표, 약한 비밀번호와 72바이트 초과 비밀번호)이 모두 400이거나 저장되지 않는지 확인합니다.
+  - 스크립트가 든 표시 문자열을 보내도 저장된 값은 서버가 만든 TAGO 이름인지 확인합니다.
+- `npm run test:web`(`scripts/web-escape.test.js`):
+  - `escapeHtml`이 태그·속성·따옴표를 글자로 바꾸는지 확인합니다.
+  - 화면 스크립트에 인라인 이벤트 값 끼워 넣기가 없는지 확인합니다. 예전 `script.js`로 되돌리면 실패합니다.
+
+**남은 일**
+- 장소 매칭은 점마다 카카오·도로명주소 API를 부를 수 있습니다. 비로그인 사용을 열 때 호출 횟수 제한(rate limit)과 함께 다룹니다.

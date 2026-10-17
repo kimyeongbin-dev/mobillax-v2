@@ -112,6 +112,7 @@ Git이 자동으로 만드는 `Merge ...`, `Revert "..."` 메시지는 통과시
 | 전체 포맷 | `npm run format` |
 | 훅 회귀 테스트 | `npm run test:hooks` |
 | 컨테이너 보안 규칙(S8) | `npm run test:infra` |
+| 화면 출력 이스케이프(S10) | `npm run test:web` |
 
 ### 보안 규칙
 기능을 고쳐도 깨지면 안 되는 보안 규칙은 [docs/SECURITY_RULES.md](docs/SECURITY_RULES.md)에 있고, `SecurityRegressionTests` 등 회귀 테스트로 고정되어 있습니다. 회귀 테스트를 지우거나 약하게 바꾸지 않습니다. 규칙을 바꿔야 하면 문서와 테스트를 같은 PR에서 고치고 이유를 적습니다.

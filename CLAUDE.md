@@ -24,6 +24,8 @@ AI 코딩 도구(Claude Code)가 이 저장소에서 작업할 때 지키는 규
 - [docs/SECURITY_RULES.md](docs/SECURITY_RULES.md)의 규칙은 기능을 고쳐도 깨지면 안 된다. 각 규칙은 회귀 테스트(`SecurityRegressionTests` 등)로 고정되어 있다.
 - 회귀 테스트를 지우거나, 단언을 약하게 바꾸거나, 실패하는 테스트를 건너뛰게 하지 않는다. 규칙을 바꿔야 하면 문서·테스트를 같은 PR에서 고치고 이유를 적는다.
 - 새 API를 만들면 로그인 필요 여부(S2)·CSRF(S3)·소유권(S4)을 확인하고 테스트를 추가한다.
+- 브라우저에서 오는 값은 모두 서버가 검증한다(S10): 요청 DTO에 제약을 걸고 `@Valid`, 화면에 다시 보일 문자열은 서버 값으로 만든다.
+- 화면 스크립트에서 서버·외부·사용자 문자열을 `innerHTML`에 넣을 때는 `escapeHtml`을 거치고, 인라인 이벤트 문자열에 값을 넣지 않는다.
 - fetch 로 상태를 바꾸는 화면은 `csrf.js`를 먼저 불러온다.
 
 ## 실행 환경
@@ -31,4 +33,5 @@ AI 코딩 도구(Claude Code)가 이 저장소에서 작업할 때 지키는 규
   - 실행: `docker compose up -d --build`
   - 테스트: `docker compose --profile test run --rm --build test`
   - Dockerfile·docker-compose.yml을 고치면 `npm run test:infra`(보안 규칙 S8)도 돌린다.
+  - 화면 스크립트를 고치면 `npm run test:web`(보안 규칙 S10)도 돌린다.
 - TMAP 대중교통 API는 FREE 요금제가 하루 10건이므로 검증 호출을 최소화한다.
