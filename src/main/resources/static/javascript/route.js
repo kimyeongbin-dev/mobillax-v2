@@ -580,7 +580,8 @@ async function loadTrips(element, kind, depId, arrId, reference, departAt) {
   fareText.classList.add("trip-fare");
   const apply = () => {
     const trip = trips[Number(select.value)];
-    element.dataset.trip = JSON.stringify(trip);
+    // 편을 조회한 조건도 함께 둔다: 담기·결제 때 서버가 이 조건으로 운임을 다시 확인한다
+    element.dataset.trip = JSON.stringify({ ...trip, kind, depId, arrId });
     element.dataset.tripBookable = String(Boolean(trip.bookable));
     element.classList.toggle("selected", Boolean(trip.bookable));
     fareText.textContent = trip.bookable
