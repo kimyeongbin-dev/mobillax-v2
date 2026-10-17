@@ -113,5 +113,8 @@ Git이 자동으로 만드는 `Merge ...`, `Revert "..."` 메시지는 통과시
 | 전체 포맷 | `npm run format` |
 | 훅 회귀 테스트 | `npm run test:hooks` |
 
+### 보안 규칙
+기능을 고쳐도 깨지면 안 되는 보안 규칙은 [docs/SECURITY_RULES.md](docs/SECURITY_RULES.md)에 있고, `SecurityRegressionTests` 등 회귀 테스트로 고정되어 있습니다. 회귀 테스트를 지우거나 약하게 바꾸지 않습니다. 규칙을 바꿔야 하면 문서와 테스트를 같은 PR에서 고치고 이유를 적습니다.
+
 ### AI 도구 하네스
 Claude Code 같은 AI 도구에는 [CLAUDE.md](CLAUDE.md)의 규칙과 `.claude/` 설정이 적용됩니다. `.claude/hooks/guard-secrets.js`가 AI 도구의 `.env` 접근과 환경변수 출력을 도구 단계에서 차단합니다.

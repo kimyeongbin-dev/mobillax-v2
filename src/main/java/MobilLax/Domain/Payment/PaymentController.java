@@ -172,7 +172,14 @@ public class PaymentController {
     public String failPayment(@RequestBody PaymentRequest req) {
         String email = getCurrentUserEmail();
 
+        if (req.getPaymentId() == null || req.getPaymentId().isBlank()) {
+            throw new IllegalArgumentException("결제 번호가 없습니다.");
+        }
         Optional<PaymentEntity> existing = paymentRepository.findByPaymentId(req.getPaymentId());
+        // 다른 사용자의 결제 기록은 바꿀 수 없다 (있다는 사실도 알리지 않는다)
+        if (existing.isPresent() && !email.equals(existing.get().getEmail())) {
+            throw new java.util.NoSuchElementException();
+        }
 
         PaymentEntity entity = existing.orElseGet(() -> PaymentEntity.builder()
                 .email(email)
@@ -187,30 +194,6 @@ public class PaymentController {
         paymentRepository.save(entity);
 
         return "fail recorded";
-    }
-
-    // 장바구니 복원 처리
-    @PostMapping("/restore-cart")
-    public String restoreCart(@RequestBody RestoreCartRequest req) {
-        String email = getCurrentUserEmail();
-
-        boolean isPaid = paymentRepository.existsByGroupIdAndTransportTypeAndStatus(
-                req.getGroupId(), req.getTransportType(), PaymentEntity.PaymentStatus.SUCCESS
-        );
-
-        if (isPaid) {
-            return "이미 결제된 항목입니다.";
-        }
-
-        cartItemRepository.restoreByEmailAndGroupIdAndTransport(email, req.getGroupId(), req.getTransportType());
-        return "복원 완료";
-    }
-
-    @Getter
-    @Setter
-    public static class RestoreCartRequest {
-        private String groupId;
-        private String transportType;
     }
 
     private String getCurrentUserEmail() {

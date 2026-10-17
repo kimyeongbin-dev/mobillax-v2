@@ -8,6 +8,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" type="text/css" rel="stylesheet">
   <script th:src="|https://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJsAppKey}&libraries=services|"></script>
   <script th:src="|https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=${tmapAppKey}|"></script>
+  <script src="javascript/csrf.js"></script>
   <script src="javascript/transport.js"></script>
   <script src="javascript/script.js"></script>
 </head>
@@ -29,9 +30,11 @@
     <a href="/mypage">
       <img src="https://img.icons8.com/ios-glyphs/30/ffffff/user.png" alt="MyPage">마이페이지
     </a>
-    <a href="/logout">
-      <img src="https://img.icons8.com/ios-glyphs/30/ffffff/logout-rounded.png" alt="Logout">로그아웃
-    </a>
+    <form th:action="@{/logout}" method="post" class="logout-form">
+      <button type="submit" class="logout-button">
+        <img src="https://img.icons8.com/ios-glyphs/30/ffffff/logout-rounded.png" alt="Logout">로그아웃
+      </button>
+    </form>
   </div>
 </header>
 

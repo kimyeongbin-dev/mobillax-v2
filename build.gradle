@@ -54,12 +54,18 @@ dependencies {
 
 	// ✅ 테스트 및 개발 도구
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+	// 실패 원인(assert 메시지)을 콘솔에 그대로 보여 준다 (Docker 로 돌리면 리포트 파일을 보기 어렵다)
+	testLogging {
+		events 'failed'
+		exceptionFormat 'full'
+	}
 }
 
 tasks.withType(JavaCompile) {
