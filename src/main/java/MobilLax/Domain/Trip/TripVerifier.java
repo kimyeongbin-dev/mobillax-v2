@@ -1,5 +1,6 @@
 package MobilLax.Domain.Trip;
 
+import MobilLax.Config.UserFacingException;
 import MobilLax.Domain.Cart.CartItemRequestDTO;
 import MobilLax.Domain.Cart.DepartureCheck;
 import MobilLax.Domain.Place.TransitKind;
@@ -32,15 +33,15 @@ public class TripVerifier {
         String label = leg.getStartName() + " → " + leg.getEndName();
         TransitKind kind = kindOf(leg);
         if (!isId(leg.getDepId()) || !isId(leg.getArrId()) || leg.getRouteId() == null || leg.getRouteId().isBlank()) {
-            throw new IllegalArgumentException("편 정보가 올바르지 않습니다. 편을 다시 골라 주세요: " + label);
+            throw new UserFacingException("편 정보가 올바르지 않습니다. 편을 다시 골라 주세요: " + label);
         }
         String now = DepartureCheck.now();
         if (DepartureCheck.isDeparted(leg.getDepartureTime(), now)) {
-            throw new IllegalArgumentException("이미 출발했거나 출발 시각을 알 수 없는 편은 예매할 수 없습니다: " + label);
+            throw new UserFacingException("이미 출발했거나 출발 시각을 알 수 없는 편은 예매할 수 없습니다: " + label);
         }
         String date = leg.getDepartureTime().substring(0, 8);
         if (!date.equals(now.substring(0, 8))) {
-            throw new IllegalArgumentException("당일 출발편만 예매할 수 있습니다: " + label);
+            throw new UserFacingException("당일 출발편만 예매할 수 있습니다: " + label);
         }
 
         List<TagoTripClient.Trip> trips;
@@ -56,13 +57,13 @@ public class TripVerifier {
                 .filter(t -> leg.getRouteId().equals(t.no()) && leg.getDepartureTime().equals(t.departAt()) && t.fare() > 0)
                 .toList();
         if (same.isEmpty()) {
-            throw new IllegalArgumentException("고른 편을 찾을 수 없습니다. 편을 다시 골라 주세요: " + label);
+            throw new UserFacingException("고른 편을 찾을 수 없습니다. 편을 다시 골라 주세요: " + label);
         }
         return same.stream()
                 .mapToInt(TagoTripClient.Trip::fare)
                 .filter(fare -> fare == leg.getRoutePayment())
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("운임이 편 정보와 다릅니다. 편을 다시 골라 주세요: " + label));
+                .orElseThrow(() -> new UserFacingException("운임이 편 정보와 다릅니다. 편을 다시 골라 주세요: " + label));
     }
 
     /** 구간의 교통수단(TMAP mode)과 편 조회에 쓴 교통수단(kind)이 맞는지까지 확인 */
@@ -71,7 +72,7 @@ public class TripVerifier {
         try {
             kind = TransitKind.valueOf(String.valueOf(leg.getKind()));
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("예매할 수 없는 교통수단입니다.");
+            throw new UserFacingException("예매할 수 없는 교통수단입니다.");
         }
         boolean matches = switch (kind) {
             case TRAIN -> "TRAIN".equals(leg.getMode());
@@ -79,7 +80,7 @@ public class TripVerifier {
             case EXPRESS_BUS, INTERCITY_BUS -> "EXPRESSBUS".equals(leg.getMode());
         };
         if (!matches) {
-            throw new IllegalArgumentException("예매할 수 없는 교통수단입니다.");
+            throw new UserFacingException("예매할 수 없는 교통수단입니다.");
         }
         return kind;
     }

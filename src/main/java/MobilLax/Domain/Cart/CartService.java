@@ -1,5 +1,6 @@
 package MobilLax.Domain.Cart;
 
+import MobilLax.Config.UserFacingException;
 import MobilLax.Domain.Trip.TripVerifier;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -36,7 +37,7 @@ public class CartService {
         // 요금이 없는 구간(도보 등)은 담지 않고, 나머지는 모두 운임을 확인한 뒤에 저장
         List<CartItemRequestDTO.LegDTO> paidLegs = legs.stream().filter(leg -> leg.getRoutePayment() > 0).toList();
         if (paidLegs.isEmpty()) {
-            throw new IllegalArgumentException("요금이 있는 구간만 담을 수 있습니다.");
+            throw new UserFacingException("요금이 있는 구간만 담을 수 있습니다.");
         }
         paidLegs.forEach(tripVerifier::verifiedFare);
 
