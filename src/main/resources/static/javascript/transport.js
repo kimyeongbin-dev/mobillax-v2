@@ -4,9 +4,22 @@
  * - 안내 전용: 시내버스, 지하철, 도보 등 (현장 결제)
  * 규칙 문서: docs/PUBLIC_DATA_API.md
  */
-/* exported TRANSFER_OPTIONS, getTransferMinutes, setTransferMinutes, PAYABLE_MODES, isOperatingLeg, isPayableLeg, preferOperating, nowStamp, formatHm, collectBookingLegs, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt */
+/* exported escapeHtml, TRANSFER_OPTIONS, getTransferMinutes, setTransferMinutes, PAYABLE_MODES, isOperatingLeg, isPayableLeg, preferOperating, nowStamp, formatHm, collectBookingLegs, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt */
 
 const PAYABLE_MODES = ["TRAIN", "EXPRESSBUS", "AIRPLANE"];
+
+const HTML_ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "`": "&#96;" };
+
+/**
+ * HTML 이스케이프 (보안 규칙 S10)
+ * - 서버·외부 API(TMAP·카카오)·사용자에게서 온 문자열을 innerHTML 템플릿에 넣을 때는 반드시 이 함수를 거친다
+ * - 이름에 꺾쇠·따옴표가 섞여 있어도 글자로만 보이고 태그·스크립트로 실행되지 않는다
+ * @param {*} value
+ * @returns {string}
+ */
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"'`]/g, (c) => HTML_ESCAPES[c]);
+}
 
 // TMAP 은 고속버스와 시외버스를 모두 EXPRESSBUS 로 주고 type 으로 구분한다 (23 고속, 22 시외)
 const EXPRESSBUS_TYPE_LABELS = { 22: "시외버스", 23: "고속버스" };
