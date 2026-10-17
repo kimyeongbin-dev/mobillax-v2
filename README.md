@@ -245,10 +245,10 @@ docker compose --profile test run --rm --build test
 
 **보안** — 원본 코드에서 물려받은 문제로, **v3 배포 전에 반드시 고칠 항목**입니다. v2에서 가장 먼저 다룹니다. 규칙과 회귀 테스트: [docs/SECURITY_RULES.md](docs/SECURITY_RULES.md)
 
-- **결제 검증 없음:** `/payment/complete`가 PortOne에 결제 결과를 확인하지 않고 클라이언트가 보낸 값으로 결제 완료를 기록합니다.
 - **TMAP 키 브라우저 노출:** 브라우저에서 TMAP REST를 직접 부르던 옛 지도 페이지(`map.html` 계열)는 v1.8에서 지웠지만, 지도 SDK가 같은 `TMAP_APPKEY`를 쓰므로 키는 여전히 브라우저에 보입니다. 배포 전에 SDK용 키를 분리하거나 도메인을 제한해야 합니다.
 - **내부 정보 노출:** `/health/db`가 오류 메시지를 응답에 내보내고, SQL 바인딩 값까지 로그에 남깁니다.
 - ~~CSRF 보호 비활성화, 비로그인 장바구니~~ → v2.1에서 해결 (CSRF 보호·POST 로그아웃, 모든 API 로그인 필요)
+- ~~결제 검증 없음~~ → v2.2에서 해결 (운임은 서버가 TAGO에서 다시 확인, 결제 완료는 PortOne 조회로 확인)
 
 ---
 

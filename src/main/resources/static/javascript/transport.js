@@ -152,6 +152,10 @@ function collectBookingLegs() {
       startName: leg.start.name,
       endName: leg.end.name,
       departureTime: trip.departAt,
+      // 서버가 같은 조건으로 TAGO 를 다시 조회해 운임을 확인한다 (보안 규칙 S1)
+      kind: trip.kind,
+      depId: trip.depId,
+      arrId: trip.arrId,
     }));
 }
 
