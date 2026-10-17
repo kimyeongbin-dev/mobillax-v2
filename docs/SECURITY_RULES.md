@@ -137,10 +137,25 @@
 
 요청 본문, 경로, 폼 값은 개발자도구로 얼마든지 바꿀 수 있습니다. 화면의 `maxlength`, `required`, 선택 상자는 안내일 뿐이고, **서버가 모든 값을 다시 검사**합니다.
 
+**구조 (공통 계층에서 강제)**
+
+| 구성 | 역할 |
+| --- | --- |
+| `Common/Validation/InputRules`, `AccountRules` | 정규식·범위·계정 규칙을 한 곳에 모음 |
+| 재사용 제약 어노테이션 | `@TagoId`, `@TripNo`, `@DateTimeMinute`, `@DateYmd`, `@PaymentId`, `@PayableMode`, `@TransitKindName`, `@PlainText`, `@KoreanLatitude`, `@KoreanLongitude`, `@AccountEmail`, `@UserName`, `@Password`. DTO는 이 어노테이션만 붙이고 정규식을 다시 쓰지 않음 |
+| `RequestBodyValidationAdvice` | **모든 `@RequestBody`를 컨트롤러에 넘기기 전에 검사**하는 미들웨어. 컨트롤러가 `@Valid`를 빠뜨려도 검사됨 |
+| 폼·경로·쿼리 | 폼 객체는 `@Valid` + `BindingResult`, 경로·쿼리 문자열은 제약 어노테이션(스프링 메서드 검증) |
+| `GlobalExceptionHandler` | 검증 실패를 모두 400 `"입력값이 올바르지 않습니다."`로 응답. 보낸 값은 싣지 않고(S5) 필드 이름만 로그에 남김 |
+| `InputValidationCoverageTests` | **등록된 모든 컨트롤러 메서드의 입력을 훑어**, 제약이 선언되지 않은 본문·폼·문자열 입력이 있으면 실패. 새 API가 검증을 빠뜨리면 빌드가 깨짐 |
+| `safe-html.js`의 `` html`...` `` | 끼워 넣는 값을 모두 자동으로 이스케이프하는 태그 템플릿. 고정 마크업만 `raw()` |
+| `scripts/web-escape.test.js` | 모든 화면 스크립트의 `innerHTML`·`outerHTML`·`insertAdjacentHTML`·`document.write`가 `` html`` ``이나 고정 문자열만 쓰는지, 템플릿이 `safe-html.js`를 먼저 불러오는지 검사 |
+
+컨트롤러에는 형식 검사를 직접 쓰지 않고, 날짜 범위(오늘부터 14일)·당일 예매·TAGO 재조회 같은 **업무 규칙만** 남깁니다.
+
 **원칙**
-1. **형식 검사:** 요청 DTO에 Bean Validation 제약(`@Pattern`, `@Size`, `@Min`, `@Max`, `@DecimalMin` 등)을 걸고 `@Valid`로 검사합니다. 규칙은 `Config/InputRules`에 모았습니다. 실패하면 400 `"입력값이 올바르지 않습니다."`이고, 보낸 값은 응답에 되돌려 싣지 않습니다(S5).
+1. **형식 검사:** 위 구조로 모든 입력의 형식·길이·범위를 검사합니다. 실패하면 400 `"입력값이 올바르지 않습니다."`이고, 보낸 값은 응답에 되돌려 싣지 않습니다(S5).
 2. **서버 값으로 바꾸기:** 화면에 다시 보여 줄 문자열은 브라우저 값을 저장하지 않고 서버가 만듭니다. 장바구니·결제의 역 이름은 TAGO 마스터(`transit_place`)에서, 노선 표시는 TAGO 편 정보로 만듭니다. 운임도 TAGO 값입니다(S1).
-3. **출력 이스케이프:** 서버·외부 API(TMAP·카카오)·사용자 문자열을 `innerHTML`에 넣을 때는 `escapeHtml`(transport.js)을 거칩니다. 인라인 이벤트(`onclick="...${값}..."`)에는 값을 넣지 않고 `addEventListener`를 씁니다.
+3. **출력 이스케이프:** HTML은 `` html`...` ``로만 만듭니다. 인라인 이벤트(`onclick="...${값}..."`)에는 값을 넣지 않고 `addEventListener`를 씁니다.
 4. **쓰지 않는 입구 없애기:** 화면에서 쓰지 않던 `/api/terminals`(TAGO 응답 XML을 그대로 넘김)를 지웠습니다.
 
 **입력별 검사**
@@ -157,12 +172,14 @@
 | 프로필 수정 | 이름 규칙 동일 |
 
 **회귀 테스트**
+- `InputValidationCoverageTests`: 모든 컨트롤러 입력에 검증이 선언됐는지(구조). 도입하자마자 `GET /register?error=` 쿼리의 빠진 제약을 찾아냈습니다. `PaymentRequest`의 제약을 지우면 결제 완료·실패 두 곳을 짚어 실패합니다.
 - `InputValidationRegressionTests`:
   - 개발자도구로 바꾼 값(교통수단·ID·시각·운임 위조, 구간 0개·11개·null, 없는 역, UUID 아닌 묶음 번호, SQL·스크립트 모양의 결제 번호, 너무 긴 장소 이름·국외 좌표, 약한 비밀번호와 72바이트 초과 비밀번호)이 모두 400이거나 저장되지 않는지 확인합니다.
   - 스크립트가 든 표시 문자열을 보내도 저장된 값은 서버가 만든 TAGO 이름인지 확인합니다.
 - `npm run test:web`(`scripts/web-escape.test.js`):
-  - `escapeHtml`이 태그·속성·따옴표를 글자로 바꾸는지 확인합니다.
-  - 화면 스크립트에 인라인 이벤트 값 끼워 넣기가 없는지 확인합니다. 예전 `script.js`로 되돌리면 실패합니다.
+  - `` html`` ``의 이스케이프(태그·속성·따옴표·백틱, 중첩, 배열, `raw`)를 확인합니다.
+  - 모든 HTML 대입이 `` html`` ``이나 고정 문자열인지, 인라인 이벤트에 값을 끼우지 않는지, 템플릿이 `safe-html.js`를 먼저 불러오는지 확인합니다.
+  - 일반 템플릿 대입, 변수 대입, 문자열 이어 붙이기, 불러오는 순서를 하나씩 일부러 틀리게 바꿔 보면 각각 그 줄을 짚어 실패합니다.
 
 **남은 일**
 - 장소 매칭은 점마다 카카오·도로명주소 API를 부를 수 있습니다. 비로그인 사용을 열 때 호출 횟수 제한(rate limit)과 함께 다룹니다.

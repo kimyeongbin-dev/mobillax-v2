@@ -206,18 +206,19 @@ npm run test:web                                       # 화면 출력 이스케
 ```
 .
 ├── src/main/java/MobilLax
-│   ├── Config/         # Security, WebClient, 외부 API 설정, 템플릿 키 주입
-│   ├── Controller/     # 페이지·경로·터미널·회원·프론트 설정 컨트롤러
+│   ├── Common/Validation/  # 입력 검증 공통 계층 (재사용 제약 어노테이션, 요청 본문 검증 어드바이스)
+│   ├── Config/         # Security, 외부 API 설정, 전역 예외 처리, 템플릿 키 주입
+│   ├── Controller/     # 페이지·경로·회원 컨트롤러
 │   ├── Domain/
 │   │   ├── Cart/       # 장바구니 (엔티티·리포지토리·서비스·API)
 │   │   ├── MyPage/     # 마이페이지
 │   │   └── Payment/    # PortOne 결제
 │   ├── Model/          # 회원 엔티티, TMAP 응답 모델
 │   ├── Repository/
-│   └── Service/        # 경로·터미널·회원 서비스
+│   └── Service/        # 경로·회원 서비스
 ├── src/main/resources
 │   ├── templates/      # Thymeleaf 페이지
-│   └── static/         # JS(경로·장바구니·결제), CSS, 지도 페이지
+│   └── static/         # JS(경로·장바구니·결제, safe-html.js 출력 이스케이프), CSS
 ├── docs/ENV_SETUP.md   # .env 키 발급 가이드
 ├── docs/PUBLIC_DATA_API.md  # 공공데이터포털(기차·고속·시외버스·항공) API 정리
 ├── docs/V1_SUMMARY.md       # v1.x 총평 (원본 대비 문제점·개선점·바뀐 점)
