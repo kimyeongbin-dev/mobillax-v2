@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MobilLax - 장바구니</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="css/cart.css" type="text/css" rel="stylesheet">
+    <script src="/javascript/csrf.js"></script>
     <script src="/javascript/transport.js"></script>
     <script src="/javascript/cart.js"></script>
     <script src="/javascript/payment.js"></script>
@@ -18,9 +19,11 @@
         <a href="/mypage">
             <img src="https://img.icons8.com/ios-glyphs/30/ffffff/user.png" alt="MyPage">마이페이지
         </a>
-        <a href="/logout">
-            <img src="https://img.icons8.com/ios-glyphs/30/ffffff/logout-rounded.png" alt="Logout">로그아웃
-        </a>
+        <form th:action="@{/logout}" method="post" class="logout-form">
+      <button type="submit" class="logout-button">
+        <img src="https://img.icons8.com/ios-glyphs/30/ffffff/logout-rounded.png" alt="Logout">로그아웃
+      </button>
+    </form>
     </div>
 </header>
 
