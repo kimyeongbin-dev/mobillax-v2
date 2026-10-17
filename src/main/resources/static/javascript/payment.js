@@ -42,7 +42,7 @@ function isUserCancel(response) {
 async function payAll(paymentDataMap) {
   const paid = [];
   for (const [transportType, paymentData] of Object.entries(paymentDataMap)) {
-    const { storeId, channelKey, paymentId, orderName, amount, groupId } = paymentData;
+    const { storeId, channelKey, paymentId, orderName, amount } = paymentData;
     const paymentResponse = await PortOne.requestPayment({
       storeId,
       channelKey,
@@ -52,7 +52,8 @@ async function payAll(paymentDataMap) {
       currency: "CURRENCY_KRW",
       payMethod: "CARD",
     });
-    const record = { paymentId, groupId, amount, transportType };
+    // 금액·묶음은 서버가 결제 준비 때 기록했으므로 결제 번호만 보낸다 (서버가 PortOne 에서 확인)
+    const record = { paymentId };
 
     if (paymentResponse?.code !== undefined && isUserCancel(paymentResponse)) {
       return {
@@ -66,9 +67,10 @@ async function payAll(paymentDataMap) {
     }
     const done = await postJson("/payment/complete", record);
     if (!done.ok) {
+      const data = await done.json().catch(() => ({}));
       return {
         status: "FAILED",
-        message: `${transportType} 결제는 되었지만 기록하지 못했습니다. 마이페이지에서 확인해 주세요.`,
+        message: `${transportType} 결제를 확인하지 못했습니다: ${data?.error || "마이페이지에서 확인해 주세요."}`,
       };
     }
     paid.push(transportType);
