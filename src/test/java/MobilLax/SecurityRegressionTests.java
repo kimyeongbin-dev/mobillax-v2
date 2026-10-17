@@ -181,7 +181,8 @@ class SecurityRegressionTests {
         @Test
         @WithMockUser(username = USER_A)
         void cannotChangeOthersPaymentRecord() throws Exception {
-            String paymentId = "security-test-" + UUID.randomUUID();
+            // 서버가 만드는 형식(payment-...)의 번호: 형식 검사(S10)를 통과한 뒤 소유권 검사(S4)에서 막혀야 한다
+            String paymentId = "payment-security-" + UUID.randomUUID();
             paymentRepository.save(PaymentEntity.builder()
                     .email(USER_B).paymentId(paymentId).amount(1000).date(LocalDate.now())
                     .groupId(UUID.randomUUID().toString()).transportType("TRAIN")
