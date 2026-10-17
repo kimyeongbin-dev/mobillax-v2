@@ -82,7 +82,8 @@ class SecurityRegressionTests {
 
         @Test
         void privatePagesRedirectToLogin() throws Exception {
-            for (String page : new String[]{"/cart", "/mypage", "/route", "/health/db"}) {
+            // v2.3: /health/db 는 /health·/health/live(로그인 없이 UP/DOWN 만, S7)로 바뀌어 목록에서 뺐다
+            for (String page : new String[]{"/cart", "/mypage", "/mypage/edit", "/route"}) {
                 mvc.perform(get(page)).andExpect(status().is3xxRedirection()).andExpect(redirectedUrlPattern("**/login"));
             }
         }
