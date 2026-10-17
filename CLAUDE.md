@@ -30,4 +30,5 @@ AI 코딩 도구(Claude Code)가 이 저장소에서 작업할 때 지키는 규
 - 로컬 JDK 버전과 무관하게 **Docker로 빌드·실행·테스트**한다. 호스트에서 `./gradlew`를 직접 돌리지 않는다.
   - 실행: `docker compose up -d --build`
   - 테스트: `docker compose --profile test run --rm --build test`
+  - Dockerfile·docker-compose.yml을 고치면 `npm run test:infra`(보안 규칙 S8)도 돌린다.
 - TMAP 대중교통 API는 FREE 요금제가 하루 10건이므로 검증 호출을 최소화한다.
