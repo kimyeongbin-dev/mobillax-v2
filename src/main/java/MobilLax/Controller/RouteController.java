@@ -34,7 +34,7 @@ public class RouteController {
 
     @PostMapping(value = "/transit", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> searchTransit(@RequestBody TransitRouteRequest request) {
-        if (!request.isInKorea()) {
+        if (request == null || !request.isInKorea()) {
             return error(HttpStatus.BAD_REQUEST, "출발지와 도착지 좌표가 올바르지 않습니다.");
         }
         if (!request.isDepartAtValid(LocalDate.now(KOREA))) {

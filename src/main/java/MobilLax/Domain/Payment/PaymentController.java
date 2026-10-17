@@ -6,11 +6,11 @@ import MobilLax.Domain.Cart.CartItemRepository;
 import MobilLax.Domain.Cart.CartItemRequestDTO;
 import MobilLax.Domain.Cart.DepartureCheck;
 import MobilLax.Domain.Trip.TripVerifier;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * 결제 준비·완료·실패 (보안 규칙 S1, docs/SECURITY_RULES.md)
@@ -68,33 +69,21 @@ public class PaymentController {
     }
 
     @PostMapping("/direct-sdk-ready")
-    public ResponseEntity<?> prepareDirectSdkPayments(@RequestBody CartItemRequestDTO request) {
+    public Map<String, Map<String, Object>> prepareDirectSdkPayments(@Valid @RequestBody CartItemRequestDTO request) {
         String email = getCurrentUserEmail();
 
-        List<CartItemRequestDTO.LegDTO> selectedLegs = request.getSelectedLegs();
-
-        // ✅ 유효성 검사: 선택된 구간이 비어있는 경우
-        if (selectedLegs == null || selectedLegs.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "선택된 구간이 없습니다."));
+        // 구간 수·형식은 @Valid 가 확인하고, 운임·이름·출발 시각·당일 여부는 서버가 TAGO 에서 확인한다 (S1·S10)
+        List<CartItemRequestDTO.LegDTO> legs = request.getSelectedLegs();
+        List<TripVerifier.VerifiedTrip> verified = legs.stream().map(tripVerifier::verify).toList();
+        record Priced(String mode, TripVerifier.VerifiedTrip trip) {
         }
-
-        // ✅ 유효 구간 필터링: 요금 0 이하 또는 출발/도착지 누락된 경우 제외
-        List<CartItemRequestDTO.LegDTO> validLegs = selectedLegs.stream()
-                .filter(leg -> leg.getRoutePayment() > 0
-                        && leg.getStartName() != null && !leg.getStartName().isBlank()
-                        && leg.getEndName() != null && !leg.getEndName().isBlank())
+        List<Priced> priced = IntStream.range(0, legs.size())
+                .mapToObj(i -> new Priced(legs.get(i).getMode(), verified.get(i)))
                 .toList();
 
-        if (validLegs.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "요금이 있는 구간만 결제할 수 있습니다."));
-        }
-        // 운임은 서버가 TAGO 에서 다시 확인한다 (출발 시각·당일 여부 포함)
-        validLegs.forEach(tripVerifier::verifiedFare);
-
         // 바로 결제는 장바구니 묶음이 없으므로 새 묶음 번호를 만든다
-        return ResponseEntity.ok(prepareByTransport(email, UUID.randomUUID().toString(), validLegs,
-                CartItemRequestDTO.LegDTO::getMode, CartItemRequestDTO.LegDTO::getRoutePayment,
-                CartItemRequestDTO.LegDTO::getStartName, CartItemRequestDTO.LegDTO::getEndName));
+        return prepareByTransport(email, UUID.randomUUID().toString(), priced, Priced::mode,
+                p -> p.trip().fare(), p -> p.trip().startName(), p -> p.trip().endName());
     }
 
     /**
@@ -147,7 +136,7 @@ public class PaymentController {
      * 결제 완료: PortOne 에서 확인한 뒤에만 SUCCESS 로 기록하고 장바구니 묶음을 비운다
      */
     @PostMapping("/complete")
-    public Map<String, String> completePayment(@RequestBody PaymentRequest req) {
+    public Map<String, String> completePayment(@Valid @RequestBody PaymentRequest req) {
         String email = getCurrentUserEmail();
         PaymentEntity payment = findOwnPayment(email, req);
 
@@ -195,7 +184,7 @@ public class PaymentController {
      * 결제 실패·취소 알림: 자기 결제 중 아직 확인되지 않은(PENDING) 것만 FAIL 로 바꾼다
      */
     @PostMapping("/fail")
-    public Map<String, String> failPayment(@RequestBody PaymentRequest req) {
+    public Map<String, String> failPayment(@Valid @RequestBody PaymentRequest req) {
         String email = getCurrentUserEmail();
         PaymentEntity payment = findOwnPayment(email, req);
 

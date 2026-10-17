@@ -54,6 +54,9 @@ public class TripController {
 
     @PostMapping
     public ResponseEntity<?> trips(@RequestBody TripRequest request) {
+        if (request == null) {
+            return badRequest("교통수단 또는 날짜가 올바르지 않습니다.");
+        }
         TransitKind kind;
         LocalDate date;
         try {

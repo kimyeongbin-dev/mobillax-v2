@@ -65,6 +65,10 @@ public class UserAccountService  {
     @Transactional
     public void registerUser(String name, String email, String password) {
         validateName(name);
+        validatePassword(password);
+        if (email == null || email.length() > MAX_EMAIL_LENGTH) {
+            throw new UserFacingException("이메일은 " + MAX_EMAIL_LENGTH + "자 이하로 입력해 주세요.");
+        }
         if (userAccountRepository.existsByEmail(email)) {
             throw new UserFacingException("이 이메일은 이미 사용 중입니다.");
         }
@@ -107,12 +111,30 @@ public class UserAccountService  {
 
     /** 이름 최대 길이 */
     public static final int MAX_NAME_LENGTH = 30;
+    static final int MIN_PASSWORD_LENGTH = 8;
+    static final int MAX_PASSWORD_LENGTH = 64;
+    static final int MAX_EMAIL_LENGTH = 100;
 
     /**
      * 이름 검증
      * - 요청 본문이 UTF-8 이 아닌 인코딩(예: Windows 의 CP949)으로 오면 서버가 읽지 못한 글자를 U+FFFD(�)로 바꿔 저장한다.
      *   이런 깨진 이름이 DB 에 남지 않도록 막는다
      */
+    /**
+     * 비밀번호 검증 (보안 규칙 S10)
+     * - 8자 이상 64자 이하, 제어 문자 없음
+     * - BCrypt 는 72바이트를 넘는 부분을 버려 앞 72바이트만 같으면 로그인되므로 UTF-8 72바이트 이하로 제한
+     */
+    public static void validatePassword(String password) {
+        if (password == null || password.length() < MIN_PASSWORD_LENGTH || password.length() > MAX_PASSWORD_LENGTH) {
+            throw new UserFacingException("비밀번호는 " + MIN_PASSWORD_LENGTH + "자 이상 " + MAX_PASSWORD_LENGTH + "자 이하로 입력해 주세요.");
+        }
+        if (password.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72
+                || password.chars().anyMatch(Character::isISOControl)) {
+            throw new UserFacingException("비밀번호에 쓸 수 없는 문자가 있거나 너무 깁니다.");
+        }
+    }
+
     public static void validateName(String name) {
         if (name == null || name.isBlank()) {
             throw new UserFacingException("이름을 입력해 주세요.");
