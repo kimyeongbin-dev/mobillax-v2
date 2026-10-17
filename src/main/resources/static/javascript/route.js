@@ -1,7 +1,7 @@
 /* global PAYABLE_MODES, isOperatingLeg, isPayableLeg, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt, preferOperating, nowStamp, formatHm, TRANSFER_OPTIONS, getTransferMinutes, setTransferMinutes -- transport.js */
 /**
  * 상세 경로 페이지 스크립트
- * - Tmap API를 이용하여 경로 요약, 경로 단계 표시 및 지도에 경로 렌더링
+ * - 서버가 받아 온 TMAP 대중교통 경로로 요약·단계를 표시하고, 카카오맵에 경로를 그린다 (TMAP 키는 서버 전용, 보안 규칙 S9)
  * @lastModified 2025-06-09
  */
 
@@ -22,11 +22,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     document.title = `MobilLax - ${titleMap[type]}`;
   }
 
-  map = new Tmapv2.Map("map_div", {
-    center: new Tmapv2.LatLng(37.5652045, 126.98702028),
-    width: "100%",
-    height: "100%",
-    zoom: 16,
+  map = new kakao.maps.Map(document.getElementById("map_div"), {
+    center: new kakao.maps.LatLng(37.5652045, 126.98702028),
+    level: 4,
   });
 
   const selectedFrom = JSON.parse(localStorage.getItem("selectedFrom")) || {};
@@ -135,10 +133,10 @@ function getBestItineraryIndex(type, data) {
  * @param {Array} legs - 경로 구간 배열
  */
 function drawRoute(legs) {
-  const routeBounds = new Tmapv2.LatLngBounds();
+  const routeBounds = new kakao.maps.LatLngBounds();
   for (const leg of legs) {
-    const startLatLng = new Tmapv2.LatLng(Number(leg.start.lat), Number(leg.start.lon));
-    const endLatLng = new Tmapv2.LatLng(Number(leg.end.lat), Number(leg.end.lon));
+    const startLatLng = new kakao.maps.LatLng(Number(leg.start.lat), Number(leg.start.lon));
+    const endLatLng = new kakao.maps.LatLng(Number(leg.end.lat), Number(leg.end.lon));
     routeBounds.extend(startLatLng);
     routeBounds.extend(endLatLng);
 
@@ -153,7 +151,7 @@ function drawRoute(legs) {
       drawLine(points, color);
     }
   }
-  map.panToBounds(routeBounds);
+  map.setBounds(routeBounds);
 }
 
 /**
@@ -162,19 +160,20 @@ function drawRoute(legs) {
  * @param {string} color - 선 색상
  */
 function drawLine(latlngs, color) {
-  const polyline = new Tmapv2.Polyline({
+  const polyline = new kakao.maps.Polyline({
     path: latlngs,
     strokeColor: color,
     strokeWeight: 6,
-    map: map,
+    strokeOpacity: 0.9,
   });
+  polyline.setMap(map);
   resultDrawArr.push(polyline);
 }
 
 /**
  * LineString 파싱
  * @param {string} line - 좌표 문자열
- * @returns {Array} Tmapv2.LatLng 배열
+ * @returns {Array} kakao.maps.LatLng 배열 (TMAP 은 WGS84 경도,위도 순서)
  */
 function parseLineString(line) {
   return line
@@ -182,7 +181,7 @@ function parseLineString(line) {
     .split(" ")
     .map((pair) => {
       const [lon, lat] = pair.split(",").map(Number);
-      return new Tmapv2.LatLng(lat, lon);
+      return new kakao.maps.LatLng(lat, lon);
     });
 }
 /**

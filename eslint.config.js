@@ -16,7 +16,6 @@ module.exports = [
       sourceType: "script",
       globals: {
         ...globals.browser,
-        Tmapv2: "readonly",
         kakao: "readonly",
         PortOne: "readonly",
       },
