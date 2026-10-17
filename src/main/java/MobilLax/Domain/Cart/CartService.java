@@ -1,5 +1,6 @@
 package MobilLax.Domain.Cart;
 
+import MobilLax.Domain.Trip.TripVerifier;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,9 +19,11 @@ import java.util.stream.Collectors;
 public class CartService {
 
     private final CartItemRepository cartItemRepository;
+    private final TripVerifier tripVerifier;
 
     /**
      * 사용자가 선택한 구간들을 장바구니에 저장
+     * - 운임은 서버가 TAGO 에서 다시 확인한 값만 저장한다 (보안 규칙 S1). 하나라도 확인되지 않으면 아무것도 담지 않는다
      * @param legs 선택된 경로 리스트
      * @return 총 결제 금액
      */
@@ -30,21 +33,14 @@ public class CartService {
         String groupId = UUID.randomUUID().toString();  // 새 그룹 ID 생성
         int totalFare = 0;
 
-        String now = DepartureCheck.now();
-        for (CartItemRequestDTO.LegDTO leg : legs) {
-            if (leg.getRoutePayment() > 0 && DepartureCheck.isDeparted(leg.getDepartureTime(), now)) {
-                throw new IllegalArgumentException("이미 출발했거나 출발 시각을 알 수 없는 편은 담을 수 없습니다: "
-                        + leg.getStartName() + " → " + leg.getEndName());
-            }
+        // 요금이 없는 구간(도보 등)은 담지 않고, 나머지는 모두 운임을 확인한 뒤에 저장
+        List<CartItemRequestDTO.LegDTO> paidLegs = legs.stream().filter(leg -> leg.getRoutePayment() > 0).toList();
+        if (paidLegs.isEmpty()) {
+            throw new IllegalArgumentException("요금이 있는 구간만 담을 수 있습니다.");
         }
+        paidLegs.forEach(tripVerifier::verifiedFare);
 
-        for (CartItemRequestDTO.LegDTO leg : legs) {
-            // 도보이거나 요금이 0 이하인 구간은 저장하지 않음
-            if (leg.getRoutePayment() <= 0) {
-                System.out.println("❌ 저장 제외: " + leg.getMode() + " - " + leg.getStartName() + " → " + leg.getEndName());
-                continue;
-            }
-
+        for (CartItemRequestDTO.LegDTO leg : paidLegs) {
             CartItemEntity item = CartItemEntity.builder()
                     .email(email)
                     .mode(leg.getMode())
@@ -56,6 +52,7 @@ public class CartService {
                     .departureTime(leg.getDepartureTime())
                     .totalFareGroupId(groupId)
                     .isDeleted(false)  // 신규 저장 시 isDeleted는 false
+                    .fareVerified(true)
                     .build();
 
             cartItemRepository.save(item);

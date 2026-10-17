@@ -153,7 +153,10 @@ async function handleAddToCart() {
       body: JSON.stringify({ selectedLegs }),
     });
 
-    if (!response.ok) throw new Error("서버 응답 실패");
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data?.error || "서버 응답 실패");
+    }
 
     const totalFare = await response.json(); // 총 결제 금액(totalFare)
     console.log("총 결제 금액:", totalFare);

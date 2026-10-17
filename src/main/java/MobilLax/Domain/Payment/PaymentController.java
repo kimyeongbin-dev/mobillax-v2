@@ -4,20 +4,31 @@ import MobilLax.Domain.Cart.CartItemEntity;
 import MobilLax.Domain.Cart.CartItemRepository;
 import MobilLax.Domain.Cart.CartItemRequestDTO;
 import MobilLax.Domain.Cart.DepartureCheck;
-import lombok.Getter;
+import MobilLax.Domain.Trip.TripVerifier;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Function;
+import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 
+/**
+ * 결제 준비·완료·실패 (보안 규칙 S1, docs/SECURITY_RULES.md)
+ * - 준비: 서버가 금액을 정해 결제 기록(PENDING)을 먼저 남기고, 그 결제 번호·금액으로만 결제창을 연다
+ * - 완료: 브라우저의 "결제됨" 알림을 믿지 않고 PortOne 에서 상태(PAID)·금액·통화·상점을 확인한 뒤에만 SUCCESS
+ *   금액이 다르거나 이미 결제된 묶음이면 PortOne 결제를 취소하고 FAIL
+ */
+@Slf4j
 @RestController
 @RequestMapping("/payment")
 @RequiredArgsConstructor
@@ -25,6 +36,8 @@ public class PaymentController {
 
     private final CartItemRepository cartItemRepository;
     private final PaymentRepository paymentRepository;
+    private final PortOneClient portOneClient;
+    private final TripVerifier tripVerifier;
 
     @Value("${portone_store}")
     private String storeId;
@@ -44,37 +57,15 @@ public class PaymentController {
         if (items.stream().anyMatch(i -> DepartureCheck.isDeparted(i.getDepartureTime(), now))) {
             throw new IllegalArgumentException("출발 시각이 지났거나 알 수 없는 편이 있어 결제할 수 없습니다. 이 묶음을 삭제하고 편을 다시 골라 주세요.");
         }
-
-        Map<String, List<CartItemEntity>> groupedByTransport = items.stream()
-                .collect(Collectors.groupingBy(CartItemEntity::getMode));
-
-        Map<String, Map<String, Object>> result = new HashMap<>();
-
-        for (Map.Entry<String, List<CartItemEntity>> entry : groupedByTransport.entrySet()) {
-            String transport = entry.getKey();
-            List<CartItemEntity> transportItems = entry.getValue();
-
-            int totalAmount = transportItems.stream().mapToInt(CartItemEntity::getRoutePayment).sum();
-
-            String orderName = transportItems.size() == 1 ?
-                    transportItems.get(0).getStartName() + " → " + transportItems.get(0).getEndName() :
-                    transportItems.get(0).getStartName() + " → " + transportItems.get(transportItems.size() - 1).getEndName()
-                            + " 외 " + (transportItems.size() - 1) + "건";
-
-            Map<String, Object> paymentInfo = new HashMap<>();
-            paymentInfo.put("storeId", storeId);
-            paymentInfo.put("channelKey", channelKey);
-            paymentInfo.put("paymentId", "payment-" + UUID.randomUUID());
-            paymentInfo.put("orderName", orderName);
-            paymentInfo.put("amount", totalAmount);
-            paymentInfo.put("transportType", transport);
-            paymentInfo.put("groupId", groupId.toString());
-
-            result.put(transport, paymentInfo);
+        // 담을 때 서버가 운임을 확인한 항목만 (v2.2 이전에 담은 항목은 브라우저가 보낸 운임이라 결제하지 않는다)
+        if (items.stream().anyMatch(i -> !Boolean.TRUE.equals(i.getFareVerified()))) {
+            throw new IllegalArgumentException("운임을 확인하지 않은 항목이 있어 결제할 수 없습니다. 이 묶음을 삭제하고 편을 다시 골라 주세요.");
         }
 
-        return result;
+        return prepareByTransport(email, groupId.toString(), items, CartItemEntity::getMode,
+                CartItemEntity::getRoutePayment, CartItemEntity::getStartName, CartItemEntity::getEndName);
     }
+
     @PostMapping("/direct-sdk-ready")
     public ResponseEntity<?> prepareDirectSdkPayments(@RequestBody CartItemRequestDTO request) {
         String email = getCurrentUserEmail();
@@ -96,30 +87,46 @@ public class PaymentController {
         if (validLegs.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "요금이 있는 구간만 결제할 수 있습니다."));
         }
-        String now = DepartureCheck.now();
-        if (validLegs.stream().anyMatch(leg -> DepartureCheck.isDeparted(leg.getDepartureTime(), now))) {
-            return ResponseEntity.badRequest().body(Map.of("error", "출발 시각이 지났거나 알 수 없는 편이 있어 결제할 수 없습니다. 편을 다시 골라 주세요."));
-        }
+        // 운임은 서버가 TAGO 에서 다시 확인한다 (출발 시각·당일 여부 포함)
+        validLegs.forEach(tripVerifier::verifiedFare);
 
-        // ✅ 교통수단별로 구간 그룹화
-        Map<String, List<CartItemRequestDTO.LegDTO>> groupedByTransport = validLegs.stream()
-                .collect(Collectors.groupingBy(CartItemRequestDTO.LegDTO::getMode));
+        // 바로 결제는 장바구니 묶음이 없으므로 새 묶음 번호를 만든다
+        return ResponseEntity.ok(prepareByTransport(email, UUID.randomUUID().toString(), validLegs,
+                CartItemRequestDTO.LegDTO::getMode, CartItemRequestDTO.LegDTO::getRoutePayment,
+                CartItemRequestDTO.LegDTO::getStartName, CartItemRequestDTO.LegDTO::getEndName));
+    }
+
+    /**
+     * 교통수단별로 결제 한 건씩: 서버가 정한 금액으로 결제 기록(PENDING)을 남기고 결제창에 넘길 값을 만든다
+     */
+    private <T> Map<String, Map<String, Object>> prepareByTransport(String email, String groupId, List<T> items,
+                                                                    Function<T, String> mode, ToIntFunction<T> fare,
+                                                                    Function<T, String> start, Function<T, String> end) {
+        Map<String, List<T>> groupedByTransport = items.stream()
+                .collect(Collectors.groupingBy(mode, LinkedHashMap::new, Collectors.toList()));
 
         Map<String, Map<String, Object>> result = new HashMap<>();
-
-        for (Map.Entry<String, List<CartItemRequestDTO.LegDTO>> entry : groupedByTransport.entrySet()) {
+        for (Map.Entry<String, List<T>> entry : groupedByTransport.entrySet()) {
             String transport = entry.getKey();
-            List<CartItemRequestDTO.LegDTO> legs = entry.getValue();
+            List<T> transportItems = entry.getValue();
 
-            int totalAmount = legs.stream().mapToInt(CartItemRequestDTO.LegDTO::getRoutePayment).sum();
-
-            String orderName = legs.size() == 1
-                    ? legs.get(0).getStartName() + " → " + legs.get(0).getEndName()
-                    : legs.get(0).getStartName() + " → " + legs.get(legs.size() - 1).getEndName()
-                    + " 외 " + (legs.size() - 1) + "건";
+            int totalAmount = transportItems.stream().mapToInt(fare).sum();
+            T first = transportItems.get(0);
+            String orderName = transportItems.size() == 1
+                    ? start.apply(first) + " → " + end.apply(first)
+                    : start.apply(first) + " → " + end.apply(transportItems.get(transportItems.size() - 1))
+                    + " 외 " + (transportItems.size() - 1) + "건";
 
             String paymentId = "payment-" + UUID.randomUUID();
-            String groupId = UUID.randomUUID().toString();
+            paymentRepository.save(PaymentEntity.builder()
+                    .email(email)
+                    .paymentId(paymentId)
+                    .amount(totalAmount)
+                    .date(LocalDate.now())
+                    .groupId(groupId)
+                    .transportType(transport)
+                    .status(PaymentEntity.PaymentStatus.PENDING)
+                    .build());
 
             Map<String, Object> paymentInfo = new HashMap<>();
             paymentInfo.put("storeId", storeId);
@@ -127,73 +134,97 @@ public class PaymentController {
             paymentInfo.put("paymentId", paymentId);
             paymentInfo.put("orderName", orderName);
             paymentInfo.put("amount", totalAmount);
-            paymentInfo.put("groupId", groupId);
             paymentInfo.put("transportType", transport);
+            paymentInfo.put("groupId", groupId);
 
             result.put(transport, paymentInfo);
         }
-
-        return ResponseEntity.ok(result);
+        return result;
     }
 
-    // 결제 완료 저장
+    /**
+     * 결제 완료: PortOne 에서 확인한 뒤에만 SUCCESS 로 기록하고 장바구니 묶음을 비운다
+     */
     @PostMapping("/complete")
-    public String completePayment(@RequestBody PaymentRequest req) {
+    public Map<String, String> completePayment(@RequestBody PaymentRequest req) {
         String email = getCurrentUserEmail();
+        PaymentEntity payment = findOwnPayment(email, req);
 
-        boolean alreadyPaid = paymentRepository.existsByGroupIdAndTransportTypeAndStatus(
-                req.getGroupId(), req.getTransportType(), PaymentEntity.PaymentStatus.SUCCESS);
-        if (alreadyPaid) {
-            return "이미 결제된 주문입니다.";
+        if (payment.getStatus() == PaymentEntity.PaymentStatus.SUCCESS) {
+            return Map.of("message", "이미 결제된 주문입니다.");
+        }
+        if (payment.getStatus() != PaymentEntity.PaymentStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 실패로 처리된 결제입니다.");
         }
 
-        if (req.getPaymentId() == null || req.getPaymentId().isBlank()) {
-            throw new IllegalArgumentException("결제 번호가 없습니다.");
+        PortOneClient.Payment portOne;
+        try {
+            portOne = portOneClient.find(payment.getPaymentId())
+                    .orElseThrow(() -> new IllegalArgumentException("결제 내역을 찾을 수 없습니다."));
+        } catch (IllegalStateException e) {
+            log.warn("결제 확인 실패 ({}): {}", payment.getPaymentId(), e.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "결제를 확인하지 못했습니다. 잠시 후 마이페이지에서 확인해 주세요.");
+        }
+        if (!"PAID".equals(portOne.status())) {
+            throw new IllegalArgumentException("결제가 완료되지 않았습니다.");
         }
 
-        PaymentEntity entity = PaymentEntity.builder()
-                .email(email)
-                .paymentId(req.getPaymentId())  // 빠져 있어 NOT NULL 제약으로 결제 완료가 한 번도 저장되지 않았다
-                .amount(req.getAmount())
-                .date(LocalDate.now())
-                .groupId(req.getGroupId())
-                .transportType(req.getTransportType())
-                .status(PaymentEntity.PaymentStatus.SUCCESS)
-                .build();
+        // 금액·통화·상점이 결제 준비 때 서버가 정한 값과 다르면 위조로 보고 취소
+        if (portOne.total() != payment.getAmount() || !"KRW".equals(portOne.currency()) || !storeId.equals(portOne.storeId())) {
+            log.warn("결제 금액 불일치 ({}): 기록 {}원, PortOne {}원 {}", payment.getPaymentId(), payment.getAmount(),
+                    portOne.total(), portOne.currency());
+            cancelAndFail(payment, "결제 금액 불일치");
+            throw new IllegalArgumentException("결제 금액이 주문과 달라 결제를 취소했습니다.");
+        }
+        // 같은 묶음·교통수단을 다른 결제로 이미 냈다면 이번 결제는 중복이므로 취소
+        if (paymentRepository.existsByGroupIdAndTransportTypeAndStatus(
+                payment.getGroupId(), payment.getTransportType(), PaymentEntity.PaymentStatus.SUCCESS)) {
+            cancelAndFail(payment, "중복 결제");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 결제된 주문이라 이번 결제를 취소했습니다.");
+        }
 
-        paymentRepository.save(entity);
-        cartItemRepository.markAsDeletedByEmailAndGroupId(email, req.getGroupId());  // isDeleted=true 처리
+        payment.setStatus(PaymentEntity.PaymentStatus.SUCCESS);
+        paymentRepository.save(payment);
+        cartItemRepository.markAsDeletedByEmailAndGroupId(email, payment.getGroupId());  // isDeleted=true 처리
 
-        return "ok";
+        return Map.of("message", "ok");
     }
 
-    // 결제 실패 저장
+    /**
+     * 결제 실패·취소 알림: 자기 결제 중 아직 확인되지 않은(PENDING) 것만 FAIL 로 바꾼다
+     */
     @PostMapping("/fail")
-    public String failPayment(@RequestBody PaymentRequest req) {
+    public Map<String, String> failPayment(@RequestBody PaymentRequest req) {
         String email = getCurrentUserEmail();
+        PaymentEntity payment = findOwnPayment(email, req);
 
+        // 완료가 확인된 결제는 브라우저 알림으로 실패로 바꾸지 않는다
+        if (payment.getStatus() == PaymentEntity.PaymentStatus.PENDING) {
+            payment.setStatus(PaymentEntity.PaymentStatus.FAIL);
+            paymentRepository.save(payment);
+        }
+        return Map.of("message", "fail recorded");
+    }
+
+    /** 결제 준비 때 만든 자기 결제 기록. 없거나 다른 사용자의 것이면 404 (있다는 사실도 알리지 않는다) */
+    private PaymentEntity findOwnPayment(String email, PaymentRequest req) {
         if (req.getPaymentId() == null || req.getPaymentId().isBlank()) {
             throw new IllegalArgumentException("결제 번호가 없습니다.");
         }
-        Optional<PaymentEntity> existing = paymentRepository.findByPaymentId(req.getPaymentId());
-        // 다른 사용자의 결제 기록은 바꿀 수 없다 (있다는 사실도 알리지 않는다)
-        if (existing.isPresent() && !email.equals(existing.get().getEmail())) {
-            throw new java.util.NoSuchElementException();
+        return paymentRepository.findByPaymentId(req.getPaymentId())
+                .filter(p -> email.equals(p.getEmail()))
+                .orElseThrow(NoSuchElementException::new);
+    }
+
+    private void cancelAndFail(PaymentEntity payment, String reason) {
+        try {
+            portOneClient.cancel(payment.getPaymentId(), reason);
+        } catch (IllegalStateException e) {
+            // 취소하지 못하면 FAIL 기록과 로그로 남겨 수동 환불한다
+            log.error("결제 취소 실패 ({}, {}): {}", payment.getPaymentId(), reason, e.getMessage());
         }
-
-        PaymentEntity entity = existing.orElseGet(() -> PaymentEntity.builder()
-                .email(email)
-                .paymentId(req.getPaymentId())
-                .amount(req.getAmount())
-                .date(LocalDate.now())
-                .groupId(req.getGroupId())
-                .transportType(req.getTransportType())
-                .build());
-
-        entity.setStatus(PaymentEntity.PaymentStatus.FAIL);
-        paymentRepository.save(entity);
-
-        return "fail recorded";
+        payment.setStatus(PaymentEntity.PaymentStatus.FAIL);
+        paymentRepository.save(payment);
     }
 
     private String getCurrentUserEmail() {

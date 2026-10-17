@@ -30,5 +30,8 @@ public class CartItemEntity {
     private String totalFareGroupId;
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
+    // 담을 때 서버가 TAGO 에서 운임을 확인했는지 (v2.2, 보안 규칙 S1). 그 전에 담은 항목은 null → 결제 불가
+    @Column(name = "fare_verified")
+    private Boolean fareVerified;
 
 }

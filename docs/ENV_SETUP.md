@@ -17,7 +17,7 @@ MobilLax가 사용하는 환경 변수와 각 키의 발급 방법을 정리한 
 | 카카오 | `KAKAO_APPKEY` | Kakao Developers (같은 앱의 REST API 키) | 서버: `KakaoLocalClient` (장소 매칭의 좌표↔주소 변환, 결과는 저장하지 않음) | ⬜ |
 | 포트원 | `PORTONE_STORE_ID` | 포트원 관리자콘솔 | 결제창 호출 (`PaymentController` → `payment.js`) | ✅ |
 | 포트원 | `PORTONE_CHANNEL_KEY` | 포트원 관리자콘솔 | 결제창 호출 | ✅ |
-| 포트원 | `PORTONE_APPKEY` | 포트원 관리자콘솔 (V2 API Secret) | 아직 미사용 (서버 결제 검증용으로 v2에서 사용 예정) | ⬜ |
+| 포트원 | `PORTONE_APPKEY` | 포트원 관리자콘솔 (V2 API Secret) | 결제 완료 서버 확인·취소 (`PortOneClient`, v2.2) | ✅ |
 | 공공데이터 | `BUS_API_KEY` | 공공데이터포털 | 서버: `TerminalService` (`/api/terminals`, 시외버스 터미널 조회) | ⬜ |
 | 공공데이터 | `BUS_API_URL_CTYCODE`, `BUS_API_URL_TERMINAL`, `BUS_API_URL_SCHEDULE` | 고정 URL | 위와 동일 | `.env.example` 값 그대로 |
 | 도로명주소 | `JUSO_SEARCH_KEY` | 주소기반산업지원서비스 (business.juso.go.kr) | 서버: `JusoClient` (TAGO 역·터미널·공항 주소 찾기) | ⬜ |
@@ -138,13 +138,13 @@ KAKAO_APPKEY=<REST API 키>
 6. 테스트용 상점 아이디(MID)는 제공되는 **공용 MID**를 고르고, PG별 필수 항목과 과세 구분을 입력한 뒤 **[저장]**을 누릅니다.
 7. 채널 목록에서 방금 만든 채널의 **채널 키**(`channel-key-...` 형식)를 복사합니다.
 
-### 5-3. V2 API Secret → `PORTONE_APPKEY` (선택)
+### 5-3. V2 API Secret → `PORTONE_APPKEY` (필수)
 1. **결제 연동 → 연동 관리 → 식별코드·API Keys**에서 **[V2 API]** 탭을 엽니다. Owner나 Admin 권한이 필요합니다.
 2. **[새로운 API Secret 발급]**을 누르고 이름과 만료 기한을 정해 **[생성]**합니다.
 3. Secret은 **발급 직후 한 번만** 보이니 바로 복사해서 `.env`에 넣으세요. 잃어버리면 새로 발급해야 합니다.
    - 채널 설정에 입력하는 **PG사 시크릿과는 다른 값**입니다. 헷갈리면 API 호출 때 401 에러가 납니다.
    - 서버에서만 써야 하는 민감 정보입니다. 브라우저에 절대 내려보내지 마세요.
-   - 현재 코드에서는 아직 쓰지 않습니다. v2에서 서버 측 결제 검증(결제 금액 위변조 확인)에 쓸 예정입니다.
+   - v2.2부터 결제 완료를 서버에서 확인(단건 조회)하고, 금액이 다르거나 중복 결제면 취소하는 데 씁니다. 없거나 틀리면 결제가 완료로 기록되지 않습니다.
 
 ### `.env` 입력
 ```
