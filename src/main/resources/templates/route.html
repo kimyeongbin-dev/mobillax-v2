@@ -6,7 +6,8 @@
   <title>MobilLax - 상세 경로</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link href="/css/route.css" type="text/css" rel="stylesheet"></link>
-  <script th:src="|https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=${tmapAppKey}|"></script>
+  <!-- 지도는 카카오맵: 브라우저용 JavaScript 키(등록 도메인에서만 동작). TMAP 키는 서버 전용 (보안 규칙 S9) -->
+  <script th:src="|https://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJsAppKey}|"></script>
   <script src="/javascript/csrf.js"></script>
   <script src="/javascript/transport.js"></script>
   <script src="/javascript/cart.js"></script>

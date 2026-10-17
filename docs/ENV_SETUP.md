@@ -12,8 +12,8 @@ MobilLax가 사용하는 환경 변수와 각 키의 발급 방법을 정리한 
 | 구분 | 변수 | 발급처 | 사용 위치 | 필수 |
 |---|---|---|---|---|
 | DB | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `DB_ROOT_PASSWORD` | 직접 정함 | docker compose MySQL, Spring datasource | ✅ |
-| TMAP | `TMAP_APPKEY` | SK open API | 서버: `RouteServiceImpl` (대중교통 경로) / 브라우저: `home`·`route` 템플릿 지도 SDK | ✅ |
-| 카카오 | `KAKAO_JS_APPKEY` | Kakao Developers | 브라우저: `home` 템플릿 카카오 지도 SDK(장소 검색) | ✅ |
+| TMAP | `TMAP_APPKEY` | SK open API | 서버 전용: `RouteServiceImpl` (대중교통 경로). 브라우저로 보내지 않음 (S9) | ✅ |
+| 카카오 | `KAKAO_JS_APPKEY` | Kakao Developers | 브라우저: `home`(장소 검색)·`route`(경로 지도) 카카오 지도 SDK. 브라우저로 가는 유일한 키 | ✅ |
 | 카카오 | `KAKAO_APPKEY` | Kakao Developers (같은 앱의 REST API 키) | 서버: `KakaoLocalClient` (장소 매칭의 좌표↔주소 변환, 결과는 저장하지 않음) | ⬜ |
 | 포트원 | `PORTONE_STORE_ID` | 포트원 관리자콘솔 | 결제창 호출 (`PaymentController` → `payment.js`) | ✅ |
 | 포트원 | `PORTONE_CHANNEL_KEY` | 포트원 관리자콘솔 | 결제창 호출 | ✅ |
@@ -67,7 +67,7 @@ MySQL Workbench로 접속하려면 `127.0.0.1:3306`, 사용자 `DB_USERNAME`(또
 - 대중교통 API 이용 절차: https://transit.tmapmobility.com/guide/procedure
 - 사용하는 API
   - 대중교통 경로: `POST https://apis.openapi.sk.com/transit/routes`
-  - 자동차 경로, POI 검색, 지도 JS SDK(`/tmap/jsv2`)
+  - 지도는 카카오맵을 씁니다(v2.3). TMAP 지도 SDK는 브라우저에 키를 보내야 해서 쓰지 않습니다.
 
 ### 발급 절차
 1. **회원가입/로그인:** openapi.sk.com에서 T아이디로 로그인하거나 회원가입합니다. 개인회원을 선택합니다.
@@ -84,8 +84,8 @@ MySQL Workbench로 접속하려면 `127.0.0.1:3306`, 사용자 `DB_USERNAME`(또
 ```
 TMAP_APPKEY=<발급받은 appKey>
 ```
-- 키 하나로 서버 호출과 브라우저 지도 SDK를 모두 처리합니다.
-- 배포(v3) 때 브라우저용 키를 도메인 제한이나 호출량 분리 목적으로 따로 두어야 하면 그때 나눕니다.
+- 서버에서만 씁니다. 브라우저로 보내지 않습니다(보안 규칙 S9).
+- SK open API의 appKey는 앱마다 하나이고, 걸 수 있는 제한은 **IP 허용 목록**뿐입니다(도메인 제한 없음). 배포(v3) 때 **[앱] → [앱키(appKey)] → IPS**에 서버 IP만 등록합니다.
 
 ---
 
@@ -221,8 +221,9 @@ docker compose up -d --force-recreate app
 
 ## 8. 브라우저에 노출되는 키에 대해
 
-`TMAP_APPKEY`(지도 SDK용으로 내려가는 값)와 `KAKAO_JS_APPKEY`는 구조상 사용자 브라우저에 그대로 보입니다. `.env`로 옮긴 것은 **저장소에 키가 커밋되지 않게** 하려는 것이고, 브라우저 노출까지 막지는 않습니다.
+브라우저로 가는 키는 **`KAKAO_JS_APPKEY` 하나**입니다(보안 규칙 S9, `KeyExposureRegressionTests`가 지킴). `.env`는 **저장소에 키가 커밋되지 않게** 하는 장치이고, 브라우저로 보낸 키는 숨길 수 없으므로 "어떤 키를 브라우저로 보내도 되는가"를 따로 정했습니다.
 
-- **카카오 JavaScript 키:** 원래 공개를 전제로 한 키입니다. **JavaScript SDK 도메인 등록**으로 다른 사이트에서 쓰지 못하게 막습니다.
-- **TMAP 키:** REST API 호출(대중교통 경로)은 서버가 합니다. 브라우저에서 REST를 직접 부르던 옛 지도 페이지는 v1.8에서 지웠습니다. 다만 지도 SDK(`/tmap/jsv2?appKey=`)가 같은 `TMAP_APPKEY`를 쓰므로 키는 브라우저에 보입니다. 배포(v3) 전에 SDK용 키를 분리하거나 허용 도메인을 제한합니다.
-- **포트원 `storeId`·`channelKey`:** 공개해도 되는 식별자입니다. `PORTONE_APPKEY`(API Secret)는 절대 브라우저로 보내면 안 됩니다.
+- **카카오 JavaScript 키:** 브라우저에서 쓰도록 설계된 키입니다. 공식 지도 가이드도 `sdk.js?appkey=`로 넣고, **JavaScript SDK 도메인에 등록한 사이트에서만 동작**합니다(그 밖의 요청은 거절). 배포 때 운영 도메인을 추가합니다.
+- **TMAP 키:** 서버 전용입니다. 예전에는 지도 SDK 주소(`/tmap/jsv2?appKey=`)로 같은 키를 브라우저에 보냈는데, SK 키는 도메인 제한이 없고 하루 10건인 대중교통 키와 같은 값이라 v2.3에서 지도를 카카오맵으로 바꾸고 브라우저에서 뺐습니다.
+- **카카오 REST 키, 공공데이터·도로명주소 키, `PORTONE_APPKEY`, DB 비밀번호:** 서버 전용입니다.
+- **포트원 `storeId`·`channelKey`:** 결제창 SDK에 필요한 공개 식별자이고 비밀키가 아닙니다. 결제 확인·취소는 서버가 `PORTONE_APPKEY`로 합니다.
