@@ -1,4 +1,4 @@
-/* global escapeHtml, hasPayableLeg, buildRouteRequest, isBookableDate, preferOperating -- transport.js */
+/* global html, raw, hasPayableLeg, buildRouteRequest, isBookableDate, preferOperating -- transport.js */
 let selectedFrom = null; //출발지 선택 상태 저장용 변수
 let selectedTo = null; //도착지 선택 상태 저장용 변수
 let currentFocusType = null; //현재 선택 상태 저장용 변수
@@ -66,22 +66,29 @@ function showSuggestions(value) {
 
   const ps = new kakao.maps.services.Places();
   ps.keywordSearch(value, function (data, status) {
-    const header = `<div class="suggest-header">${type === "from" ? "출발지 검색" : "도착지 검색"}</div>`;
+    const header = html`<div class="suggest-header">${type === "from" ? "출발지 검색" : "도착지 검색"}</div>`;
 
     if (status !== kakao.maps.services.Status.OK) {
-      suggestionsBox.innerHTML = `
+      suggestionsBox.innerHTML = html`
         <div class="suggest-header">${type === "from" ? "출발지 검색" : "도착지 검색"}</div>
         <div class="empty-result" id="empty">
-            <div class="icon"><img src="https://img.icons8.com/?size=100&id=132&format=png&color=1A1A1A" alt="검색 아이콘" width="100" height="100"></div>
-            <div>검색결과가 없습니다.</div>
+          <div class="icon">
+            <img
+              src="https://img.icons8.com/?size=100&id=132&format=png&color=1A1A1A"
+              alt="검색 아이콘"
+              width="100"
+              height="100"
+            />
+          </div>
+          <div>검색결과가 없습니다.</div>
         </div>
-        `;
+      `;
       suggestionsBox.style.display = "block";
       return;
     }
 
     // 장소 이름은 외부(카카오) 데이터라 HTML·인라인 스크립트 문자열에 넣지 않고 글자로만 넣는다 (S10)
-    suggestionsBox.innerHTML = header;
+    suggestionsBox.innerHTML = html`${header}`;
     data.slice(0, 5).forEach((place) => {
       const item = document.createElement("div");
       item.className = "item";
@@ -334,20 +341,18 @@ function displayRoutes(data, bookableDate) {
 
     const li = document.createElement("li");
 
-    li.innerHTML = `
+    li.innerHTML = html`
       <a class="route-card" href="/route?type=${key}">
         <div class="route-summary">
           <div class="route-type">${labels[key]}</div>
           <div class="total-info">
-            <span class="time">⏱ ${escapeHtml(route.time)}분</span>
-            <span class="price">💸 ${escapeHtml(route.cost)}원</span>
-            <span class="transfer-info">🔁 환승 ${escapeHtml(route.transfers)}회</span>
-            ${hasPayableLeg(route) ? (bookableDate ? '<span class="bookable">🎫 예매 가능</span>' : '<span class="bookable view-only">🗓 조회 전용 (예매는 당일만)</span>') : ""}
+            <span class="time">⏱ ${route.time}분</span>
+            <span class="price">💸 ${route.cost}원</span>
+            <span class="transfer-info">🔁 환승 ${route.transfers}회</span>
+            ${hasPayableLeg(route) ? (bookableDate ? raw('<span class="bookable">🎫 예매 가능</span>') : raw('<span class="bookable view-only">🗓 조회 전용 (예매는 당일만)</span>')) : ""}
           </div>
         </div>
-        <div class="route-summary-line">
-          ${escapeHtml(route.summary)}
-        </div>
+        <div class="route-summary-line">${route.summary}</div>
       </a>
     `;
 
