@@ -369,6 +369,9 @@ async function getTmapRoute(from, to, departAt) {
   });
   const data = await response.json().catch(() => ({}));
 
+  if (response.status === 401) {
+    throw new Error("로그인 후 경로를 검색할 수 있습니다.");
+  }
   if (!response.ok) {
     throw new Error(getRouteErrorMessage(data) || `경로 검색에 실패했습니다. (${response.status})`);
   }
@@ -384,29 +387,4 @@ function getRouteErrorMessage(data) {
 
 function alertComingSoon() {
   alert("해당 기능은 준비 중입니다.");
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const authBox = document.querySelector(".auth-buttons");
-
-  if (!authBox) return;
-
-  const isLoggedIn = localStorage.getItem("login") === "true"; // 예: 로그인 시 true 저장한다고 가정
-
-  if (isLoggedIn) {
-    authBox.innerHTML = `
-      <a href="/member/mypage.html">
-        <img src="https://img.icons8.com/ios-filled/50/user.png" alt="MyPage">마이페이지
-      </a>
-      <a href="#" onclick="logout()">
-        <img src="https://img.icons8.com/ios-filled/50/logout-rounded-left.png" alt="Logout">로그아웃
-      </a>
-    `;
-  }
-});
-
-function logout() {
-  localStorage.removeItem("login");
-  alert("로그아웃 되었습니다.");
-  location.reload();
 }
