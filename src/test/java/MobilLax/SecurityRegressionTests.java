@@ -195,6 +195,33 @@ class SecurityRegressionTests {
                     .isEqualTo(PaymentEntity.PaymentStatus.SUCCESS);
         }
 
+        /**
+         * 결제 번호 형식(payment-UUID)이 알려져도, 남의 진행 중(PENDING) 결제를 실패로 바꿔 그 사람의 결제를 막을 수 없다.
+         * 남의 번호와 없는 번호의 응답이 같아, 응답으로 번호가 있는지 알아낼 수도 없다
+         */
+        @Test
+        @WithMockUser(username = USER_A)
+        void cannotFailOthersPendingPaymentOrProbeIt() throws Exception {
+            String othersPending = "payment-" + UUID.randomUUID();
+            paymentRepository.save(PaymentEntity.builder()
+                    .email(USER_B).paymentId(othersPending).amount(1000).date(LocalDate.now())
+                    .groupId(UUID.randomUUID().toString()).transportType("TRAIN")
+                    .status(PaymentEntity.PaymentStatus.PENDING).build());
+            String nonexistent = "payment-" + UUID.randomUUID();
+
+            var others = mvc.perform(post("/payment/fail").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"paymentId\":\"" + othersPending + "\"}")).andReturn().getResponse();
+            var missing = mvc.perform(post("/payment/fail").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"paymentId\":\"" + nonexistent + "\"}")).andReturn().getResponse();
+
+            assertThat(others.getStatus()).isEqualTo(404);
+            assertThat(others.getContentAsString()).isEqualTo(missing.getContentAsString());
+            assertThat(missing.getStatus()).isEqualTo(404);
+            assertThat(paymentRepository.findByPaymentId(othersPending).orElseThrow().getStatus())
+                    .isEqualTo(PaymentEntity.PaymentStatus.PENDING);
+            assertThat(paymentRepository.findByPaymentId(nonexistent)).isEmpty();
+        }
+
         @Test
         @WithMockUser(username = USER_A)
         void unusedCartRestoreApiIsGone() throws Exception {
