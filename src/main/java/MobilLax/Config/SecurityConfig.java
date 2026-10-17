@@ -76,7 +76,9 @@ public class SecurityConfig {
     /** 로그인 없이 열리는 화면·정적 파일 (API 는 모두 로그인 필요: 비로그인 사용 허용은 호출 횟수 제한과 함께 나중에) */
     static final String[] PUBLIC_PATHS = {
             "/", "/home", "/login", "/register", "/error",
-            "/css/**", "/javascript/**", "/images/**"
+            "/css/**", "/javascript/**", "/images/**",
+            // 헬스체크: 컨테이너가 로그인 없이 확인한다. 응답은 UP/DOWN 뿐 (보안 규칙 S7)
+            "/health", "/health/live"
     };
 
     /** 화면이 아니라 fetch 로 부르는 경로: 로그인이 안 되어 있으면 로그인 페이지로 보내지 않고 401 JSON */

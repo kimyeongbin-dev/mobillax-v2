@@ -74,6 +74,13 @@ public class TagoTripClient {
         };
     }
 
+    /**
+     * 헬스체크용 가벼운 호출 (열차 도시 코드 목록). 키·서비스가 정상이면 예외 없이 끝난다
+     */
+    public void ping() {
+        fetch("TrainInfo/GetCtyCodeList", "", i -> new Trip("", "", "", "", 0));
+    }
+
     private static Trip busTrip(JsonNode i) {
         return new Trip(i.path("routeId").asText(), i.path("gradeNm").asText(),
                 minute(i.path("depPlandTime").asText()), minute(i.path("arrPlandTime").asText()),
