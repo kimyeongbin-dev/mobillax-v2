@@ -78,8 +78,7 @@ flowchart LR
 
     subgraph External["외부 API"]
         TmapREST["TMAP 대중교통 API"]
-        TmapSDK["TMAP 지도 SDK / POI·경로"]
-        KakaoSDK["카카오 지도 SDK"]
+        KakaoSDK["카카오 지도 SDK<br/>경로 지도·장소 검색"]
         PortOne["PortOne V2 결제"]
         DataGo["공공데이터포털<br/>TAGO 시외버스"]
     end
@@ -88,13 +87,13 @@ flowchart LR
     App -- "JPA" --> DB
     App -- "경로 조회" --> TmapREST
     App -- "터미널 조회" --> DataGo
-    UI -- "지도 표시·장소 검색" --> TmapSDK
-    UI -- "장소 검색" --> KakaoSDK
+    UI -- "지도 표시·장소 검색 (JS 키)" --> KakaoSDK
     UI -- "결제창" --> PortOne
 ```
 
-- 모든 키는 `.env` 한 곳에서 관리합니다. 브라우저가 쓰는 지도 SDK 키는 서버가 템플릿(`FrontendKeyAdvice`)으로 내려줍니다.
-- 경로·편·장소 매칭 같은 REST API 호출은 모두 서버가 하고, 브라우저는 지도 SDK만 씁니다. → [알려진 이슈](#알려진-이슈)
+- 모든 키는 `.env` 한 곳에서 관리합니다.
+- 경로·편·장소 매칭·결제 확인 같은 API 호출은 모두 서버가 합니다. TMAP·카카오 REST·공공데이터·PortOne 비밀키는 **서버 전용**입니다.
+- 브라우저로 가는 키는 **카카오 JavaScript 키 하나**뿐입니다. 등록한 도메인에서만 동작하도록 설계된 키이고, 서버가 템플릿(`FrontendKeyAdvice`)으로 내려줍니다. → [보안 규칙 S9](docs/SECURITY_RULES.md#s9-브라우저로-가는-키-v23)
 
 ### 예매·결제 흐름
 
@@ -144,7 +143,7 @@ sequenceDiagram
 | 데이터 | **Spring Data JPA + MySQL 8.0** | 회원·장바구니·결제처럼 관계와 정합성이 중요한 데이터라 RDBMS를 씀. JPA로 반복 SQL을 줄임 |
 | 외부 API 호출 | **WebClient / RestTemplate** | 공공데이터 API를 비동기(WebClient)로 호출. XML 응답은 Jackson XML로 매핑 |
 | 경로 | **TMAP 대중교통 API** | 여러 교통수단을 엮은 경로와 **구간별 요금**을 함께 주는 공개 API여서 "통합 예매"라는 목표에 직접 맞음 |
-| 지도 | **TMAP 지도 SDK, 카카오 지도 SDK** | TMAP은 경로 시각화와 POI 검색, 카카오는 홈 화면 출발지·도착지 장소 검색(자동완성)에 사용 |
+| 지도 | **카카오 지도 SDK** | 경로 시각화와 홈 화면 장소 검색(자동완성). 브라우저용 JavaScript 키가 도메인 제한을 지원해서, 도메인 제한이 없는 TMAP 키 대신 브라우저에는 이 키만 둔다 (v2.3, S9) |
 | 결제 | **PortOne V2** | 여러 PG사를 하나의 SDK와 API로 연동할 수 있고, 계약 없이 **테스트 채널**로 전체 결제 흐름을 검증할 수 있음 |
 | 공공데이터 | **공공데이터포털 TAGO** | 시외·고속버스 등 국토교통부 공식 데이터. 자동 승인이라 바로 연동할 수 있음 |
 | 설정 | **spring-dotenv** | DB 접속 정보와 API 키를 코드에서 분리해 `.env` 하나로 관리 |
@@ -245,10 +244,10 @@ docker compose --profile test run --rm --build test
 
 **보안** — 원본 코드에서 물려받은 문제로, **v3 배포 전에 반드시 고칠 항목**입니다. v2에서 가장 먼저 다룹니다. 규칙과 회귀 테스트: [docs/SECURITY_RULES.md](docs/SECURITY_RULES.md)
 
-- **TMAP 키 브라우저 노출:** 브라우저에서 TMAP REST를 직접 부르던 옛 지도 페이지(`map.html` 계열)는 v1.8에서 지웠지만, 지도 SDK가 같은 `TMAP_APPKEY`를 쓰므로 키는 여전히 브라우저에 보입니다. 배포 전에 SDK용 키를 분리하거나 도메인을 제한해야 합니다.
 - **내부 정보 노출:** `/health/db`가 오류 메시지를 응답에 내보내고, SQL 바인딩 값까지 로그에 남깁니다.
 - ~~CSRF 보호 비활성화, 비로그인 장바구니~~ → v2.1에서 해결 (CSRF 보호·POST 로그아웃, 모든 API 로그인 필요)
 - ~~결제 검증 없음~~ → v2.2에서 해결 (운임은 서버가 TAGO에서 다시 확인, 결제 완료는 PortOne 조회로 확인)
+- ~~TMAP 키 브라우저 노출~~ → v2.3에서 해결 (경로 지도를 카카오맵으로 바꾸고 TMAP 키는 서버 전용)
 
 ---
 
