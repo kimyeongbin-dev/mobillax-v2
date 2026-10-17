@@ -1,5 +1,6 @@
 package MobilLax.Domain.MyPage;
 
+import MobilLax.Config.UserFacingException;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -54,7 +55,7 @@ public class MyPageController {
 
         try {
             myPageService.updateProfile(user.getUsername(), dto.getName(), null);
-        } catch (IllegalArgumentException e) {
+        } catch (UserFacingException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/mypage/edit";
         }

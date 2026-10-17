@@ -26,7 +26,7 @@ module.exports = [
     },
   },
   {
-    files: [".claude/hooks/**/*.js", "eslint.config.js"],
+    files: [".claude/hooks/**/*.js", "scripts/**/*.js", "eslint.config.js"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "commonjs",

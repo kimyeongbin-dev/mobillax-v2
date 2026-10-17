@@ -3,10 +3,11 @@
   "private": true,
   "description": "MobilLax 프론트엔드 린트·포맷과 Git 훅용 개발 도구 (앱 실행에는 필요 없음)",
   "scripts": {
-    "lint": "eslint src/main/resources/static .claude/hooks",
-    "format": "prettier --write \"src/main/resources/static/**/*.{js,css}\" \".claude/hooks/*.js\"",
-    "format:check": "prettier --check \"src/main/resources/static/**/*.{js,css}\" \".claude/hooks/*.js\"",
-    "test:hooks": "node .claude/hooks/guard-secrets.test.js && bash .githooks/secret-scan.test.sh && bash .githooks/eol-check.test.sh"
+    "lint": "eslint src/main/resources/static .claude/hooks scripts",
+    "format": "prettier --write \"src/main/resources/static/**/*.{js,css}\" \".claude/hooks/*.js\" \"scripts/*.js\"",
+    "format:check": "prettier --check \"src/main/resources/static/**/*.{js,css}\" \".claude/hooks/*.js\" \"scripts/*.js\"",
+    "test:hooks": "node .claude/hooks/guard-secrets.test.js && bash .githooks/secret-scan.test.sh && bash .githooks/eol-check.test.sh",
+    "test:infra": "node scripts/infra-rules.test.js"
   },
   "lint-staged": {
     "*.js": [

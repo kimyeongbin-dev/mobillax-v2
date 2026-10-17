@@ -41,7 +41,7 @@ MobilLax가 사용하는 환경 변수와 각 키의 발급 방법을 정리한 
 | `DB_NAME` | `MobilLaxDB` | 컨테이너 최초 기동 시 자동 생성되는 DB |
 | `DB_USERNAME` | `mobillax` | 앱이 쓰는 일반 계정 (최초 기동 시 자동 생성) |
 | `DB_PASSWORD` | 무작위 문자열 | 위 계정의 비밀번호 |
-| `DB_ROOT_PASSWORD` | 무작위 문자열 | MySQL root 비밀번호 (헬스체크·관리용) |
+| `DB_ROOT_PASSWORD` | 무작위 문자열 | MySQL root 비밀번호 (관리용. v2.3부터 헬스체크는 앱 계정을 씀) |
 
 비밀번호 생성 예시 (PowerShell):
 

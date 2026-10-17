@@ -1,5 +1,6 @@
 package MobilLax.Controller;
 
+import MobilLax.Domain.Health.HealthService;
 import MobilLax.Model.TransitRouteRequest;
 import MobilLax.Service.RouteService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class RouteController {
     private static final ZoneId KOREA = ZoneId.of("Asia/Seoul");
 
     private final RouteService routeService;
+    private final HealthService healthService;
 
     @PostMapping(value = "/transit", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> searchTransit(@RequestBody TransitRouteRequest request) {
@@ -41,10 +43,14 @@ public class RouteController {
         }
 
         try {
-            return ResponseEntity.ok(routeService.searchTransitRoutes(request));
+            String routes = routeService.searchTransitRoutes(request);
+            healthService.record(HealthService.Component.TMAP, true);
+            return ResponseEntity.ok(routes);
         } catch (HttpStatusCodeException e) {
             log.warn("TMAP 대중교통 API 오류: {} {}", e.getStatusCode(), e.getResponseBodyAsString());
             int code = e.getStatusCode().value();
+            // 헬스체크(S7): 하루 10건 한도라 따로 점검 호출을 하지 않고 실제 호출 결과로 판단. 400(검색 결과 없음 등)은 서비스 정상
+            healthService.record(HealthService.Component.TMAP, code == 400);
             if (code == 400) {
                 // "검색 결과 없음" 등 요청 단위 오류는 TMAP 안내 문구를 그대로 전달
                 return ResponseEntity.badRequest()
@@ -58,6 +64,7 @@ public class RouteController {
             return error(HttpStatus.BAD_GATEWAY, "경로 검색 서비스를 일시적으로 사용할 수 없습니다.");
         } catch (ResourceAccessException e) {
             log.warn("TMAP 대중교통 API 응답 없음: {}", e.getMessage());
+            healthService.record(HealthService.Component.TMAP, false);
             return error(HttpStatus.GATEWAY_TIMEOUT, "경로 검색 서버가 응답하지 않습니다. 잠시 후 다시 시도해 주세요.");
         }
     }

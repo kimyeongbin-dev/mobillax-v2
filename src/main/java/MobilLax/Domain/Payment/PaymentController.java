@@ -1,5 +1,6 @@
 package MobilLax.Domain.Payment;
 
+import MobilLax.Config.UserFacingException;
 import MobilLax.Domain.Cart.CartItemEntity;
 import MobilLax.Domain.Cart.CartItemRepository;
 import MobilLax.Domain.Cart.CartItemRequestDTO;
@@ -52,14 +53,14 @@ public class PaymentController {
 
         // 삭제했거나 이미 결제한 묶음은 다시 결제 준비하지 않는다
         List<CartItemEntity> items = cartItemRepository.findActiveByGroupId(email, groupId.toString());
-        if (items.isEmpty()) throw new IllegalArgumentException("결제할 항목이 없습니다.");
+        if (items.isEmpty()) throw new UserFacingException("결제할 항목이 없습니다.");
         String now = DepartureCheck.now();
         if (items.stream().anyMatch(i -> DepartureCheck.isDeparted(i.getDepartureTime(), now))) {
-            throw new IllegalArgumentException("출발 시각이 지났거나 알 수 없는 편이 있어 결제할 수 없습니다. 이 묶음을 삭제하고 편을 다시 골라 주세요.");
+            throw new UserFacingException("출발 시각이 지났거나 알 수 없는 편이 있어 결제할 수 없습니다. 이 묶음을 삭제하고 편을 다시 골라 주세요.");
         }
         // 담을 때 서버가 운임을 확인한 항목만 (v2.2 이전에 담은 항목은 브라우저가 보낸 운임이라 결제하지 않는다)
         if (items.stream().anyMatch(i -> !Boolean.TRUE.equals(i.getFareVerified()))) {
-            throw new IllegalArgumentException("운임을 확인하지 않은 항목이 있어 결제할 수 없습니다. 이 묶음을 삭제하고 편을 다시 골라 주세요.");
+            throw new UserFacingException("운임을 확인하지 않은 항목이 있어 결제할 수 없습니다. 이 묶음을 삭제하고 편을 다시 골라 주세요.");
         }
 
         return prepareByTransport(email, groupId.toString(), items, CartItemEntity::getMode,
@@ -160,13 +161,13 @@ public class PaymentController {
         PortOneClient.Payment portOne;
         try {
             portOne = portOneClient.find(payment.getPaymentId())
-                    .orElseThrow(() -> new IllegalArgumentException("결제 내역을 찾을 수 없습니다."));
+                    .orElseThrow(() -> new UserFacingException("결제 내역을 찾을 수 없습니다."));
         } catch (IllegalStateException e) {
             log.warn("결제 확인 실패 ({}): {}", payment.getPaymentId(), e.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "결제를 확인하지 못했습니다. 잠시 후 마이페이지에서 확인해 주세요.");
         }
         if (!"PAID".equals(portOne.status())) {
-            throw new IllegalArgumentException("결제가 완료되지 않았습니다.");
+            throw new UserFacingException("결제가 완료되지 않았습니다.");
         }
 
         // 금액·통화·상점이 결제 준비 때 서버가 정한 값과 다르면 위조로 보고 취소
@@ -174,7 +175,7 @@ public class PaymentController {
             log.warn("결제 금액 불일치 ({}): 기록 {}원, PortOne {}원 {}", payment.getPaymentId(), payment.getAmount(),
                     portOne.total(), portOne.currency());
             cancelAndFail(payment, "결제 금액 불일치");
-            throw new IllegalArgumentException("결제 금액이 주문과 달라 결제를 취소했습니다.");
+            throw new UserFacingException("결제 금액이 주문과 달라 결제를 취소했습니다.");
         }
         // 같은 묶음·교통수단을 다른 결제로 이미 냈다면 이번 결제는 중복이므로 취소
         if (paymentRepository.existsByGroupIdAndTransportTypeAndStatus(
@@ -209,7 +210,7 @@ public class PaymentController {
     /** 결제 준비 때 만든 자기 결제 기록. 없거나 다른 사용자의 것이면 404 (있다는 사실도 알리지 않는다) */
     private PaymentEntity findOwnPayment(String email, PaymentRequest req) {
         if (req.getPaymentId() == null || req.getPaymentId().isBlank()) {
-            throw new IllegalArgumentException("결제 번호가 없습니다.");
+            throw new UserFacingException("결제 번호가 없습니다.");
         }
         return paymentRepository.findByPaymentId(req.getPaymentId())
                 .filter(p -> email.equals(p.getEmail()))
