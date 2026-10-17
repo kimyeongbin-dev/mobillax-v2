@@ -1,5 +1,8 @@
 package MobilLax.Model;
 
+import MobilLax.Common.Validation.DateTimeMinute;
+import MobilLax.Common.Validation.KoreanLatitude;
+import MobilLax.Common.Validation.KoreanLongitude;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -11,7 +14,9 @@ import java.time.format.ResolverStyle;
  *
  * @param departAt 출발 일시 yyyyMMddHHmm (TMAP searchDttm). 비어 있으면 현재 시각 기준으로 검색
  */
-public record TransitRouteRequest(double startX, double startY, double endX, double endY, String departAt) {
+public record TransitRouteRequest(@KoreanLongitude double startX, @KoreanLatitude double startY,
+                                  @KoreanLongitude double endX, @KoreanLatitude double endY,
+                                  @DateTimeMinute String departAt) {
 
     /** 출발 일시 형식 (TMAP searchDttm 과 같음) */
     public static final DateTimeFormatter DEPART_AT_FORMAT =
@@ -20,10 +25,6 @@ public record TransitRouteRequest(double startX, double startY, double endX, dou
     /** 조회할 수 있는 가장 먼 날짜 (오늘부터 며칠 뒤까지) */
     public static final int MAX_DAYS_AHEAD = 14;
 
-    /** 출발지·도착지가 모두 대한민국 범위 안의 좌표인지 */
-    public boolean isInKorea() {
-        return inKorea(startX, startY) && inKorea(endX, endY);
-    }
 
     /** 출발 일시를 지정했는지 */
     public boolean hasDepartAt() {
@@ -43,7 +44,4 @@ public record TransitRouteRequest(double startX, double startY, double endX, dou
         }
     }
 
-    private static boolean inKorea(double lon, double lat) {
-        return lon >= 124 && lon <= 132 && lat >= 33 && lat <= 39;
-    }
 }

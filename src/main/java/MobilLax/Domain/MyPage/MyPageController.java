@@ -1,6 +1,6 @@
 package MobilLax.Domain.MyPage;
 
-import MobilLax.Config.UserFacingException;
+import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.bind.annotation.*;
@@ -49,16 +50,17 @@ public class MyPageController {
 
     @PostMapping("/mypage/edit")
     public String updateProfile(@AuthenticationPrincipal User user,
-                                @ModelAttribute ProfileUpdateDto dto,
+                                @Valid @ModelAttribute ProfileUpdateDto dto,
+                                BindingResult binding,
                                 RedirectAttributes redirectAttributes) {
         if (user == null) return "redirect:/login";
 
-        try {
-            myPageService.updateProfile(user.getUsername(), dto.getName(), null);
-        } catch (UserFacingException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        // 이름 형식은 ProfileUpdateDto 의 @UserName 으로 검사한다 (S10)
+        if (binding.hasErrors()) {
+            redirectAttributes.addFlashAttribute("error", binding.getAllErrors().get(0).getDefaultMessage());
             return "redirect:/mypage/edit";
         }
+        myPageService.updateProfile(user.getUsername(), dto.getName(), null);
         return "redirect:/mypage";
     }
 

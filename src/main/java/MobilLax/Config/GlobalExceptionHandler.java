@@ -1,5 +1,6 @@
 package MobilLax.Config;
 
+import MobilLax.Common.Validation.InvalidInputException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -7,9 +8,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -49,6 +52,24 @@ public class GlobalExceptionHandler {
             MethodArgumentTypeMismatchException.class})
     public ResponseEntity<Map<String, String>> badRequest(Exception ex) {
         return body(HttpStatus.BAD_REQUEST, "요청 형식이 올바르지 않습니다.");
+    }
+
+    /**
+     * 요청 DTO 의 형식·길이·범위 검증(@Valid) 실패 → 400 (보안 규칙 S10)
+     * 어떤 값이 왜 틀렸는지는 응답에 싣지 않는다 (입력값을 되돌려 보내지 않음, S5). 필드 이름만 로그에 남긴다
+     */
+    @ExceptionHandler({InvalidInputException.class, MethodArgumentNotValidException.class,
+            HandlerMethodValidationException.class, jakarta.validation.ConstraintViolationException.class})
+    public ResponseEntity<Map<String, String>> invalidInput(Exception ex) {
+        if (ex instanceof InvalidInputException invalid) {
+            log.warn("입력값 검증 실패: {}", invalid.getFields());
+        } else if (ex instanceof MethodArgumentNotValidException invalid) {
+            log.warn("입력값 검증 실패: {}", invalid.getBindingResult().getFieldErrors().stream()
+                    .map(org.springframework.validation.FieldError::getField).distinct().toList());
+        } else {
+            log.warn("입력값 검증 실패: {}", ex.getClass().getSimpleName());
+        }
+        return body(HttpStatus.BAD_REQUEST, "입력값이 올바르지 않습니다.");
     }
 
     /** 서비스가 검증에서 거절한 값 → 400 (사용자에게 보여 줄 문구로 던진 것만 그대로 싣는다) */

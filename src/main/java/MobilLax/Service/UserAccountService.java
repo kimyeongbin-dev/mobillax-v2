@@ -64,14 +64,11 @@ public class UserAccountService  {
      */
     @Transactional
     public void registerUser(String name, String email, String password) {
-        validateName(name);
+        // 이름·이메일·비밀번호 형식은 RegisterForm 의 제약(AccountRules)으로 컨트롤러 입구에서 검사했다 (S10)
         if (userAccountRepository.existsByEmail(email)) {
             throw new UserFacingException("이 이메일은 이미 사용 중입니다.");
         }
 
-        if (!email.matches("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$")) {
-            throw new UserFacingException("유효하지 않은 이메일 형식입니다.");
-        }
 
         String encodedPassword = passwordEncoder.encode(password);
 
@@ -106,22 +103,5 @@ public class UserAccountService  {
     }
 
     /** 이름 최대 길이 */
-    public static final int MAX_NAME_LENGTH = 30;
 
-    /**
-     * 이름 검증
-     * - 요청 본문이 UTF-8 이 아닌 인코딩(예: Windows 의 CP949)으로 오면 서버가 읽지 못한 글자를 U+FFFD(�)로 바꿔 저장한다.
-     *   이런 깨진 이름이 DB 에 남지 않도록 막는다
-     */
-    public static void validateName(String name) {
-        if (name == null || name.isBlank()) {
-            throw new UserFacingException("이름을 입력해 주세요.");
-        }
-        if (name.length() > MAX_NAME_LENGTH) {
-            throw new UserFacingException("이름은 " + MAX_NAME_LENGTH + "자 이하로 입력해 주세요.");
-        }
-        if (name.indexOf('\uFFFD') >= 0 || name.chars().anyMatch(Character::isISOControl)) {
-            throw new UserFacingException("이름에 읽을 수 없는 문자가 있습니다. 다시 입력해 주세요.");
-        }
-    }
 }

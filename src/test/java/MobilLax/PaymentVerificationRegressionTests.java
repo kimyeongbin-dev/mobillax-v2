@@ -7,6 +7,8 @@ import MobilLax.Domain.Payment.PaymentEntity;
 import MobilLax.Domain.Payment.PaymentRepository;
 import MobilLax.Domain.Payment.PortOneClient;
 import MobilLax.Domain.Place.TransitKind;
+import MobilLax.Domain.Place.TransitPlace;
+import MobilLax.Domain.Place.TransitPlaceRepository;
 import MobilLax.Domain.Trip.TagoTripClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -65,6 +67,9 @@ class PaymentVerificationRegressionTests {
     @Autowired
     PaymentRepository paymentRepository;
 
+    @Autowired
+    TransitPlaceRepository transitPlaceRepository;
+
     @MockBean
     PortOneClient portOneClient;
 
@@ -77,9 +82,15 @@ class PaymentVerificationRegressionTests {
     /** 오늘 23:59 출발편 (당일 예매 규칙을 지키는 아직 출발하지 않은 편) */
     private final String departAt = DepartureCheck.now().substring(0, 8) + "2359";
 
+    /** 테스트 전용 역 (트랜잭션으로 되돌림). 서버는 이 이름으로 장바구니 표시를 만든다 */
+    static final String DEP_ID = "TESTDEP01";
+    static final String ARR_ID = "TESTARR01";
+
     @BeforeEach
     void tagoHasTrain() {
-        when(tagoTripClient.trips(eq(TransitKind.TRAIN), eq("NAT010000"), eq("NAT014445"), anyString()))
+        transitPlaceRepository.save(new TransitPlace(TransitKind.TRAIN, DEP_ID, "테스트출발역", "테스트시"));
+        transitPlaceRepository.save(new TransitPlace(TransitKind.TRAIN, ARR_ID, "테스트도착역", "테스트시"));
+        when(tagoTripClient.trips(eq(TransitKind.TRAIN), eq(DEP_ID), eq(ARR_ID), anyString()))
                 .thenReturn(List.of(new TagoTripClient.Trip(TRAIN_NO, "KTX", departAt, departAt, FARE)));
     }
 
@@ -87,8 +98,8 @@ class PaymentVerificationRegressionTests {
         return """
                 {"selectedLegs":[{"mode":"TRAIN","route":"기차:서울-부산","routeId":"%s","routePayment":%d,
                 "startName":"서울","endName":"부산","departureTime":"%s",
-                "kind":"TRAIN","depId":"NAT010000","arrId":"NAT014445"}]}
-                """.formatted(TRAIN_NO, fare, departureTime);
+                "kind":"TRAIN","depId":"%s","arrId":"%s"}]}
+                """.formatted(TRAIN_NO, fare, departureTime, DEP_ID, ARR_ID);
     }
 
     private ResultActions postJson(String url, String body) throws Exception {

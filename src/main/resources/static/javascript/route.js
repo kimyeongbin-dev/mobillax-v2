@@ -1,4 +1,4 @@
-/* global PAYABLE_MODES, isOperatingLeg, isPayableLeg, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt, preferOperating, nowStamp, formatHm, TRANSFER_OPTIONS, getTransferMinutes, setTransferMinutes -- transport.js */
+/* global html, raw, PAYABLE_MODES, isOperatingLeg, isPayableLeg, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt, preferOperating, nowStamp, formatHm, TRANSFER_OPTIONS, getTransferMinutes, setTransferMinutes -- transport.js */
 /**
  * 상세 경로 페이지 스크립트
  * - 서버가 받아 온 TMAP 대중교통 경로로 요약·단계를 표시하고, 카카오맵에 경로를 그린다 (TMAP 키는 서버 전용, 보안 규칙 S9)
@@ -196,7 +196,7 @@ function renderSummary(itinerary, departAt) {
   const totalDistanceKm = (itinerary.totalDistance / 1000).toFixed(1); // 총 거리(km)
   const transferCount = itinerary.transferCount; // 환승 횟수
 
-  summaryBox.innerHTML = `
+  summaryBox.innerHTML = html`
     <div class="summary-item">
       <span>출발</span>
       <strong>${formatDepartAt(departAt)}</strong>
@@ -256,14 +256,14 @@ function renderSteps(itinerary, bookable) {
           : "안내 전용 구간입니다. 요금은 현장에서 냅니다.";
     }
 
-    stepElement.innerHTML = `
+    stepElement.innerHTML = html`
       <div class="step-content">
         <h4>${index + 1}. ${startName} → ${endName} (index)</h4>
         <p>${getTransportLabel(leg)} (${mode})</p>
         <p class="step-desc">${stepDescription}</p>
-        ${PAYABLE_MODES.includes(mode) && !isOperatingLeg(leg) ? '<p class="step-warn">검색 시각에 운행하지 않는 구간입니다</p>' : ""}
-        ${PAYABLE_MODES.includes(mode) ? '<p class="step-match">역·터미널 확인 중…</p>' : ""}
-        ${isPayableLeg(leg) ? '<div class="step-trip"></div>' : ""}
+        ${PAYABLE_MODES.includes(mode) && !isOperatingLeg(leg) ? raw('<p class="step-warn">검색 시각에 운행하지 않는 구간입니다</p>') : ""}
+        ${PAYABLE_MODES.includes(mode) ? raw('<p class="step-match">역·터미널 확인 중…</p>') : ""}
+        ${isPayableLeg(leg) ? raw('<div class="step-trip"></div>') : ""}
       </div>
     `;
     container.appendChild(stepElement);

@@ -11,9 +11,14 @@
 package MobilLax.Controller;
 
 import MobilLax.Config.UserFacingException;
+import MobilLax.Common.Validation.PlainText;
+import MobilLax.Model.RegisterForm;
 import MobilLax.Service.UserAccountService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -45,8 +50,8 @@ public class UserAccountController {
      * @return 로그인 뷰 템플릿 경로 (member/login.html)
      */
     @GetMapping("/login")
-    public String showLoginForm(@RequestParam(value = "error", required = false) String error,
-                                @RequestParam(value = "logout", required = false) String logout,
+    public String showLoginForm(@RequestParam(value = "error", required = false) @Size(max = 20) @PlainText String error,
+                                @RequestParam(value = "logout", required = false) @Size(max = 20) @PlainText String logout,
                                 Model model) {
         if (error != null) {
             model.addAttribute("error", "이메일 또는 비밀번호가 잘못되었습니다.");
@@ -66,7 +71,8 @@ public class UserAccountController {
      * @return 회원가입 뷰 템플릿 경로 (member/register.html)
      */
     @GetMapping("/register")
-    public String showSignupForm(@RequestParam(value = "error", required = false) String error, Model model) {
+    public String showSignupForm(@RequestParam(value = "error", required = false) @Size(max = 20) @PlainText String error,
+                                 Model model) {
         if (error != null) {
             model.addAttribute("error", error);
         }
@@ -84,13 +90,17 @@ public class UserAccountController {
      * @return 회원가입 성공 시 로그인 페이지로 리디렉션, 실패 시 다시 회원가입 페이지로 이동
      */
     @PostMapping("/register")
-    public String register(@RequestParam String name,
-                           @RequestParam String email,
-                           @RequestParam String password,
+    public String register(@Valid @ModelAttribute RegisterForm form,
+                           BindingResult binding,
                            Model model,
                            RedirectAttributes redirectAttributes) {
+        // 형식(이름·이메일·비밀번호)은 RegisterForm 의 제약으로, 중복 이메일은 서비스가 확인한다 (S10)
+        if (binding.hasErrors()) {
+            model.addAttribute("error", binding.getAllErrors().get(0).getDefaultMessage());
+            return "member/register";
+        }
         try {
-            userAccountService.registerUser(name, email, password);
+            userAccountService.registerUser(form.getName(), form.getEmail(), form.getPassword());
             // 리다이렉트하면 Model 값은 사라지므로 한 번만 쓰는 flash 속성으로 넘긴다
             redirectAttributes.addFlashAttribute("successMessage", "회원가입에 성공했습니다. 로그인해 주세요.");
             return "redirect:/login";

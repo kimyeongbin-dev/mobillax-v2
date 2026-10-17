@@ -29,9 +29,10 @@
         <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
       </th:block>
 
-      <input type="text" name="name" placeholder="이름" required class="form-input">
-      <input type="email" name="email" placeholder="이메일" required class="form-input">
-      <input type="password" name="password" placeholder="비밀번호" required class="form-input">
+      <input type="text" name="name" placeholder="이름" required maxlength="30" class="form-input">
+      <input type="email" name="email" placeholder="이메일" required maxlength="100" class="form-input">
+      <!-- 입력 제한은 안내용이고, 실제 검사는 서버가 한다 (S10) -->
+      <input type="password" name="password" placeholder="비밀번호 (8-64자)" required minlength="8" maxlength="64" class="form-input">
       <button type="submit" class="form-btn">회원가입</button>
     </form>
 
