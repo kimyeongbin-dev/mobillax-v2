@@ -10,6 +10,7 @@
 
 package MobilLax.Service;
 
+import MobilLax.Config.UserFacingException;
 import MobilLax.Model.UserAccount;
 import MobilLax.Repository.UserAccountRepository;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -65,11 +66,11 @@ public class UserAccountService  {
     public void registerUser(String name, String email, String password) {
         validateName(name);
         if (userAccountRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("이 이메일은 이미 사용 중입니다.");
+            throw new UserFacingException("이 이메일은 이미 사용 중입니다.");
         }
 
         if (!email.matches("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$")) {
-            throw new IllegalArgumentException("유효하지 않은 이메일 형식입니다.");
+            throw new UserFacingException("유효하지 않은 이메일 형식입니다.");
         }
 
         String encodedPassword = passwordEncoder.encode(password);
@@ -100,7 +101,7 @@ public class UserAccountService  {
             );
             // 로그인 성공 시 후속 처리 로직(예: 토큰 생성 등)을 여기에 작성할 수 있습니다.
         } catch (AuthenticationException e) {
-            throw new IllegalArgumentException("이메일 또는 비밀번호가 잘못되었습니다.");
+            throw new UserFacingException("이메일 또는 비밀번호가 잘못되었습니다.");
         }
     }
 
@@ -114,13 +115,13 @@ public class UserAccountService  {
      */
     public static void validateName(String name) {
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("이름을 입력해 주세요.");
+            throw new UserFacingException("이름을 입력해 주세요.");
         }
         if (name.length() > MAX_NAME_LENGTH) {
-            throw new IllegalArgumentException("이름은 " + MAX_NAME_LENGTH + "자 이하로 입력해 주세요.");
+            throw new UserFacingException("이름은 " + MAX_NAME_LENGTH + "자 이하로 입력해 주세요.");
         }
         if (name.indexOf('\uFFFD') >= 0 || name.chars().anyMatch(Character::isISOControl)) {
-            throw new IllegalArgumentException("이름에 읽을 수 없는 문자가 있습니다. 다시 입력해 주세요.");
+            throw new UserFacingException("이름에 읽을 수 없는 문자가 있습니다. 다시 입력해 주세요.");
         }
     }
 }

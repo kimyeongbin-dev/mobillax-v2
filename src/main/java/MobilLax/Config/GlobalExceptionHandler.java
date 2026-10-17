@@ -51,10 +51,17 @@ public class GlobalExceptionHandler {
         return body(HttpStatus.BAD_REQUEST, "요청 형식이 올바르지 않습니다.");
     }
 
-    /** 서비스가 검증에서 거절한 값 → 400 (서비스가 사용자에게 보여 줄 문구로 던진다) */
+    /** 서비스가 검증에서 거절한 값 → 400 (사용자에게 보여 줄 문구로 던진 것만 그대로 싣는다) */
+    @ExceptionHandler(UserFacingException.class)
+    public ResponseEntity<Map<String, String>> userFacing(UserFacingException ex) {
+        return body(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    /** 라이브러리 등이 던진 IllegalArgumentException → 400, 메시지는 내부 정보일 수 있어 로그에만 (S5) */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> illegalArgument(IllegalArgumentException ex) {
-        return body(HttpStatus.BAD_REQUEST, ex.getMessage());
+        log.warn("잘못된 요청 값: {} {}", ex.getClass().getSimpleName(), ex.getMessage());
+        return body(HttpStatus.BAD_REQUEST, "요청 값이 올바르지 않습니다.");
     }
 
     /** 코드에서 상태를 정해 던진 경우 그대로 */

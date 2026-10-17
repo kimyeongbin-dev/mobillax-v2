@@ -48,7 +48,7 @@
 
 ### 2-3. 요약 (첫 줄)
 - **50자 이내** (type·scope 포함), 끝에 마침표를 찍지 않습니다.
-- "무엇을 했는지"를 명사형이나 "~ 수정", "~ 추가"로 끝맺습니다.
+- "무엇을 했는지"를 명사형이나 "○○ 수정", "○○ 추가"로 끝맺습니다.
 - 한 커밋에는 하나의 논리적 변경만 담습니다.
 
 ### 2-4. 본문 (선택)
@@ -103,8 +103,7 @@ Git이 자동으로 만드는 `Merge ...`, `Revert "..."` 메시지는 통과시
 ### 줄바꿈 (LF)
 - 저장소의 모든 텍스트 파일은 **LF**로 통일합니다. CRLF가 섞이면 diff가 줄 전체 변경으로 보이고, 셸 스크립트가 리눅스·컨테이너에서 `\r` 때문에 깨집니다.
 - `.gitattributes`(`* text=auto eol=lf`)가 커밋할 때 LF로 맞추고, `.editorconfig`가 편집기의 새 파일을 LF로 만듭니다. Windows 전용 `*.bat`·`*.cmd`만 CRLF입니다.
-- 스크립트로 파일을 쓸 때도 줄바꿈을 명시합니다. Python은 `open(..., newline="
-")`, PowerShell은 `[IO.File]::WriteAllText`에 LF 문자열을 씁니다.
+- 스크립트로 파일을 쓸 때도 줄바꿈을 명시합니다. Python은 `open(..., newline="\n")`, PowerShell은 `[IO.File]::WriteAllText`에 LF 문자열을 씁니다.
 
 ### 린트·포맷 명령
 | 목적 | 명령 |
@@ -112,6 +111,7 @@ Git이 자동으로 만드는 `Merge ...`, `Revert "..."` 메시지는 통과시
 | 전체 린트 | `npm run lint` |
 | 전체 포맷 | `npm run format` |
 | 훅 회귀 테스트 | `npm run test:hooks` |
+| 컨테이너 보안 규칙(S8) | `npm run test:infra` |
 
 ### 보안 규칙
 기능을 고쳐도 깨지면 안 되는 보안 규칙은 [docs/SECURITY_RULES.md](docs/SECURITY_RULES.md)에 있고, `SecurityRegressionTests` 등 회귀 테스트로 고정되어 있습니다. 회귀 테스트를 지우거나 약하게 바꾸지 않습니다. 규칙을 바꿔야 하면 문서와 테스트를 같은 PR에서 고치고 이유를 적습니다.

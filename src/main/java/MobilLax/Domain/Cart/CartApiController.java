@@ -18,8 +18,6 @@ public class CartApiController {
      */
     @PostMapping("/add")
     public ResponseEntity<Integer> addSelectedToCart(@RequestBody CartItemRequestDTO request) {
-        System.out.println("🔔 요청 도착: " + request);
-
         List<CartItemRequestDTO.LegDTO> selectedLegs = request.getSelectedLegs();
 
         if (selectedLegs == null || selectedLegs.isEmpty()) {

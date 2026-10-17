@@ -14,8 +14,10 @@ services:
       - "127.0.0.1:3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+    # 보안 규칙 S8: 비밀번호를 명령 인자에 넣지 않는다 (docker inspect·ps 에 그대로 보인다)
+    # 컨테이너 안의 앱 계정 비밀번호를 MYSQL_PWD 환경변수로만 넘긴다 ($$ 는 compose 치환이 아니라 컨테이너 셸 변수)
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_PASSWORD\" mysqladmin ping -h localhost -u \"$$MYSQL_USER\" --silent"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -28,6 +30,13 @@ services:
       DB_PORT: 3306
     ports:
       - "127.0.0.1:8080:8080"
+    # 로그인 없이 상태만 보는 /health/live (DB 만, 외부 API 장애로 재시작하지 않도록) — 보안 규칙 S7
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://localhost:8080/health/live || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
     depends_on:
       db:
         condition: service_healthy
