@@ -1,15 +1,15 @@
 package MobilLax.Domain.Place;
 
-import MobilLax.Config.InputRules;
+import MobilLax.Common.Validation.KoreanLatitude;
+import MobilLax.Common.Validation.KoreanLongitude;
+import MobilLax.Common.Validation.PayableMode;
+import MobilLax.Common.Validation.PlainText;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,13 +44,13 @@ public class PlaceMatchController {
      * @param name  TMAP 장소 이름 (구간 start.name / end.name)
      */
     public record MatchPoint(
-            @NotNull @Pattern(regexp = InputRules.PAYABLE_MODE) String mode,
+            @NotNull @PayableMode String mode,
             @Min(0) @Max(999) Integer type,
-            @Size(max = 60) @Pattern(regexp = InputRules.PLAIN_TEXT) String route,
-            @NotBlank @Size(max = 40) @Pattern(regexp = InputRules.PLAIN_TEXT) String name,
-            // 국내 좌표만 (TMAP 이 주는 장소). 이름·좌표는 캐시 키로 저장되므로 길이·범위를 제한한다 (S10)
-            @DecimalMin("33.0") @DecimalMax("39.0") double lat,
-            @DecimalMin("124.0") @DecimalMax("132.0") double lon) {
+            @Size(max = 60) @PlainText String route,
+            @NotBlank @Size(max = 40) @PlainText String name,
+            // 이름·좌표는 캐시 키로 저장되므로 길이·문자·국내 범위를 제한한다 (S10)
+            @KoreanLatitude double lat,
+            @KoreanLongitude double lon) {
     }
 
     public record MatchRequest(@NotEmpty @Size(max = MAX_POINTS) List<@NotNull @Valid MatchPoint> points) {
@@ -60,11 +60,9 @@ public class PlaceMatchController {
     }
 
     @PostMapping("/match")
-    public ResponseEntity<List<MatchResponse>> match(@Valid @RequestBody MatchRequest request) {
-        List<MatchPoint> points = request == null || request.points() == null ? List.of() : request.points();
-        if (points.isEmpty() || points.size() > MAX_POINTS) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<List<MatchResponse>> match(@RequestBody MatchRequest request) {
+        // 개수·형식은 RequestBodyValidationAdvice 가 MatchRequest 의 제약으로 먼저 검사한다
+        List<MatchPoint> points = request.points();
 
         List<MatchResponse> responses = new ArrayList<>();
         for (MatchPoint point : points) {

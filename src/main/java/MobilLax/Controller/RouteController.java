@@ -34,9 +34,7 @@ public class RouteController {
 
     @PostMapping(value = "/transit", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> searchTransit(@RequestBody TransitRouteRequest request) {
-        if (request == null || !request.isInKorea()) {
-            return error(HttpStatus.BAD_REQUEST, "출발지와 도착지 좌표가 올바르지 않습니다.");
-        }
+        // 좌표(국내)·출발 일시 형식은 RequestBodyValidationAdvice 가 TransitRouteRequest 의 제약으로 먼저 검사한다
         if (!request.isDepartAtValid(LocalDate.now(KOREA))) {
             return error(HttpStatus.BAD_REQUEST,
                     "출발 일시가 올바르지 않습니다. 오늘부터 " + TransitRouteRequest.MAX_DAYS_AHEAD + "일 안에서 선택해 주세요.");

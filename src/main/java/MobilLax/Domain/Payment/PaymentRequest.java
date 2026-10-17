@@ -1,8 +1,7 @@
 package MobilLax.Domain.Payment;
 
-import MobilLax.Config.InputRules;
+import MobilLax.Common.Validation.PaymentId;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,7 +12,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class PaymentRequest {
-    @NotNull
-    @Pattern(regexp = InputRules.PAYMENT_ID)
+    @NotNull @PaymentId
     private String paymentId;
 }

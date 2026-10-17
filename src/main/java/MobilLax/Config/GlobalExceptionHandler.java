@@ -1,5 +1,6 @@
 package MobilLax.Config;
 
+import MobilLax.Common.Validation.InvalidInputException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -57,10 +58,12 @@ public class GlobalExceptionHandler {
      * 요청 DTO 의 형식·길이·범위 검증(@Valid) 실패 → 400 (보안 규칙 S10)
      * 어떤 값이 왜 틀렸는지는 응답에 싣지 않는다 (입력값을 되돌려 보내지 않음, S5). 필드 이름만 로그에 남긴다
      */
-    @ExceptionHandler({MethodArgumentNotValidException.class, HandlerMethodValidationException.class,
-            jakarta.validation.ConstraintViolationException.class})
+    @ExceptionHandler({InvalidInputException.class, MethodArgumentNotValidException.class,
+            HandlerMethodValidationException.class, jakarta.validation.ConstraintViolationException.class})
     public ResponseEntity<Map<String, String>> invalidInput(Exception ex) {
-        if (ex instanceof MethodArgumentNotValidException invalid) {
+        if (ex instanceof InvalidInputException invalid) {
+            log.warn("입력값 검증 실패: {}", invalid.getFields());
+        } else if (ex instanceof MethodArgumentNotValidException invalid) {
             log.warn("입력값 검증 실패: {}", invalid.getBindingResult().getFieldErrors().stream()
                     .map(org.springframework.validation.FieldError::getField).distinct().toList());
         } else {

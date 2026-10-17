@@ -6,7 +6,6 @@ import MobilLax.Domain.Cart.CartItemRepository;
 import MobilLax.Domain.Cart.CartItemRequestDTO;
 import MobilLax.Domain.Cart.DepartureCheck;
 import MobilLax.Domain.Trip.TripVerifier;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,10 +68,10 @@ public class PaymentController {
     }
 
     @PostMapping("/direct-sdk-ready")
-    public Map<String, Map<String, Object>> prepareDirectSdkPayments(@Valid @RequestBody CartItemRequestDTO request) {
+    public Map<String, Map<String, Object>> prepareDirectSdkPayments(@RequestBody CartItemRequestDTO request) {
         String email = getCurrentUserEmail();
 
-        // 구간 수·형식은 @Valid 가 확인하고, 운임·이름·출발 시각·당일 여부는 서버가 TAGO 에서 확인한다 (S1·S10)
+        // 구간 수·형식은 RequestBodyValidationAdvice 가 확인하고, 운임·이름·출발 시각·당일 여부는 서버가 TAGO 에서 확인한다 (S1·S10)
         List<CartItemRequestDTO.LegDTO> legs = request.getSelectedLegs();
         List<TripVerifier.VerifiedTrip> verified = legs.stream().map(tripVerifier::verify).toList();
         record Priced(String mode, TripVerifier.VerifiedTrip trip) {
@@ -136,7 +135,7 @@ public class PaymentController {
      * 결제 완료: PortOne 에서 확인한 뒤에만 SUCCESS 로 기록하고 장바구니 묶음을 비운다
      */
     @PostMapping("/complete")
-    public Map<String, String> completePayment(@Valid @RequestBody PaymentRequest req) {
+    public Map<String, String> completePayment(@RequestBody PaymentRequest req) {
         String email = getCurrentUserEmail();
         PaymentEntity payment = findOwnPayment(email, req);
 
@@ -184,7 +183,7 @@ public class PaymentController {
      * 결제 실패·취소 알림: 자기 결제 중 아직 확인되지 않은(PENDING) 것만 FAIL 로 바꾼다
      */
     @PostMapping("/fail")
-    public Map<String, String> failPayment(@Valid @RequestBody PaymentRequest req) {
+    public Map<String, String> failPayment(@RequestBody PaymentRequest req) {
         String email = getCurrentUserEmail();
         PaymentEntity payment = findOwnPayment(email, req);
 

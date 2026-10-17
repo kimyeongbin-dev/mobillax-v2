@@ -1,7 +1,11 @@
 package MobilLax.Domain.Trip;
 
+import MobilLax.Common.Validation.DateYmd;
+import MobilLax.Common.Validation.TagoId;
+import MobilLax.Common.Validation.TransitKindName;
 import MobilLax.Domain.Place.TransitKind;
 import MobilLax.Model.TransitRouteRequest;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -43,7 +47,10 @@ public class TripController {
      * @param arrId 도착 TAGO ID
      * @param date  출발일 yyyyMMdd (오늘부터 14일)
      */
-    public record TripRequest(String kind, String depId, String arrId, String date) {
+    public record TripRequest(@NotNull @TransitKindName String kind,
+                              @NotNull @TagoId String depId,
+                              @NotNull @TagoId String arrId,
+                              @NotNull @DateYmd String date) {
     }
 
     public record TripView(String no, String grade, String departAt, String arriveAt, int fare, boolean bookable) {
@@ -54,19 +61,13 @@ public class TripController {
 
     @PostMapping
     public ResponseEntity<?> trips(@RequestBody TripRequest request) {
-        if (request == null) {
-            return badRequest("교통수단 또는 날짜가 올바르지 않습니다.");
-        }
-        TransitKind kind;
+        // 형식은 RequestBodyValidationAdvice 가 TripRequest 의 제약으로 먼저 검사한다
+        TransitKind kind = TransitKind.valueOf(request.kind());
         LocalDate date;
         try {
-            kind = TransitKind.valueOf(request.kind());
             date = LocalDate.parse(request.date(), DATE);
         } catch (RuntimeException e) {
-            return badRequest("교통수단 또는 날짜가 올바르지 않습니다.");
-        }
-        if (!isId(request.depId()) || !isId(request.arrId())) {
-            return badRequest("출발·도착 역(터미널) 정보가 올바르지 않습니다.");
+            return badRequest("교통수단 또는 날짜가 올바르지 않습니다."); // 20261399 처럼 형식만 맞는 날짜
         }
         LocalDate today = LocalDate.now(KOREA);
         if (date.isBefore(today) || date.isAfter(today.plusDays(TransitRouteRequest.MAX_DAYS_AHEAD))) {
@@ -93,9 +94,6 @@ public class TripController {
         return ResponseEntity.ok(new TripResponse(bookableDate, views));
     }
 
-    private static boolean isId(String id) {
-        return id != null && id.matches("[A-Za-z0-9]{1,40}");
-    }
 
     private static ResponseEntity<Map<String, String>> badRequest(String message) {
         return ResponseEntity.badRequest().body(Map.of("message", message));
