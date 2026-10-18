@@ -4,16 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MobilLax - 마이페이지</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link th:href="@{/css/mypage.css}" rel="stylesheet" />
+    <th:block th:replace="~{fragments/layout :: head}"></th:block>
 </head>
 <body>
-<header>
-    <h1><a th:href="@{/home}" title="MobilLax">MobilLax</a></h1>
-</header>
+<header th:replace="~{fragments/layout :: header('mypage')}"></header>
 
 <main>
     <section class="mypage-container">
+        <p class="notice success" th:if="${successMessage}" th:text="${successMessage}"></p>
         <div class="profile-box">
             <img src="https://img.icons8.com/ios-glyphs/90/user--v1.png" alt="프로필" class="avatar">
             <div class="profile-info">
@@ -30,7 +29,8 @@
             </div>
             <div class="grid-item">
                 <h3>결제 내역</h3>
-                <p th:text="'총 결제 ₩' + ${totalPayment}">총 결제 ₩62,000</p>
+                <p th:text="'이번 달 결제 ₩' + ${#numbers.formatInteger(monthlyPayment, 1, 'COMMA')}">이번 달 결제 ₩62,000</p>
+                <a th:href="@{/mypage/payments}">예매 내역 보기 →</a>
             </div>
             <div class="grid-item">
                 <h3>장바구니</h3>
@@ -40,7 +40,7 @@
             <div class="grid-item">
                 <h3>계정 관리 및 설정</h3>
                 <ul>
-                    <li><span class="coming-soon" title="준비 중인 기능입니다">비밀번호 변경 (준비 중)</span></li>
+                    <li><a th:href="@{/mypage/password}">비밀번호 변경</a></li>
                     <li><span class="coming-soon" title="준비 중인 기능입니다">알림 설정 (준비 중)</span></li>
                     <li>
                         <form id="deleteForm" th:action="@{/mypage/delete}" method="post" style="display: inline;">

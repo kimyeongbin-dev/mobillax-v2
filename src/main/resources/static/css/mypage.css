@@ -21,25 +21,6 @@ header h1 {
   cursor: pointer;
 }
 
-.auth-buttons {
-  display: flex;
-  gap: 20px;
-}
-.auth-buttons a {
-  color: white;
-  text-decoration: none;
-  font-size: 0.85em;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.auth-buttons img {
-  width: 28px;
-  height: 28px;
-  margin-bottom: 3px;
-  filter: brightness(0) invert(1);
-}
-
 main {
   display: flex;
   justify-content: center;
@@ -139,4 +120,139 @@ footer {
 .coming-soon {
   color: #999;
   cursor: default;
+}
+
+/* 안내 문구 (성공·오류) */
+.notice {
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin: 0 0 16px;
+  font-size: 0.95em;
+}
+
+.notice.success {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+
+.notice.error {
+  background: #fdecea;
+  color: #b71c1c;
+}
+
+/* 프로필 수정·비밀번호 변경 폼 */
+.edit-profile-container {
+  width: 90%;
+  max-width: 480px;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.form-group input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1em;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.form-buttons button {
+  background: #2f80ed;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+.cancel-button {
+  color: #666;
+}
+
+/* 예매 내역 */
+.history-help {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.history-empty a {
+  color: #2f80ed;
+}
+
+.history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.history-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 16px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #f8f8f8;
+  margin-bottom: 10px;
+  border-left: 4px solid #27ae60;
+}
+
+.history-item.failed {
+  border-left-color: #eb5757;
+  opacity: 0.85;
+}
+
+.history-main {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.history-transport {
+  font-size: 0.85em;
+  color: #1e3a8a;
+}
+
+.history-sub {
+  grid-column: 1;
+  display: flex;
+  gap: 12px;
+  font-size: 0.85em;
+  color: #666;
+}
+
+.history-side {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.history-amount {
+  font-weight: 700;
+}
+
+.history-status {
+  font-size: 0.85em;
+  color: #27ae60;
+}
+
+.history-item.failed .history-status {
+  color: #eb5757;
 }

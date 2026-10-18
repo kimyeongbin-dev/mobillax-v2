@@ -1,76 +1,102 @@
 package MobilLax.Domain.MyPage;
 
-import jakarta.validation.Valid;
+import MobilLax.Common.Validation.FormErrors;
+import MobilLax.Config.UserFacingException;
+import MobilLax.Domain.Payment.PaymentService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.bind.annotation.*;
+
 import java.security.Principal;
 
+/**
+ * 마이페이지: 정보 요약, 프로필 수정, 비밀번호 변경, 결제 내역, 회원 탈퇴
+ * 로그인한 사용자 것만 다룬다 (Principal 의 이메일, 보안 규칙 S4)
+ */
 @Controller
+@RequiredArgsConstructor
 public class MyPageController {
 
     private final MyPageServiceInterface myPageService;
-
-    @Autowired
-    public MyPageController(MyPageServiceInterface myPageService) {
-        this.myPageService = myPageService;
-    }
+    private final PaymentService paymentService;
 
     @GetMapping("/mypage")
     public String showMyPage(Model model, Principal principal) {
-        String email = principal.getName();  // 인증된 사용자의 이메일
-
-        MyPageDto dto = myPageService.getMyPageInfo(email);
+        MyPageDto dto = myPageService.getMyPageInfo(principal.getName());
         model.addAttribute("name", dto.getName());
         model.addAttribute("email", dto.getEmail());
         model.addAttribute("recentRoute", dto.getRecentRoute());
-        model.addAttribute("totalPayment", dto.getTotalPayment());
+        model.addAttribute("monthlyPayment", dto.getTotalPayment());
         model.addAttribute("cartCount", dto.getCartCount());
-
         return "mypage";
     }
 
     @GetMapping("/mypage/edit")
-    public String editPage(@AuthenticationPrincipal User user, Model model) {
-        if (user == null) return "redirect:/login";
-
-        String email = user.getUsername(); // Security User의 username은 보통 email
-        MyPageDto myPageDto = myPageService.getMyPageInfo(email);
-        model.addAttribute("profile", myPageDto);
+    public String editPage(Model model, Principal principal) {
+        model.addAttribute("profile", myPageService.getMyPageInfo(principal.getName()));
         return "mypage-edit";
     }
 
     @PostMapping("/mypage/edit")
-    public String updateProfile(@AuthenticationPrincipal User user,
-                                @Valid @ModelAttribute ProfileUpdateDto dto,
-                                BindingResult binding,
-                                RedirectAttributes redirectAttributes) {
-        if (user == null) return "redirect:/login";
-
+    public String updateProfile(@Valid @ModelAttribute ProfileUpdateDto dto, BindingResult binding,
+                                Principal principal, RedirectAttributes redirectAttributes) {
         // 이름 형식은 ProfileUpdateDto 의 @UserName 으로 검사한다 (S10)
         if (binding.hasErrors()) {
-            redirectAttributes.addFlashAttribute("error", binding.getAllErrors().get(0).getDefaultMessage());
+            redirectAttributes.addFlashAttribute("error", FormErrors.first(binding, "name"));
             return "redirect:/mypage/edit";
         }
-        myPageService.updateProfile(user.getUsername(), dto.getName(), null);
+        myPageService.updateProfile(principal.getName(), dto.getName());
+        redirectAttributes.addFlashAttribute("successMessage", "프로필을 저장했습니다.");
         return "redirect:/mypage";
     }
 
-    // ✅ 회원 탈퇴 요청 처리
+    @GetMapping("/mypage/password")
+    public String passwordPage() {
+        return "mypage-password";
+    }
+
+    /**
+     * 비밀번호 변경 (v2.5)
+     * - 성공하면 세션 ID 를 바꾼다: 바꾸기 전 세션 ID 를 알던 사람이 계속 쓰지 못하게 (세션 고정 방지)
+     */
+    @PostMapping("/mypage/password")
+    public String changePassword(@Valid @ModelAttribute PasswordChangeForm form, BindingResult binding,
+                                 Principal principal, HttpServletRequest request,
+                                 RedirectAttributes redirectAttributes) {
+        if (binding.hasErrors()) {
+            redirectAttributes.addFlashAttribute("error", FormErrors.first(binding, PasswordChangeForm.FIELD_ORDER));
+            return "redirect:/mypage/password";
+        }
+        try {
+            myPageService.changePassword(principal.getName(), form.getCurrentPassword(), form.getNewPassword());
+        } catch (UserFacingException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/mypage/password";
+        }
+        request.changeSessionId();
+        redirectAttributes.addFlashAttribute("successMessage", "비밀번호를 바꿨습니다.");
+        return "redirect:/mypage";
+    }
+
+    /** 결제 내역 (예매 확인, v2.5) */
+    @GetMapping("/mypage/payments")
+    public String payments(Model model, Principal principal) {
+        model.addAttribute("payments", paymentService.getHistory(principal.getName()));
+        return "mypage-payments";
+    }
+
     @PostMapping("/mypage/delete")
-    public String deleteAccount(@AuthenticationPrincipal UserDetails userDetails,
-                                HttpSession session) {
-        String email = userDetails.getUsername();
-        myPageService.deleteAccountByEmail(email);
+    public String deleteAccount(Principal principal, HttpSession session) {
+        myPageService.deleteAccountByEmail(principal.getName());
         session.invalidate(); // 세션 만료 처리 (로그아웃 효과)
-        return "redirect:/home"; // 홈으로 이동
+        return "redirect:/home";
     }
 }

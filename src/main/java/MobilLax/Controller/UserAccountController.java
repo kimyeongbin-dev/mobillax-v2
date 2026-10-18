@@ -11,6 +11,7 @@
 package MobilLax.Controller;
 
 import MobilLax.Config.UserFacingException;
+import MobilLax.Common.Validation.FormErrors;
 import MobilLax.Common.Validation.PlainText;
 import MobilLax.Model.RegisterForm;
 import MobilLax.Service.UserAccountService;
@@ -96,7 +97,7 @@ public class UserAccountController {
                            RedirectAttributes redirectAttributes) {
         // 형식(이름·이메일·비밀번호)은 RegisterForm 의 제약으로, 중복 이메일은 서비스가 확인한다 (S10)
         if (binding.hasErrors()) {
-            model.addAttribute("error", binding.getAllErrors().get(0).getDefaultMessage());
+            model.addAttribute("error", FormErrors.first(binding, "name", "email", "password"));
             return "member/register";
         }
         try {
