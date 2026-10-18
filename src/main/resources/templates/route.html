@@ -4,12 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MobilLax - 상세 경로</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link href="/css/route.css" type="text/css" rel="stylesheet"></link>
   <!-- 지도는 카카오맵: 브라우저용 JavaScript 키(등록 도메인에서만 동작). TMAP 키는 서버 전용 (보안 규칙 S9) -->
   <script th:src="|https://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJsAppKey}|"></script>
-  <script src="/javascript/csrf.js"></script>
-  <script src="/javascript/safe-html.js"></script>
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
   <script src="/javascript/transport.js"></script>
   <script src="/javascript/cart.js"></script>
   <script src="/javascript/route.js"></script>
@@ -22,6 +20,7 @@
       <div class="back-home">
         <a href="/home" title="홈으로"><i class="fas fa-arrow-left"></i> 되돌아가기</a>
       </div>
+      <nav th:replace="~{fragments/layout :: compactNav}"></nav>
       <h2 id="routeTitle">상세경로 안내</h2>
       <div class="summary-box"></div>
     </div>

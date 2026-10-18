@@ -1,42 +1,17 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.w3.org/1999/xhtml">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MobilLax</title>
   <link href="css/style.css" type="text/css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" type="text/css" rel="stylesheet">
   <script th:src="|https://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJsAppKey}&libraries=services|"></script>
-  <script src="javascript/csrf.js"></script>
-  <script src="javascript/safe-html.js"></script>
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
   <script src="javascript/transport.js"></script>
   <script src="javascript/script.js"></script>
 </head>
 <body>
-<header>
-  <h1>MobilLax</h1>
-  <!-- 로그인 안 했을 때 -->
-  <div class="auth-buttons" th:if="${remoteUser == null}">
-    <a href="/login">
-      <img src="https://img.icons8.com/ios-filled/50/ffffff/login-rounded-right.png" alt="Login">로그인
-    </a>
-    <a href="/register">
-      <img src="https://img.icons8.com/ios-filled/50/ffffff/add-user-male.png" alt="SignUp">회원가입
-    </a>
-  </div>
-
-  <!-- 로그인 했을 때 -->
-  <div class="auth-buttons" th:if="${remoteUser != null}">
-    <a href="/mypage">
-      <img src="https://img.icons8.com/ios-glyphs/30/ffffff/user.png" alt="MyPage">마이페이지
-    </a>
-    <form th:action="@{/logout}" method="post" class="logout-form">
-      <button type="submit" class="logout-button">
-        <img src="https://img.icons8.com/ios-glyphs/30/ffffff/logout-rounded.png" alt="Logout">로그아웃
-      </button>
-    </form>
-  </div>
-</header>
+<header th:replace="~{fragments/layout :: header('home')}"></header>
 
 <main>
   <section class="search-card">
@@ -71,9 +46,9 @@
       <div class="mode-item" data-mode="transit">
         <i class="fas fa-subway"></i><span>대중교통</span>
       </div>
-      <div class="mode-item" data-mode="reservation" onclick="alertComingSoon()">
+      <a class="mode-item" data-mode="reservation" th:href="@{/mypage/payments}">
         <i class="fas fa-ticket-alt"></i><span>예매확인</span>
-      </div>
+      </a>
       <div class="mode-item" data-mode="fare" onclick="alertComingSoon()">
         <i class="fas fa-receipt"></i><span>요금비교</span>
       </div>

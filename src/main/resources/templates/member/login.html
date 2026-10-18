@@ -19,12 +19,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MobilLax - 로그인</title>
   <link href="/css/login.css" type="text/css" rel="stylesheet">
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
 </head>
 <body>
 
-<header>
-  <h1><a href="/home">MobilLax</a></h1>
-</header>
+<header th:replace="~{fragments/layout :: header('')}"></header>
 
 <div class="form-wrapper">
   <div class="form-box">

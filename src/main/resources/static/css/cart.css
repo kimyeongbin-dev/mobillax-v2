@@ -17,24 +17,6 @@ header {
   align-items: center;
 }
 
-.auth-buttons {
-  display: flex;
-  gap: 20px;
-}
-
-.auth-buttons a {
-  color: white;
-  text-decoration: none;
-  font-size: 0.85em;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.auth-buttons i {
-  margin-bottom: 4px;
-}
-
 main {
   display: flex;
   justify-content: center;
@@ -240,22 +222,4 @@ footer {
 .group-pay-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-/* 로그아웃은 POST 폼 버튼 (CSRF 보호) — 링크와 같은 모양 */
-.logout-form {
-  margin: 0;
-}
-
-.logout-button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0;
-  border: none;
-  background: none;
-  color: white;
-  font: inherit;
-  font-size: 0.85em;
-  cursor: pointer;
 }

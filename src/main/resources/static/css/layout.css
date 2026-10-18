@@ -1,0 +1,137 @@
+/* 공통 레이아웃 (templates/fragments/layout.html, v2.5): 헤더 메뉴와 세션 타이머 */
+.site-header {
+  background-color: #1e2a38;
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.site-header h1 {
+  margin: 0;
+  font-size: 1.6em;
+}
+
+.site-header h1 a {
+  color: white;
+  text-decoration: none;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.site-nav a,
+.site-nav .logout-button {
+  color: white;
+  text-decoration: none;
+  font: inherit;
+  font-size: 0.9em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 2px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.site-nav a:hover,
+.site-nav .logout-button:hover {
+  border-bottom-color: rgba(255, 255, 255, 0.6);
+}
+
+.site-nav a.active {
+  border-bottom-color: #f2c94c;
+  font-weight: 600;
+}
+
+.site-nav .logout-form {
+  margin: 0;
+}
+
+.nav-badge {
+  background: #f2c94c;
+  color: #1e2a38;
+  border-radius: 10px;
+  padding: 0 7px;
+  font-size: 0.8em;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+/* 세션 타이머: 남은 시간이 5분 이하면 warning, 0이면 expired */
+.session-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8em;
+  padding: 4px 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #e0e6ee;
+  font-variant-numeric: tabular-nums;
+}
+
+.session-timer button {
+  font: inherit;
+  font-size: 0.95em;
+  color: #1e2a38;
+  background: #e0e6ee;
+  border: none;
+  border-radius: 10px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.session-timer.warning {
+  background: #f2c94c;
+  color: #1e2a38;
+}
+
+.session-timer.expired {
+  background: #eb5757;
+  color: white;
+}
+
+.session-timer.expired a {
+  color: white;
+  text-decoration: underline;
+}
+
+/* 지도 화면처럼 헤더가 없는 화면에 붙이는 작은 메뉴 */
+.compact-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  font-size: 0.85em;
+  margin: 8px 0;
+}
+
+.compact-nav a {
+  color: #2f80ed;
+  text-decoration: none;
+}
+
+.compact-nav .session-timer {
+  background: #eef2f7;
+  color: #1e2a38;
+}
+
+@media (max-width: 640px) {
+  .site-header {
+    padding: 12px 16px;
+  }
+
+  .site-nav {
+    gap: 12px;
+  }
+}
