@@ -64,7 +64,8 @@ public class PaymentController {
         }
 
         return prepareByTransport(email, groupId.toString(), items, CartItemEntity::getMode,
-                CartItemEntity::getRoutePayment, CartItemEntity::getStartName, CartItemEntity::getEndName);
+                CartItemEntity::getRoutePayment, CartItemEntity::getStartName, CartItemEntity::getEndName,
+                CartItemEntity::getDepartureTime);
     }
 
     @PostMapping("/direct-sdk-ready")
@@ -74,15 +75,15 @@ public class PaymentController {
         // 구간 수·형식은 RequestBodyValidationAdvice 가 확인하고, 운임·이름·출발 시각·당일 여부는 서버가 TAGO 에서 확인한다 (S1·S10)
         List<CartItemRequestDTO.LegDTO> legs = request.getSelectedLegs();
         List<TripVerifier.VerifiedTrip> verified = legs.stream().map(tripVerifier::verify).toList();
-        record Priced(String mode, TripVerifier.VerifiedTrip trip) {
+        record Priced(String mode, TripVerifier.VerifiedTrip trip, String departureTime) {
         }
         List<Priced> priced = IntStream.range(0, legs.size())
-                .mapToObj(i -> new Priced(legs.get(i).getMode(), verified.get(i)))
+                .mapToObj(i -> new Priced(legs.get(i).getMode(), verified.get(i), legs.get(i).getDepartureTime()))
                 .toList();
 
         // 바로 결제는 장바구니 묶음이 없으므로 새 묶음 번호를 만든다
         return prepareByTransport(email, UUID.randomUUID().toString(), priced, Priced::mode,
-                p -> p.trip().fare(), p -> p.trip().startName(), p -> p.trip().endName());
+                p -> p.trip().fare(), p -> p.trip().startName(), p -> p.trip().endName(), Priced::departureTime);
     }
 
     /**
@@ -90,7 +91,8 @@ public class PaymentController {
      */
     private <T> Map<String, Map<String, Object>> prepareByTransport(String email, String groupId, List<T> items,
                                                                     Function<T, String> mode, ToIntFunction<T> fare,
-                                                                    Function<T, String> start, Function<T, String> end) {
+                                                                    Function<T, String> start, Function<T, String> end,
+                                                                    Function<T, String> departure) {
         Map<String, List<T>> groupedByTransport = items.stream()
                 .collect(Collectors.groupingBy(mode, LinkedHashMap::new, Collectors.toList()));
 
@@ -106,6 +108,10 @@ public class PaymentController {
                     : start.apply(first) + " → " + end.apply(transportItems.get(transportItems.size() - 1))
                     + " 외 " + (transportItems.size() - 1) + "건";
 
+            // 결제 내역에 보여 줄 가장 이른 출발 일시 (서버가 확인한 편)
+            String firstDeparture = transportItems.stream().map(departure).filter(Objects::nonNull)
+                    .min(String::compareTo).orElse(null);
+
             String paymentId = "payment-" + UUID.randomUUID();
             paymentRepository.save(PaymentEntity.builder()
                     .email(email)
@@ -115,6 +121,8 @@ public class PaymentController {
                     .groupId(groupId)
                     .transportType(transport)
                     .status(PaymentEntity.PaymentStatus.PENDING)
+                    .orderName(orderName)
+                    .departureTime(firstDeparture)
                     .build());
 
             Map<String, Object> paymentInfo = new HashMap<>();
