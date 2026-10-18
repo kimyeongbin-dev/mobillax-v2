@@ -28,6 +28,7 @@ AI 코딩 도구(Claude Code)가 이 저장소에서 작업할 때 지키는 규
   - 요청 DTO에 `Common/Validation`의 제약 어노테이션을 붙인다. 본문은 `RequestBodyValidationAdvice`가 자동으로 검사한다.
   - 폼 객체에는 `@Valid`, 경로·쿼리 문자열에는 제약 어노테이션을 붙인다.
   - 화면에 다시 보일 문자열은 서버 값으로 만든다.
+- 새 화면은 공통 레이아웃 조각(`fragments/layout :: head`, `header(...)` 또는 `compactNav`)을 쓴다. 헤더를 직접 쓰지 않는다(`npm run test:web`의 web-layout 검사).
 - 화면 스크립트에서 HTML을 넣을 때는 `` html`...` `` 태그 템플릿(`safe-html.js`)을 쓰고, 인라인 이벤트 문자열에 값을 넣지 않는다.
 - fetch 로 상태를 바꾸는 화면은 `csrf.js`를 먼저 불러온다.
 
