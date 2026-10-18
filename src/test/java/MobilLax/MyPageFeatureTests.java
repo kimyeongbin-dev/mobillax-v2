@@ -127,8 +127,8 @@ class MyPageFeatureTests {
     @WithMockUser(username = USER)
     class PaymentHistory {
 
-        private void payment(String email, PaymentEntity.PaymentStatus status, String orderName) {
-            paymentRepository.save(PaymentEntity.builder()
+        private PaymentEntity payment(String email, PaymentEntity.PaymentStatus status, String orderName) {
+            return paymentRepository.save(PaymentEntity.builder()
                     .email(email).paymentId("payment-" + UUID.randomUUID()).amount(4800).date(LocalDate.now())
                     .groupId(UUID.randomUUID().toString()).transportType("TRAIN").status(status)
                     .orderName(orderName).departureTime("202610180702").build());
@@ -153,6 +153,52 @@ class MyPageFeatureTests {
             payment(USER, PaymentEntity.PaymentStatus.SUCCESS, "<script>alert(1)</script>");
             String body = mvc.perform(get("/mypage/payments")).andReturn().getResponse().getContentAsString();
             assertThat(body).doesNotContain("<script>alert(1)</script>").contains("&lt;script&gt;");
+        }
+
+        private int hide(String paymentId) throws Exception {
+            return mvc.perform(post("/mypage/payments/hide").with(csrf()).param("paymentId", paymentId))
+                    .andReturn().getResponse().getStatus();
+        }
+
+        /** 내역에서 삭제는 화면에서만 숨기고 기록은 남긴다 (법정 보존, 중복 결제 확인·환불·분쟁 대응) */
+        @Test
+        void hideRemovesFromListButKeepsRecord() throws Exception {
+            PaymentEntity paid = payment(USER, PaymentEntity.PaymentStatus.SUCCESS, "숨길역 → 영등포");
+            payment(USER, PaymentEntity.PaymentStatus.SUCCESS, "남길역 → 영등포");
+
+            assertThat(hide(paid.getPaymentId())).isEqualTo(302);
+
+            String body = mvc.perform(get("/mypage/payments")).andReturn().getResponse().getContentAsString();
+            assertThat(body).doesNotContain("숨길역").contains("남길역", "고객센터로 문의");
+            PaymentEntity kept = paymentRepository.findByPaymentId(paid.getPaymentId()).orElseThrow();
+            assertThat(kept.getHiddenAt()).isNotNull();
+            assertThat(kept.getStatus()).isEqualTo(PaymentEntity.PaymentStatus.SUCCESS);
+            // 같은 묶음을 다시 결제하지 못하게 막는 검사(S1)는 숨긴 기록도 본다
+            assertThat(paymentRepository.existsByGroupIdAndTransportTypeAndStatus(
+                    paid.getGroupId(), paid.getTransportType(), PaymentEntity.PaymentStatus.SUCCESS)).isTrue();
+        }
+
+        @Test
+        void cannotHideOthersPendingOrUnknownPayments() throws Exception {
+            PaymentEntity others = payment(OTHER, PaymentEntity.PaymentStatus.SUCCESS, "남의역 → 영등포");
+            PaymentEntity pending = payment(USER, PaymentEntity.PaymentStatus.PENDING, "준비역 → 영등포");
+
+            assertThat(hide(others.getPaymentId())).as("남의 결제").isEqualTo(404);
+            assertThat(hide(pending.getPaymentId())).as("내역에 없는 준비 결제").isEqualTo(404);
+            assertThat(hide("payment-" + UUID.randomUUID())).as("없는 번호").isEqualTo(404);
+            assertThat(hide("x' OR '1'='1")).as("형식이 틀린 번호").isEqualTo(400);
+
+            assertThat(paymentRepository.findByPaymentId(others.getPaymentId()).orElseThrow().getHiddenAt()).isNull();
+            assertThat(paymentRepository.findByPaymentId(pending.getPaymentId()).orElseThrow().getHiddenAt()).isNull();
+        }
+
+        @Test
+        void hideNeedsCsrfToken() throws Exception {
+            PaymentEntity paid = payment(USER, PaymentEntity.PaymentStatus.SUCCESS, "토큰역 → 영등포");
+            int status = mvc.perform(post("/mypage/payments/hide").param("paymentId", paid.getPaymentId()))
+                    .andReturn().getResponse().getStatus();
+            assertThat(status).isEqualTo(403);
+            assertThat(paymentRepository.findByPaymentId(paid.getPaymentId()).orElseThrow().getHiddenAt()).isNull();
         }
 
         @Test

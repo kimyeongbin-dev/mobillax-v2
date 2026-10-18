@@ -1,11 +1,13 @@
 package MobilLax.Domain.MyPage;
 
 import MobilLax.Common.Validation.FormErrors;
+import MobilLax.Common.Validation.PaymentId;
 import MobilLax.Config.UserFacingException;
 import MobilLax.Domain.Payment.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,6 +15,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
@@ -91,6 +94,19 @@ public class MyPageController {
     public String payments(Model model, Principal principal) {
         model.addAttribute("payments", paymentService.getHistory(principal.getName()));
         return "mypage-payments";
+    }
+
+    /**
+     * 예매 내역에서 삭제 (v2.5): 화면에서만 숨기고 기록은 보관한다 (PaymentService.hide)
+     * 남의 결제·없는 결제·형식이 틀린 번호는 거절된다 (S4·S10)
+     */
+    @PostMapping("/mypage/payments/hide")
+    public String hidePayment(@RequestParam @NotNull @PaymentId String paymentId, Principal principal,
+                              RedirectAttributes redirectAttributes) {
+        paymentService.hide(principal.getName(), paymentId);
+        redirectAttributes.addFlashAttribute("successMessage",
+                "내역에서 삭제했습니다. 결제 기록은 관련 법령에 따라 보관되며, 다시 보려면 고객센터로 문의해 주세요.");
+        return "redirect:/mypage/payments";
     }
 
     @PostMapping("/mypage/delete")

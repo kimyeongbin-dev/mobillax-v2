@@ -13,7 +13,9 @@
 <main>
   <section class="mypage-container">
     <h2>예매 내역</h2>
-    <p class="history-help">결제가 확인된 예매와 실패·취소된 결제를 최근 순으로 보여 줍니다 (최근 50건).</p>
+    <p class="notice success" th:if="${successMessage}" th:text="${successMessage}"></p>
+    <p class="history-help">결제가 확인된 예매와 실패·취소된 결제를 최근 순으로 보여 줍니다 (최근 50건).
+      "내역에서 삭제"는 목록에서만 사라지고, 결제 기록은 관련 법령에 따라 보관됩니다.</p>
 
     <div class="history-empty" th:if="${#lists.isEmpty(payments)}">
       <p>아직 결제한 예매가 없습니다.</p>
@@ -34,6 +36,11 @@
         <div class="history-side">
           <span class="history-amount" th:text="'₩' + ${#numbers.formatInteger(p.amount, 1, 'COMMA')}">₩4,800</span>
           <span class="history-status" th:text="${p.paid} ? '결제 완료' : '결제 실패·취소'">결제 완료</span>
+          <form th:action="@{/mypage/payments/hide}" method="post" class="history-hide"
+                onsubmit="return confirm('이 결제를 예매 내역에서 삭제할까요? 다시 보려면 고객센터로 문의해야 합니다.');">
+            <input type="hidden" name="paymentId" th:value="${p.paymentId}">
+            <button type="submit">내역에서 삭제</button>
+          </form>
         </div>
       </li>
     </ul>

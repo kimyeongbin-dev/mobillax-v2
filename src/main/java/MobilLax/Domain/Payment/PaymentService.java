@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +27,7 @@ public class PaymentService {
      *
      * @param departure 출발 일시 표시 (예: "10월 18일 07:02 출발"), 알 수 없으면 빈 문자열
      */
-    public record HistoryItem(LocalDate date, String orderName, String transport, int amount,
+    public record HistoryItem(String paymentId, LocalDate date, String orderName, String transport, int amount,
                               String departure, boolean paid) {
     }
 
@@ -42,8 +44,9 @@ public class PaymentService {
 
     /** 내 결제 내역 (최근 50건, 보안 규칙 S4: 로그인한 사용자 것만) */
     public List<HistoryItem> getHistory(String email) {
-        return paymentRepository.findTop50ByEmailAndStatusInOrderByIdDesc(email, HISTORY_STATUSES).stream()
+        return paymentRepository.findTop50ByEmailAndStatusInAndHiddenAtIsNullOrderByIdDesc(email, HISTORY_STATUSES).stream()
                 .map(p -> new HistoryItem(
+                        p.getPaymentId(),
                         p.getDate(),
                         p.getOrderName() != null ? p.getOrderName() : "주문 정보 없음 (v2.5 이전 결제)",
                         TRANSPORT_LABEL.getOrDefault(p.getTransportType(), p.getTransportType()),
@@ -51,6 +54,23 @@ public class PaymentService {
                         formatDeparture(p.getDepartureTime()),
                         p.getStatus() == PaymentEntity.PaymentStatus.SUCCESS))
                 .toList();
+    }
+
+    /**
+     * 예매 내역에서 삭제 (v2.5) — 사용자 화면에서만 숨기고 기록은 남긴다
+     * - 법정 보존 기간 동안 보관하고, 중복 결제 확인(S1)·환불·분쟁 대응에 그대로 쓴다
+     * - 숨긴 내역은 사용자가 직접 다시 볼 수 없고, 고객센터 문의로 관리자가 확인한다 (관리자 기능은 이후 버전)
+     * - 내 기록이고 내역에 보이는 상태(완료·실패)일 때만. 아니면 없는 기록과 같은 404 (보안 규칙 S4)
+     * - 이미 숨긴 기록을 다시 숨겨도 처음 숨긴 시각을 유지한다
+     */
+    public void hide(String email, String paymentId) {
+        PaymentEntity payment = paymentRepository.findByPaymentId(paymentId)
+                .filter(p -> email.equals(p.getEmail()) && HISTORY_STATUSES.contains(p.getStatus()))
+                .orElseThrow(NoSuchElementException::new);
+        if (payment.getHiddenAt() == null) {
+            payment.setHiddenAt(LocalDateTime.now());
+            paymentRepository.save(payment);
+        }
     }
 
     /** yyyyMMddHHmm → "10월 18일 07:02 출발" */
