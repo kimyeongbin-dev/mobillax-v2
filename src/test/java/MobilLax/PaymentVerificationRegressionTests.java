@@ -190,6 +190,12 @@ class PaymentVerificationRegressionTests {
             assertThat(pending.getAmount()).isEqualTo(FARE);
             assertThat(pending.getEmail()).isEqualTo(USER_A);
             assertThat(pending.getGroupId()).isEqualTo(groupId);
+            // 예매 내역 화면용 표시도 서버 값 (v2.5)
+            assertThat(pending.getOrderName()).isEqualTo("서울 → 부산");
+            assertThat(pending.getDepartureTime()).isEqualTo(departAt);
+            // 결제일은 한국 날짜 (컨테이너가 UTC 라도, v2.5)
+            assertThat(java.util.TimeZone.getDefault().getID()).isEqualTo("Asia/Seoul");
+            assertThat(pending.getDate()).isEqualTo(LocalDate.now(MobilLax.Common.Time.KoreaTime.ZONE));
         }
 
         @Test
