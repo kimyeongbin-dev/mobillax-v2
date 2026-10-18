@@ -256,3 +256,17 @@ footer {
 .history-item.failed .history-status {
   color: #eb5757;
 }
+
+.history-hide {
+  margin: 6px 0 0;
+}
+
+.history-hide button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #888;
+  font-size: 0.8em;
+  text-decoration: underline;
+  cursor: pointer;
+}
