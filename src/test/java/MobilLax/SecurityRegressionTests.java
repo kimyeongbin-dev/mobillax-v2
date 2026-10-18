@@ -116,6 +116,7 @@ class SecurityRegressionTests {
             mvc.perform(delete("/api/cart/clear")).andExpect(status().isForbidden());
             mvc.perform(post("/mypage/delete")).andExpect(status().isForbidden());
             mvc.perform(post("/mypage/password")).andExpect(status().isForbidden());
+            mvc.perform(post("/mypage/payments/hide")).andExpect(status().isForbidden());
             mvc.perform(post("/payment/complete").contentType(MediaType.APPLICATION_JSON).content("{}"))
                     .andExpect(status().isForbidden());
         }
