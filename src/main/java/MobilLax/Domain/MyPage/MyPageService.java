@@ -45,8 +45,8 @@ public class MyPageService implements MyPageServiceInterface {
     public void updateProfile(String email, String name, String password) {
         UserAccount user = userRepo.findByEmail(email).orElseThrow();
 
+        // 이름 형식은 컨트롤러 입구(ProfileUpdateDto 의 @UserName)에서 검사했다 (S10)
         if (name != null && !name.isBlank()) {
-            UserAccountService.validateName(name);
             user.setName(name);
         }
 

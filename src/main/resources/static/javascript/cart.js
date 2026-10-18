@@ -1,4 +1,4 @@
-/* global getTransportLabel, collectBookingLegs, nowStamp -- transport.js */
+/* global html, raw, getTransportLabel, collectBookingLegs, nowStamp -- transport.js */
 /**
  * cart.js
  *
@@ -75,24 +75,36 @@ async function loadCartList() {
 
       const groupElement = document.createElement("div");
       groupElement.className = "cart-group";
-      groupElement.innerHTML = `
+      groupElement.innerHTML = html`
         <h3>
           경로 묶음
           <div>
-            <button class="group-pay-button" data-groupid="${groupId}" ${departed ? 'disabled title="출발 시각이 지났거나 알 수 없는 편이 있습니다"' : ""}>결제하기</button>
+            <button
+              class="group-pay-button"
+              data-groupid="${groupId}"
+              ${departed ? raw('disabled title="출발 시각이 지났거나 알 수 없는 편이 있습니다"') : ""}
+            >
+              결제하기
+            </button>
             <button class="group-delete-button" data-groupid="${groupId}">삭제</button>
           </div>
         </h3>
       `;
 
       items.forEach((item) => {
-        totalFare += item.routePayment; // 요금(routePayment)
+        const fare = Number(item.routePayment) || 0;
+        totalFare += fare; // 요금(routePayment)
+        const dep = /^\d{12}$/.test(item.departureTime || "") ? item.departureTime : "";
         const itemElement = document.createElement("div");
         itemElement.className = "cart-item";
-        itemElement.innerHTML = `
+        // 서버 응답이라도 값은 html`` 이 이스케이프해서 넣는다 (S10)
+        itemElement.innerHTML = html`
           <div><strong>${item.startName} → ${item.endName}</strong></div>
           <div>${getTransportLabel(item)} / ${item.route}</div>
-          <div>(요금: ￦${item.routePayment.toLocaleString()}원)${item.departureTime ? ` · ${Number(item.departureTime.slice(4, 6))}월 ${Number(item.departureTime.slice(6, 8))}일 ${item.departureTime.slice(8, 10)}:${item.departureTime.slice(10, 12)} 출발` : ""}</div>
+          <div>
+            (요금:
+            ￦${fare.toLocaleString()}원)${dep ? ` · ${Number(dep.slice(4, 6))}월 ${Number(dep.slice(6, 8))}일 ${dep.slice(8, 10)}:${dep.slice(10, 12)} 출발` : ""}
+          </div>
         `;
         groupElement.appendChild(itemElement);
       });
@@ -107,7 +119,7 @@ async function loadCartList() {
 
       const totalElement = document.createElement("div");
       totalElement.className = "total-fare";
-      totalElement.innerHTML = `<strong>합계: ￦${totalFare.toLocaleString()}원</strong>`;
+      totalElement.innerHTML = html`<strong>합계: ￦${totalFare.toLocaleString()}원</strong>`;
       groupElement.appendChild(totalElement);
 
       container.appendChild(groupElement);

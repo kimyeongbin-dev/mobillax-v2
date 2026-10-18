@@ -17,7 +17,7 @@ import java.util.function.Function;
 
 /**
  * TAGO(공공데이터포털) 역·터미널·공항 목록 조회
- * - 공공데이터포털 인증키는 이미 URL 인코딩된 값이라 그대로 붙인다 (TerminalService 와 같은 방식)
+ * - 공공데이터포털 인증키는 이미 URL 인코딩된 값이라 그대로 붙인다
  * - 키가 들어간 요청 URL 은 로그에 남기지 않는다
  */
 @Component

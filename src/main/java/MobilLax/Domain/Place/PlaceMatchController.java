@@ -1,5 +1,16 @@
 package MobilLax.Domain.Place;
 
+import MobilLax.Common.Validation.KoreanLatitude;
+import MobilLax.Common.Validation.KoreanLongitude;
+import MobilLax.Common.Validation.PayableMode;
+import MobilLax.Common.Validation.PlainText;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +33,7 @@ import java.util.List;
 public class PlaceMatchController {
 
     /** 한 번에 맞출 수 있는 장소 수 (경로 하나의 장거리 구간 출발·도착) */
-    private static final int MAX_POINTS = 20;
+    static final int MAX_POINTS = 20;
 
     private final PlaceMatchService matchService;
 
@@ -32,10 +43,17 @@ public class PlaceMatchController {
      * @param route TMAP 노선명 (type 이 없을 때 고속·시외 구분 보조)
      * @param name  TMAP 장소 이름 (구간 start.name / end.name)
      */
-    public record MatchPoint(String mode, Integer type, String route, String name, double lat, double lon) {
+    public record MatchPoint(
+            @NotNull @PayableMode String mode,
+            @Min(0) @Max(999) Integer type,
+            @Size(max = 60) @PlainText String route,
+            @NotBlank @Size(max = 40) @PlainText String name,
+            // 이름·좌표는 캐시 키로 저장되므로 길이·문자·국내 범위를 제한한다 (S10)
+            @KoreanLatitude double lat,
+            @KoreanLongitude double lon) {
     }
 
-    public record MatchRequest(List<MatchPoint> points) {
+    public record MatchRequest(@NotEmpty @Size(max = MAX_POINTS) List<@NotNull @Valid MatchPoint> points) {
     }
 
     public record MatchResponse(String kind, String kindLabel, PlaceMatchService.MatchResult result) {
@@ -43,10 +61,8 @@ public class PlaceMatchController {
 
     @PostMapping("/match")
     public ResponseEntity<List<MatchResponse>> match(@RequestBody MatchRequest request) {
-        List<MatchPoint> points = request == null || request.points() == null ? List.of() : request.points();
-        if (points.isEmpty() || points.size() > MAX_POINTS) {
-            return ResponseEntity.badRequest().build();
-        }
+        // 개수·형식은 RequestBodyValidationAdvice 가 MatchRequest 의 제약으로 먼저 검사한다
+        List<MatchPoint> points = request.points();
 
         List<MatchResponse> responses = new ArrayList<>();
         for (MatchPoint point : points) {

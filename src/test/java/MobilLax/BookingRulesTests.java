@@ -1,11 +1,10 @@
 package MobilLax;
 
+import MobilLax.Common.Validation.AccountRules;
 import MobilLax.Domain.Cart.DepartureCheck;
-import MobilLax.Service.UserAccountService;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * 예매·회원 입력 규칙 (외부 호출 없음)
@@ -26,20 +25,26 @@ class BookingRulesTests {
 
     @Test
     void acceptsNormalNames() {
-        UserAccountService.validateName("김영빈");
-        UserAccountService.validateName("QA 테스트");
+        assertThat(AccountRules.nameError("김영빈")).isEmpty();
+        assertThat(AccountRules.nameError("QA 테스트")).isEmpty();
     }
 
     @Test
     void rejectsBrokenOrInvalidNames() {
         // CP949 로 보낸 "테스트"를 UTF-8 로 읽으면 생기는 깨진 문자(U+FFFD)
-        assertThatThrownBy(() -> UserAccountService.validateName("�׽�Ʈ"))
-                .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> UserAccountService.validateName(" "))
-                .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> UserAccountService.validateName("이름\u0000"))
-                .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> UserAccountService.validateName("가".repeat(UserAccountService.MAX_NAME_LENGTH + 1)))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(AccountRules.nameError("�׽�Ʈ")).isPresent();
+        assertThat(AccountRules.nameError(" ")).isPresent();
+        assertThat(AccountRules.nameError("이름\u0000")).isPresent();
+        assertThat(AccountRules.nameError("가".repeat(AccountRules.MAX_NAME_LENGTH + 1))).isPresent();
+    }
+
+    @Test
+    void passwordRules() {
+        assertThat(AccountRules.passwordError("FAKE_pass1")).isEmpty();
+        assertThat(AccountRules.passwordError("1234567")).isPresent();
+        assertThat(AccountRules.passwordError("a".repeat(AccountRules.MAX_PASSWORD_LENGTH + 1))).isPresent();
+        // 한글 25자 = 75바이트: BCrypt 72바이트 한계를 넘는다
+        assertThat(AccountRules.passwordError("가".repeat(25))).isPresent();
+        assertThat(AccountRules.passwordError(null)).isPresent();
     }
 }

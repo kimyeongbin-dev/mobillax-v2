@@ -1,6 +1,5 @@
 package MobilLax.Domain.Cart;
 
-import MobilLax.Config.UserFacingException;
 import MobilLax.Domain.Trip.TripVerifier;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -25,6 +24,7 @@ public class CartService {
     /**
      * 사용자가 선택한 구간들을 장바구니에 저장
      * - 운임은 서버가 TAGO 에서 다시 확인한 값만 저장한다 (보안 규칙 S1). 하나라도 확인되지 않으면 아무것도 담지 않는다
+     * - 역·터미널 이름과 노선 표시도 TAGO 값으로 서버가 만든다. 브라우저가 보낸 표시 문자열은 저장하지 않는다 (S10)
      * @param legs 선택된 경로 리스트
      * @return 총 결제 금액
      */
@@ -34,22 +34,20 @@ public class CartService {
         String groupId = UUID.randomUUID().toString();  // 새 그룹 ID 생성
         int totalFare = 0;
 
-        // 요금이 없는 구간(도보 등)은 담지 않고, 나머지는 모두 운임을 확인한 뒤에 저장
-        List<CartItemRequestDTO.LegDTO> paidLegs = legs.stream().filter(leg -> leg.getRoutePayment() > 0).toList();
-        if (paidLegs.isEmpty()) {
-            throw new UserFacingException("요금이 있는 구간만 담을 수 있습니다.");
-        }
-        paidLegs.forEach(tripVerifier::verifiedFare);
+        // 모든 구간을 먼저 확인하고, 하나라도 실패하면 아무것도 담지 않는다 (요청 형식은 @Valid 가 먼저 확인)
+        List<TripVerifier.VerifiedTrip> verified = legs.stream().map(tripVerifier::verify).toList();
 
-        for (CartItemRequestDTO.LegDTO leg : paidLegs) {
+        for (int i = 0; i < legs.size(); i++) {
+            CartItemRequestDTO.LegDTO leg = legs.get(i);
+            TripVerifier.VerifiedTrip trip = verified.get(i);
             CartItemEntity item = CartItemEntity.builder()
                     .email(email)
                     .mode(leg.getMode())
-                    .route(leg.getRoute())
+                    .route(trip.route())
                     .routeId(leg.getRouteId())
-                    .routePayment(leg.getRoutePayment())
-                    .startName(leg.getStartName())
-                    .endName(leg.getEndName())
+                    .routePayment(trip.fare())
+                    .startName(trip.startName())
+                    .endName(trip.endName())
                     .departureTime(leg.getDepartureTime())
                     .totalFareGroupId(groupId)
                     .isDeleted(false)  // 신규 저장 시 isDeleted는 false
@@ -57,7 +55,7 @@ public class CartService {
                     .build();
 
             cartItemRepository.save(item);
-            totalFare += leg.getRoutePayment();
+            totalFare += trip.fare();
         }
 
         return totalFare;
