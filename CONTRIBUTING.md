@@ -121,6 +121,8 @@ Git이 자동으로 만드는 `Merge ...`, `Revert "..."` 메시지는 통과시
   - 요청 본문 검증: `Common/Validation/RequestBodyValidationAdvice`가 모든 `@RequestBody`를 검사합니다. 컨트롤러는 `@Valid`를 쓰지 않아도 됩니다.
   - 화면 출력: `safe-html.js`의 `` html`...` ``가 끼워 넣는 값을 모두 이스케이프합니다.
   - 예외 응답: `GlobalExceptionHandler` 한 곳에서 상태 코드와 문구를 정합니다.
+  - 화면 공통 부분: `templates/fragments/layout.html`이 공통 head(CSRF·출력 이스케이프·세션 타이머 스크립트)와 상단 메뉴를 한 번만 정의하고, 모든 화면이 이 조각을 씁니다. 헤더 값(장바구니 수, 세션 시간)은 `LayoutInfo`가 화면을 그릴 때 계산합니다.
+  - 시간대: `Common/Time/KoreaTime` 한 곳에서 정하고 앱이 뜰 때 기본 시간대로 적용합니다.
 - **규칙 값은 한 곳에.** 정규식·범위·문구는 상수(`InputRules`, `AccountRules`)나 재사용 어노테이션(`@TagoId`, `@PaymentId`, `@UserName` 등)에 두고, DTO는 어노테이션만 붙입니다. 같은 검사를 다른 곳에 다시 쓰지 않습니다.
 - **빠뜨리면 빌드가 실패하게.** 규칙은 사람의 기억 대신 구조 테스트로 강제합니다. 예: `InputValidationCoverageTests`는 모든 컨트롤러 입력에 제약이 선언됐는지, `npm run test:web`은 모든 HTML 대입이 `` html`` ``을 거치는지 검사합니다.
 - **응집도는 높게, 결합도는 낮게.** 계층마다 한 가지 책임만 집니다.

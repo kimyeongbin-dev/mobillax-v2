@@ -5,11 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MobilLax - 회원가입</title>
   <link href="/css/login.css" type="text/css" rel="stylesheet">
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
 </head>
 <body>
-<header>
-  <h1><a href="/home">MobilLax</a></h1> <!-- 홈 페이지 링크 수정 -->
-</header>
+<header th:replace="~{fragments/layout :: header('')}"></header>
 <div class="form-wrapper">
   <div class="form-box">
     <h2>회원가입</h2>

@@ -1,5 +1,6 @@
 package MobilLax.Domain.Trip;
 
+import MobilLax.Common.Time.KoreaTime;
 import MobilLax.Common.Validation.DateYmd;
 import MobilLax.Common.Validation.TagoId;
 import MobilLax.Common.Validation.TransitKindName;
@@ -17,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 import java.util.Comparator;
@@ -35,7 +35,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TripController {
 
-    private static final ZoneId KOREA = ZoneId.of("Asia/Seoul");
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("uuuuMMdd").withResolverStyle(ResolverStyle.STRICT);
     private static final DateTimeFormatter MINUTE = DateTimeFormatter.ofPattern("uuuuMMddHHmm");
 
@@ -69,7 +68,7 @@ public class TripController {
         } catch (RuntimeException e) {
             return badRequest("교통수단 또는 날짜가 올바르지 않습니다."); // 20261399 처럼 형식만 맞는 날짜
         }
-        LocalDate today = LocalDate.now(KOREA);
+        LocalDate today = LocalDate.now(KoreaTime.ZONE);
         if (date.isBefore(today) || date.isAfter(today.plusDays(TransitRouteRequest.MAX_DAYS_AHEAD))) {
             return badRequest("오늘부터 " + TransitRouteRequest.MAX_DAYS_AHEAD + "일 안의 날짜만 조회할 수 있습니다.");
         }
@@ -84,7 +83,7 @@ public class TripController {
         }
 
         boolean bookableDate = date.equals(today);
-        String now = LocalDateTime.now(KOREA).format(MINUTE);
+        String now = LocalDateTime.now(KoreaTime.ZONE).format(MINUTE);
         List<TripView> views = trips.stream()
                 .filter(t -> !t.departAt().isEmpty() && t.fare() > 0)
                 .sorted(Comparator.comparing(TagoTripClient.Trip::departAt))

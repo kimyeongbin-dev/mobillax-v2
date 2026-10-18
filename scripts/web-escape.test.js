@@ -84,13 +84,33 @@ for (const file of fs.readdirSync(dir).filter((f) => f.endsWith(".js") && f !== 
 }
 
 // 4. 화면 스크립트를 쓰는 템플릿은 safe-html.js 를 먼저 불러온다
+//    직접 불러오거나, 공통 head 조각(fragments/layout :: head, csrf.js → safe-html.js 포함)을 먼저 넣는다
 const templates = path.join(root, "templates");
-for (const page of fs.readdirSync(templates).filter((f) => f.endsWith(".html"))) {
-  const source = fs.readFileSync(path.join(templates, page), "utf8");
-  const screens = [...source.matchAll(/javascript\/(?!csrf\.js|safe-html\.js)[\w-]+\.js/g)].map((m) => m.index);
+const COMMON = /javascript\/(?:csrf|safe-html|session-timer)\.js/;
+const layout = fs.readFileSync(path.join(templates, "fragments", "layout.html"), "utf8");
+const headFragment = layout.slice(layout.indexOf('th:fragment="head"'), layout.indexOf("</th:block>"));
+check(
+  headFragment.indexOf("csrf.js") >= 0 && headFragment.indexOf("csrf.js") < headFragment.indexOf("safe-html.js"),
+  "fragments/layout.html head 조각이 csrf.js → safe-html.js 순서로 불러오지 않는다",
+);
+
+const htmlFiles = (base) =>
+  fs.readdirSync(base, { withFileTypes: true }).flatMap((e) => {
+    const full = path.join(base, e.name);
+    return e.isDirectory() ? htmlFiles(full) : e.name.endsWith(".html") ? [full] : [];
+  });
+for (const file of htmlFiles(templates).filter((f) => !f.includes(`${path.sep}fragments${path.sep}`))) {
+  const page = path.relative(templates, file);
+  const source = fs.readFileSync(file, "utf8");
+  const screens = [...source.matchAll(/javascript\/[\w-]+\.js/g)].filter((m) => !COMMON.test(m[0])).map((m) => m.index);
   if (screens.length === 0) continue;
-  const safe = source.indexOf("javascript/safe-html.js");
-  check(safe >= 0 && screens.every((i) => i > safe), `${page}: safe-html.js 를 화면 스크립트보다 먼저 불러오지 않는다`);
+  const safe = [source.indexOf("javascript/safe-html.js"), source.indexOf("fragments/layout :: head")]
+    .filter((i) => i >= 0)
+    .reduce((a, b) => Math.min(a, b), Infinity);
+  check(
+    screens.every((i) => i > safe),
+    `${page}: safe-html.js 를 화면 스크립트보다 먼저 불러오지 않는다`,
+  );
 }
 
 if (failures.length) {
