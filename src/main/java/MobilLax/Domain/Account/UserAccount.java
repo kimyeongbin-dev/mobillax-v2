@@ -1,5 +1,6 @@
 package MobilLax.Domain.Account;
 
+import MobilLax.Common.Time.KoreaTime;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -39,6 +40,6 @@ public class UserAccount {
 
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = KoreaTime.now();
     }
 }

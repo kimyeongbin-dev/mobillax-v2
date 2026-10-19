@@ -1,7 +1,6 @@
 package MobilLax.Domain.Cart;
 
 import MobilLax.Common.Time.KoreaTime;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -18,7 +17,7 @@ public final class DepartureCheck {
 
     /** 지금 한국 시간 yyyyMMddHHmm */
     public static String now() {
-        return LocalDateTime.now(KoreaTime.ZONE).format(MINUTE);
+        return KoreaTime.now().format(MINUTE);
     }
 
     /** 결제할 수 없는 편인지 (출발 일시가 없거나, 이미 출발했거나 지금 출발) */

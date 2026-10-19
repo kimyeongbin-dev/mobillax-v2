@@ -3,9 +3,6 @@ package MobilLax.Domain.Cart;
 import MobilLax.Domain.Trip.TripDisplay;
 import MobilLax.Domain.Trip.TripVerifier;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,9 +29,7 @@ public class CartService {
      * @param legs 선택된 경로 리스트
      * @return 총 결제 금액
      */
-    public int saveCartItems(List<CartItemRequestDTO.LegDTO> legs) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String email = auth.getName();  // 현재 로그인된 사용자 이메일 획득
+    public int saveCartItems(String email, List<CartItemRequestDTO.LegDTO> legs) {
         String groupId = UUID.randomUUID().toString();  // 새 그룹 ID 생성
         int totalFare = 0;
 
@@ -70,8 +65,7 @@ public class CartService {
      * - 결제할 수 있는 묶음을 먼저, 그 안에서는 출발이 이른 순
      */
     @Transactional(readOnly = true)
-    public List<CartGroupView> getCartView() {
-        String email = getCurrentUserEmail();
+    public List<CartGroupView> getCartView(String email) {
         String now = DepartureCheck.now();
         Map<String, List<CartItemEntity>> groups = cartItemRepository.findByEmailAndIsDeletedFalse(email).stream()
                 .sorted(ITEM_ORDER)
@@ -117,21 +111,13 @@ public class CartService {
                 blocked.orElse(""));
     }
 
-    /**
-     * 로그인된 사용자의 모든 장바구니 항목 논리 삭제 처리
-     */
-    public void clearCart() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        // 실제 삭제가 아닌 isDeleted 플래그 처리 필요하면 메서드 변경 필요
+    /** 장바구니 전체 비우기: 이 사용자의 장바구니 행을 DB 에서 지운다 (결제 기록은 payments 에 남는다) */
+    public void clearCart(String email) {
         cartItemRepository.deleteByEmail(email);
     }
 
-    /**
-     * 특정 그룹 단위로 논리 삭제 처리 (isDeleted = true)
-     * @param groupId 삭제할 그룹 UUID
-     */
-    public void deleteGroup(String groupId) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+    /** 묶음 하나 삭제: 지우지 않고 isDeleted 로 표시한다 (보안 규칙 S4: 내 묶음만) */
+    public void deleteGroup(String email, String groupId) {
         cartItemRepository.markAsDeletedByEmailAndGroupId(email, groupId);
     }
 
@@ -155,9 +141,7 @@ public class CartService {
         return start + " → " + end;
     }
 
-    /**
-     * 로그인된 사용자의 장바구니 그룹 수 반환
-     */
+    /** 장바구니 묶음 수 (삭제·결제한 묶음 제외) */
     public int getCartGroupCount(String email) {
         // 삭제했거나 결제한(isDeleted) 묶음은 세지 않는다
         List<CartItemEntity> items = cartItemRepository.findByEmailAndIsDeletedFalse(email);
@@ -165,22 +149,5 @@ public class CartService {
                 .map(CartItemEntity::getTotalFareGroupId)
                 .distinct()
                 .count();
-    }
-
-    /**
-     * 인증된 사용자 이메일 조회
-     */
-    private String getCurrentUserEmail() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            throw new RuntimeException("인증되지 않은 사용자입니다.");
-        }
-
-        Object principal = auth.getPrincipal();
-        if (principal instanceof UserDetails) {
-            return ((UserDetails) principal).getUsername();
-        } else {
-            return principal.toString();
-        }
     }
 }

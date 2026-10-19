@@ -5,9 +5,13 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,6 +21,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * - 패키지: 공통 계층(Common), 설정(Config), 기능(Domain/<기능>)만 둔다. 예전의 Controller/Service/Model 같은
  *   계층별 패키지가 다시 생기면 기능 코드가 흩어지므로 실패한다
+ * - 시각: 날짜·시각은 KoreaTime.today()·now() 로만 얻는다. 시간대 없는 now() 는 서버 시간대(UTC)에 따라
+ *   날짜가 하루 어긋난 적이 있다 (v2.5)
  */
 class ArchitectureRulesTests {
 
@@ -47,5 +53,34 @@ class ArchitectureRulesTests {
                 .filter(name -> !TOP_LEVEL_PACKAGES.contains(name.split("\\.")[1]))
                 .toList();
         assertThat(misplaced).as("Common·Config·Domain 밖에 있는 클래스").isEmpty();
+    }
+
+    /** 앱 소스 파일 (src/main/java) 중 검사 대상: 규칙을 구현한 공통 클래스는 뺀다 */
+    static List<Path> appSources(String... allowed) throws IOException {
+        try (Stream<Path> files = Files.walk(Path.of("src", "main", "java", ROOT))) {
+            return files.filter(p -> p.toString().endsWith(".java"))
+                    .filter(p -> Stream.of(allowed).noneMatch(a -> p.toString().replace('\\', '/').endsWith(a)))
+                    .toList();
+        }
+    }
+
+    static List<String> sourcesMatching(Pattern pattern, String... allowed) throws IOException {
+        List<String> found = new ArrayList<>();
+        for (Path file : appSources(allowed)) {
+            // 주석 속 설명은 빼고 코드만 본다
+            String code = Files.readString(file).replaceAll("(?s)/\\*.*?\\*/", "").replaceAll("//[^\\n]*", "");
+            if (pattern.matcher(code).find()) {
+                found.add(file.getFileName().toString());
+            }
+        }
+        return found;
+    }
+
+    @Test
+    void timeComesFromKoreaTime() throws IOException {
+        assertThat(appSources()).as("검사한 소스 파일").hasSizeGreaterThan(50);
+        Pattern zoneless = Pattern.compile("\\b(LocalDate|LocalDateTime|LocalTime|ZonedDateTime)\\.now\\(");
+        assertThat(sourcesMatching(zoneless, "Common/Time/KoreaTime.java"))
+                .as("KoreaTime 대신 now() 를 직접 부르는 파일").isEmpty();
     }
 }

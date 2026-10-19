@@ -1,5 +1,6 @@
 package MobilLax.Domain.Place;
 
+import MobilLax.Common.Time.KoreaTime;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -67,7 +68,7 @@ public class TransitPlace {
         this.tagoId = tagoId;
         this.name = name;
         this.cityName = cityName;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = KoreaTime.now();
     }
 
     public void applyAddress(JusoAddress address) {
@@ -82,11 +83,11 @@ public class TransitPlace {
         this.emdNm = address.emdNm();
         this.lotMainNo = address.lotMainNo();
         this.lotSubNo = address.lotSubNo();
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = KoreaTime.now();
     }
 
     public void markAddressNotFound() {
         this.addressStatus = AddressStatus.NOT_FOUND;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = KoreaTime.now();
     }
 }

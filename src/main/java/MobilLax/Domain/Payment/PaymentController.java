@@ -1,6 +1,7 @@
 package MobilLax.Domain.Payment;
 
 import MobilLax.Common.Error.UserFacingException;
+import MobilLax.Common.Time.KoreaTime;
 import MobilLax.Domain.Cart.CartItemEntity;
 import MobilLax.Domain.Cart.CartItemRepository;
 import MobilLax.Domain.Cart.CartPayability;
@@ -17,7 +18,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
@@ -114,7 +114,7 @@ public class PaymentController {
                     .email(email)
                     .paymentId(paymentId)
                     .amount(totalAmount)
-                    .date(LocalDate.now())
+                    .date(KoreaTime.today())
                     .groupId(groupId)
                     .transportType(transport)
                     .status(PaymentEntity.PaymentStatus.PENDING)
