@@ -8,7 +8,7 @@
     "format:check": "prettier --check \"src/main/resources/static/**/*.{js,css}\" \".claude/hooks/*.js\" \"scripts/*.js\"",
     "test:hooks": "node .claude/hooks/guard-secrets.test.js && bash .githooks/secret-scan.test.sh && bash .githooks/eol-check.test.sh",
     "test:infra": "node scripts/infra-rules.test.js",
-    "test:web": "node scripts/web-escape.test.js && node scripts/web-layout.test.js && node scripts/web-booking.test.js"
+    "test:web": "node scripts/web-escape.test.js && node scripts/web-layout.test.js && node scripts/web-booking.test.js && node scripts/web-menu.test.js"
   },
   "lint-staged": {
     "*.js": [

@@ -8,6 +8,7 @@
   <script th:src="|https://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJsAppKey}&libraries=services|"></script>
   <th:block th:replace="~{fragments/layout :: head}"></th:block>
   <script src="javascript/transport.js"></script>
+  <script src="javascript/itinerary.js"></script>
   <script src="javascript/script.js"></script>
 </head>
 <body>
@@ -49,10 +50,10 @@
       <a class="mode-item" data-mode="reservation" th:href="@{/mypage/payments}">
         <i class="fas fa-ticket-alt"></i><span>예매확인</span>
       </a>
-      <div class="mode-item" data-mode="fare" onclick="alertComingSoon()">
+      <a class="mode-item" data-mode="fare" th:href="@{/compare}">
         <i class="fas fa-receipt"></i><span>요금비교</span>
-      </div>
-      <div class="mode-item" data-mode="local" onclick="alertComingSoon()">
+      </a>
+      <div class="mode-item" data-mode="local" role="link" tabindex="0" onclick="openNearby()" onkeydown="if (event.key === 'Enter') openNearby()">
         <i class="fas fa-map-marker-alt"></i><span>주변정보</span>
       </div>
     </div>
@@ -60,7 +61,7 @@
       관련
       <a href="https://search.naver.com/search.naver?sm=msv_nex&where=m&query=%EC%A7%80%ED%95%98%EC%B2%A0%EB%85%B8%EC%84%A0%EB%8F%84">지하철노선도</a>
       ·
-      <a href="#">기차승차권예매</a>
+      <a href="https://www.letskorail.com/" target="_blank" rel="noopener noreferrer" title="코레일 승차권 예매 (새 창)">기차승차권예매</a>
     </div>
   </section>
 </main>

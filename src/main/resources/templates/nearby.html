@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MobilLax - 주변정보</title>
+  <link th:href="@{/css/home-menu.css}" type="text/css" rel="stylesheet">
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
+  <script th:src="@{/javascript/nearby.js}"></script>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('home')}"></header>
+
+<main>
+  <section class="menu-card">
+    <h2><i class="fas fa-map-marker-alt"></i> 주변정보</h2>
+    <p class="menu-guide">고른 장소에서 1km 안의 장소를 가까운 순으로 보여 줍니다. "지도"를 누르면 카카오맵이 새 창으로 열립니다.</p>
+
+    <div class="menu-tabs" id="nearbyTarget" role="group" aria-label="기준 장소" hidden>
+      <button type="button" data-target="to" aria-pressed="true">도착지</button>
+      <button type="button" data-target="from" aria-pressed="false">출발지</button>
+    </div>
+    <p class="menu-target" id="nearbyTargetName" hidden></p>
+
+    <div class="menu-tabs" id="nearbyCategory" role="group" aria-label="분류" hidden>
+      <button type="button" th:each="category, stat : ${categories}"
+              th:attr="data-category=${category.name()},aria-pressed=${stat.first}"
+              th:text="${category.label()}">음식점</button>
+    </div>
+
+    <p class="menu-status" id="nearbyStatus" role="status"></p>
+    <ol class="nearby-list" id="nearbyList"></ol>
+
+    <div class="menu-empty" id="nearbyEmpty" hidden>
+      <p>기준 장소가 없습니다.</p>
+      <p class="menu-note">홈에서 출발지나 도착지를 고른 뒤 주변정보를 누르세요.</p>
+      <a class="menu-button" th:href="@{/home}">장소 고르기</a>
+    </div>
+
+    <p class="menu-note">장소 정보: 카카오 로컬. 검색한 장소와 결과는 저장하지 않습니다.</p>
+  </section>
+</main>
+</body>
+</html>
