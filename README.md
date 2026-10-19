@@ -211,18 +211,22 @@ npm run test:web                                       # 화면 출력 이스케
 ```
 .
 ├── src/main/java/MobilLax
-│   ├── Common/Validation/  # 입력 검증 공통 계층 (재사용 제약 어노테이션, 요청 본문 검증 어드바이스)
-│   ├── Common/Web/     # 공통 레이아웃 값(LayoutInfo), 세션 연장 API
-│   ├── Common/Time/    # 서비스 기준 시간대(한국 시간)
-│   ├── Config/         # Security, 외부 API 설정, 전역 예외 처리, 템플릿 키 주입
-│   ├── Controller/     # 페이지·경로·회원 컨트롤러
-│   ├── Domain/
-│   │   ├── Cart/       # 장바구니 (엔티티·리포지토리·서비스·API)
-│   │   ├── MyPage/     # 마이페이지
-│   │   └── Payment/    # PortOne 결제
-│   ├── Model/          # 회원 엔티티, TMAP 응답 모델
-│   ├── Repository/
-│   └── Service/        # 경로·회원 서비스
+│   ├── Common/         # 모든 기능이 거치는 공통 계층
+│   │   ├── Validation/ # 입력 검증 (재사용 제약 어노테이션, 요청 본문 검증 어드바이스)
+│   │   ├── Error/      # 전역 예외 응답, 사용자에게 보일 예외
+│   │   ├── Web/        # 공통 레이아웃 값(LayoutInfo), 현재 사용자(CurrentUser), 세션 연장 API
+│   │   └── Time/       # 서비스 기준 시간대(KoreaTime.today()·now())
+│   ├── Config/         # Security, 외부 API 설정, 템플릿 키 주입
+│   └── Domain/         # 기능별 패키지 (컨트롤러·서비스·저장소·클라이언트를 기능 안에 둔다)
+│       ├── Account/    # 회원가입·로그인 계정
+│       ├── Route/      # 경로 검색(TMAP)·상세·요금비교 화면
+│       ├── Trip/       # TAGO 편 조회·운임 확인
+│       ├── Place/      # 역·터미널 매칭, 카카오 로컬
+│       ├── Nearby/     # 주변정보
+│       ├── Cart/       # 장바구니
+│       ├── Payment/    # 결제 준비·확인(PortOne)·내역
+│       ├── MyPage/     # 마이페이지
+│       └── Health/     # 헬스체크
 ├── src/main/resources
 │   ├── templates/      # Thymeleaf 페이지 (fragments/layout.html: 모든 화면 공통 head·메뉴)
 │   └── static/         # JS(경로·장바구니·결제, safe-html.js 출력 이스케이프), CSS

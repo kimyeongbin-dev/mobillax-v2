@@ -120,12 +120,19 @@ Git이 자동으로 만드는 `Merge ...`, `Revert "..."` 메시지는 통과시
 - **공통 관심사는 공통 계층에 한 번만.** 인증·CSRF·입력 검증·출력 이스케이프·예외 응답·로그 마스킹 같은 규칙은 기능 코드마다 흩어 쓰지 않습니다. 필터, 어드바이스, 공용 모듈처럼 모든 요청과 화면이 지나가는 곳에 한 번 구현하고, 새 기능은 그 계층을 거치기만 하면 되게 합니다.
   - 요청 본문 검증: `Common/Validation/RequestBodyValidationAdvice`가 모든 `@RequestBody`를 검사합니다. 컨트롤러는 `@Valid`를 쓰지 않아도 됩니다.
   - 화면 출력: `safe-html.js`의 `` html`...` ``가 끼워 넣는 값을 모두 이스케이프합니다.
-  - 예외 응답: `GlobalExceptionHandler` 한 곳에서 상태 코드와 문구를 정합니다.
+  - 예외 응답: `Common/Error/GlobalExceptionHandler` 한 곳에서 상태 코드와 문구를 정합니다.
+  - 로그인 사용자: 컨트롤러가 `Principal`로 받아 서비스에 이메일을 넘깁니다. 서비스는 보안 컨텍스트를 읽지 않고, 요청 매개변수를 못 받는 공통 코드만 `Common/Web/CurrentUser`를 씁니다.
+  - 화면 이벤트: 템플릿에 `onclick` 같은 인라인 이벤트를 쓰지 않고 화면 스크립트에서 `addEventListener`로 겁니다. 되돌리기 어려운 폼은 `<form data-confirm="문구">`(공통 `confirm-form.js`)로 확인합니다.
   - 화면 공통 부분: `templates/fragments/layout.html`이 공통 head(CSRF·출력 이스케이프·세션 타이머 스크립트)와 상단 메뉴를 한 번만 정의하고, 모든 화면이 이 조각을 씁니다. 헤더 값(장바구니 수, 세션 시간)은 `LayoutInfo`가 화면을 그릴 때 계산합니다.
-  - 시간대: `Common/Time/KoreaTime` 한 곳에서 정하고 앱이 뜰 때 기본 시간대로 적용합니다.
+  - 시간대: `Common/Time/KoreaTime` 한 곳에서 정하고 앱이 뜰 때 기본 시간대로 적용합니다. 날짜·시각은 `KoreaTime.today()`·`now()`로만 얻습니다.
   - 화면이 미리 보여 주는 판단과 서버가 거절하는 판단은 같은 규칙을 씁니다. 예: 장바구니 묶음을 결제할 수 있는지는 `CartPayability` 하나를 화면 응답과 결제 준비가 함께 씁니다. 편 표시(교통수단 이름, 출발 일시)는 `TripDisplay` 하나를 장바구니와 예매 내역이 씁니다. 경로 요약(요금·시간·환승·교통수단)은 `itinerary.js` 하나를 홈 추천 경로와 요금비교가 씁니다.
 - **규칙 값은 한 곳에.** 정규식·범위·문구는 상수(`InputRules`, `AccountRules`)나 재사용 어노테이션(`@TagoId`, `@PaymentId`, `@UserName` 등)에 두고, DTO는 어노테이션만 붙입니다. 같은 검사를 다른 곳에 다시 쓰지 않습니다.
-- **빠뜨리면 빌드가 실패하게.** 규칙은 사람의 기억 대신 구조 테스트로 강제합니다. 예: `InputValidationCoverageTests`는 모든 컨트롤러 입력에 제약이 선언됐는지, `npm run test:web`은 모든 HTML 대입이 `` html`` ``을 거치는지 검사합니다.
+- **빠뜨리면 빌드가 실패하게.** 규칙은 사람의 기억 대신 구조 테스트로 강제합니다. 예: `InputValidationCoverageTests`는 모든 컨트롤러 입력에 제약이 선언됐는지, `npm run test:web`은 모든 HTML 대입이 `` html`` ``을 거치고 템플릿에 인라인 이벤트가 없는지 검사합니다. `ArchitectureRulesTests`는 아래 구조 규칙을 검사합니다.
+  - 클래스는 `Common`(공통 계층), `Config`(설정), `Domain/<기능>`에만 둡니다. 계층별 패키지(Controller/Service/Model)를 새로 만들지 않습니다.
+  - 컨트롤러는 저장소(Repository)를 직접 쓰지 않습니다.
+  - `SecurityContextHolder`는 `CurrentUser`만 읽습니다.
+  - 시간대 없는 `LocalDate.now()` 등은 쓰지 않습니다.
+  - ESLint `no-unused-vars`·`no-undef`는 오류입니다. 다른 파일의 함수는 파일 머리의 `/* global */`, 다른 파일이 쓰는 함수는 `/* exported */`로 밝힙니다.
 - **응집도는 높게, 결합도는 낮게.** 계층마다 한 가지 책임만 집니다.
 
   | 계층 | 책임 |
@@ -133,7 +140,9 @@ Git이 자동으로 만드는 `Merge ...`, `Revert "..."` 메시지는 통과시
   | DTO | 입력 형식 선언 |
   | 컨트롤러 | 요청을 받아 서비스로 넘기고 응답을 고름. 형식 검사를 직접 하지 않음 |
   | 서비스 | 업무 규칙 (중복 이메일, 당일 예매, 소유권 등) |
-  | 클라이언트 | 외부 API 호출 (TAGO, PortOne, 카카오, 도로명주소) |
+  | 클라이언트 | 외부 API 호출 (TMAP, TAGO, PortOne, 카카오, 도로명주소) |
+
+  구현이 하나뿐인 인터페이스(`XxxService` + `XxxServiceImpl`)는 만들지 않습니다. 두 번째 구현이 필요해질 때 만듭니다.
 
   한 파일은 한 관심사만 다룹니다. 예를 들어 교통수단 규칙은 `transport.js`, 출력 안전은 `safe-html.js`입니다.
 - **읽기 쉽게.**
