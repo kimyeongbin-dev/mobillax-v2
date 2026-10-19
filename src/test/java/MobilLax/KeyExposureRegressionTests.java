@@ -1,7 +1,7 @@
 package MobilLax;
 
-import MobilLax.Model.UserAccount;
-import MobilLax.Repository.UserAccountRepository;
+import MobilLax.Domain.Account.UserAccount;
+import MobilLax.Domain.Account.UserAccountRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

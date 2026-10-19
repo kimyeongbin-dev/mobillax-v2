@@ -1,10 +1,10 @@
 package MobilLax.Domain.MyPage;
 
-import MobilLax.Config.UserFacingException;
+import MobilLax.Common.Error.UserFacingException;
 import MobilLax.Domain.Cart.CartService;
 import MobilLax.Domain.Payment.PaymentService;
-import MobilLax.Model.UserAccount;
-import MobilLax.Repository.UserAccountRepository;
+import MobilLax.Domain.Account.UserAccount;
+import MobilLax.Domain.Account.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,14 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
-public class MyPageService implements MyPageServiceInterface {
+public class MyPageService {
 
     private final UserAccountRepository userRepo;
     private final PasswordEncoder passwordEncoder;
     private final CartService cartService;
     private final PaymentService paymentService;
 
-    @Override
     public MyPageDto getMyPageInfo(String email) {
         UserAccount user = userRepo.findByEmail(email).orElseThrow();
 
@@ -33,7 +32,6 @@ public class MyPageService implements MyPageServiceInterface {
         return new MyPageDto(user.getName(), user.getEmail(), recentRoute, monthlyPayment, cartCount);
     }
 
-    @Override
     public void updateProfile(String email, String name) {
         UserAccount user = userRepo.findByEmail(email).orElseThrow();
         user.setName(name);
@@ -45,7 +43,6 @@ public class MyPageService implements MyPageServiceInterface {
      * - 현재 비밀번호가 맞아야 한다: 세션을 잠깐 빌린 사람이 비밀번호를 바꿔 계정을 빼앗지 못하게
      * - 지금과 같은 비밀번호로는 바꾸지 않는다
      */
-    @Override
     @Transactional
     public void changePassword(String email, String currentPassword, String newPassword) {
         UserAccount user = userRepo.findByEmail(email).orElseThrow();
@@ -59,7 +56,6 @@ public class MyPageService implements MyPageServiceInterface {
         userRepo.save(user);
     }
 
-    @Override
     @Transactional
     public void deleteAccountByEmail(String email) {
         userRepo.deleteByEmail(email);

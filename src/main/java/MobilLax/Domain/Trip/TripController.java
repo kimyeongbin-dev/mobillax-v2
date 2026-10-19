@@ -5,7 +5,7 @@ import MobilLax.Common.Validation.DateYmd;
 import MobilLax.Common.Validation.TagoId;
 import MobilLax.Common.Validation.TransitKindName;
 import MobilLax.Domain.Place.TransitKind;
-import MobilLax.Model.TransitRouteRequest;
+import MobilLax.Domain.Route.TransitRouteRequest;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

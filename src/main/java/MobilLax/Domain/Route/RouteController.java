@@ -1,9 +1,7 @@
-package MobilLax.Controller;
+package MobilLax.Domain.Route;
 
 import MobilLax.Common.Time.KoreaTime;
 import MobilLax.Domain.Health.HealthService;
-import MobilLax.Model.TransitRouteRequest;
-import MobilLax.Service.RouteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -28,7 +26,7 @@ import java.time.LocalDate;
 public class RouteController {
 
 
-    private final RouteService routeService;
+    private final TmapTransitClient tmapClient;
     private final HealthService healthService;
 
     @PostMapping(value = "/transit", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -40,7 +38,7 @@ public class RouteController {
         }
 
         try {
-            String routes = routeService.searchTransitRoutes(request);
+            String routes = tmapClient.searchTransitRoutes(request);
             healthService.record(HealthService.Component.TMAP, true);
             return ResponseEntity.ok(routes);
         } catch (HttpStatusCodeException e) {

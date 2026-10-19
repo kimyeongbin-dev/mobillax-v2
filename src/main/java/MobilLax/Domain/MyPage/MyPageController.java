@@ -2,7 +2,7 @@ package MobilLax.Domain.MyPage;
 
 import MobilLax.Common.Validation.FormErrors;
 import MobilLax.Common.Validation.PaymentId;
-import MobilLax.Config.UserFacingException;
+import MobilLax.Common.Error.UserFacingException;
 import MobilLax.Domain.Payment.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -28,7 +28,7 @@ import java.security.Principal;
 @RequiredArgsConstructor
 public class MyPageController {
 
-    private final MyPageServiceInterface myPageService;
+    private final MyPageService myPageService;
     private final PaymentService paymentService;
 
     @GetMapping("/mypage")

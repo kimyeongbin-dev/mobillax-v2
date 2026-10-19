@@ -1,7 +1,7 @@
 package MobilLax;
 
-import MobilLax.Config.GlobalExceptionHandler;
-import MobilLax.Config.UserFacingException;
+import MobilLax.Common.Error.GlobalExceptionHandler;
+import MobilLax.Common.Error.UserFacingException;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

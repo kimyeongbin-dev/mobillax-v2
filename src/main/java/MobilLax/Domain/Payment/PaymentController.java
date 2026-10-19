@@ -1,6 +1,6 @@
 package MobilLax.Domain.Payment;
 
-import MobilLax.Config.UserFacingException;
+import MobilLax.Common.Error.UserFacingException;
 import MobilLax.Domain.Cart.CartItemEntity;
 import MobilLax.Domain.Cart.CartItemRepository;
 import MobilLax.Domain.Cart.CartPayability;
