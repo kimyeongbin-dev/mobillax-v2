@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MobilLax - 예매 내역</title>
+  <link th:href="@{/css/mypage.css}" rel="stylesheet" type="text/css">
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('payments')}"></header>
+
+<main>
+  <section class="mypage-container">
+    <h2>예매 내역</h2>
+    <p class="notice success" th:if="${successMessage}" th:text="${successMessage}"></p>
+    <p class="history-help">결제가 확인된 예매와 실패·취소된 결제를 최근 순으로 보여 줍니다 (최근 50건).
+      "내역에서 삭제"는 목록에서만 사라지고, 결제 기록은 관련 법령에 따라 보관됩니다.</p>
+
+    <div class="history-empty" th:if="${#lists.isEmpty(payments)}">
+      <p>아직 결제한 예매가 없습니다.</p>
+      <a th:href="@{/home}">경로 찾으러 가기 →</a>
+    </div>
+
+    <ul class="history-list" th:unless="${#lists.isEmpty(payments)}">
+      <!-- 모든 값은 서버가 만든 것이고 th:text 가 이스케이프한다 (보안 규칙 S10) -->
+      <li class="history-item" th:each="p : ${payments}" th:classappend="${p.paid} ? 'paid' : 'failed'">
+        <div class="history-main">
+          <strong th:text="${p.orderName}">서울 → 영등포</strong>
+          <span class="history-transport" th:text="${p.transport}">기차</span>
+        </div>
+        <div class="history-sub">
+          <span th:if="${!#strings.isEmpty(p.departure)}" th:text="${p.departure}">10월 18일 07:02 출발</span>
+          <span th:text="'결제일 ' + ${#temporals.format(p.date, 'yyyy.MM.dd')}">결제일 2026.10.18</span>
+        </div>
+        <div class="history-side">
+          <span class="history-amount" th:text="'₩' + ${#numbers.formatInteger(p.amount, 1, 'COMMA')}">₩4,800</span>
+          <span class="history-status" th:text="${p.paid} ? '결제 완료' : '결제 실패·취소'">결제 완료</span>
+          <form th:action="@{/mypage/payments/hide}" method="post" class="history-hide"
+                onsubmit="return confirm('이 결제를 예매 내역에서 삭제할까요? 다시 보려면 고객센터로 문의해야 합니다.');">
+            <input type="hidden" name="paymentId" th:value="${p.paymentId}">
+            <button type="submit">내역에서 삭제</button>
+          </form>
+        </div>
+      </li>
+    </ul>
+  </section>
+</main>
+
+<footer>
+  <div>© 2025 MobilLax. All rights reserved.</div>
+</footer>
+</body>
+</html>

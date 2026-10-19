@@ -19,24 +19,7 @@ header {
   justify-content: space-between;
   align-items: center;
 }
-.auth-buttons {
-  display: flex;
-  gap: 20px;
-}
-.auth-buttons a {
-  color: white;
-  text-decoration: none;
-  font-size: 0.85em;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.auth-buttons img {
-  width: 28px;
-  height: 28px;
-  margin-bottom: 3px;
-  filter: brightness(0) invert(1);
-}
+
 main {
   display: flex;
   justify-content: center;
@@ -311,7 +294,8 @@ fieldset {
   margin: 0;
 }
 
-form {
+/* 경로 결과 폼만 (전역 form 선택자는 헤더의 로그아웃 폼까지 숨겼음) */
+#routeForm {
   display: none;
   max-width: 700px;
   margin: 0 auto;
@@ -439,22 +423,4 @@ footer {
 .depart-hint {
   font-size: 0.8rem;
   color: #777;
-}
-
-/* 로그아웃은 POST 폼 버튼 (CSRF 보호) — 링크와 같은 모양 */
-.logout-form {
-  margin: 0;
-}
-
-.logout-button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0;
-  border: none;
-  background: none;
-  color: white;
-  font: inherit;
-  font-size: 0.85em;
-  cursor: pointer;
 }
