@@ -124,13 +124,12 @@ function selectSuggestion(name, type, x, y) {
   }
 }
 
-// 출발지-도착지 입력값 바꾸기
+// 출발지·도착지 바꾸기: 입력칸 글자와 고른 장소(좌표)를 함께 바꾼다
 function swapInputs() {
   const fromInput = document.getElementById("fromInput");
   const toInput = document.getElementById("toInput");
-  const temp = fromInput.value;
-  fromInput.value = toInput.value;
-  toInput.value = temp;
+  [fromInput.value, toInput.value] = [toInput.value, fromInput.value];
+  [selectedFrom, selectedTo] = [selectedTo, selectedFrom];
 }
 
 // 추천 경로 카드에 보일 요약 (계산 규칙은 itinerary.js)
