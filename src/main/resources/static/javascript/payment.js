@@ -1,26 +1,17 @@
-/* global collectBookingLegs, loadCartList, showNoRoutePopup -- transport.js, cart.js */
+/* global collectBookingLegs, loadCartList, selectedGroupIds, showNoRoutePopup -- transport.js, cart.js */
 /**
  * payment.js
  *
- * @description 경로 선택 시 즉시 결제 및 장바구니 그룹 결제를 처리하는 스크립트입니다.
+ * @description 상세 화면의 바로 결제와 장바구니에서 고른 묶음 결제를 처리하는 스크립트입니다.
  * @author
  * @lastModified 2025-06-09
  */
 document.addEventListener("DOMContentLoaded", () => {
-  // ✅ 바로 결제 버튼 (상세 경로 페이지용)
+  // 바로 결제 버튼 (상세 경로 화면)
   document.querySelector(".btn-direct-pay")?.addEventListener("click", handleDirectPayment);
 
-  // ✅ 장바구니 전체 결제 버튼
-  document.querySelector(".btn-cart-pay")?.addEventListener("click", goToPayment);
-
-  // ✅ 장바구니 그룹 결제 버튼 (동적 이벤트 위임 방식)
-  document.querySelector(".cart-list")?.addEventListener("click", async (event) => {
-    const groupId = event.target.dataset.groupid;
-    if (event.target.classList.contains("group-pay-button") && groupId && !event.target.disabled) {
-      const result = await processGroupPayment(groupId);
-      alert(result.message);
-    }
-  });
+  // 장바구니에서 고른 묶음 결제 (v2.6: 묶음별 결제·전체 결제 버튼을 하나로)
+  document.querySelector(".btn-cart-pay")?.addEventListener("click", paySelectedGroups);
 });
 
 /**
@@ -124,35 +115,34 @@ async function handleDirectPayment() {
 async function processGroupPayment(groupId) {
   try {
     const paymentDataMap = await prepare(`/payment/sdk-ready/${groupId}`);
-    const result = await payAll(paymentDataMap);
-    if (result.status === "PAID" && typeof loadCartList === "function") await loadCartList();
-    return result;
+    return await payAll(paymentDataMap);
   } catch (error) {
     return { status: "FAILED", message: error.message };
   }
 }
 
 /**
- * 장바구니의 모든 묶음을 차례로 결제. 취소·실패하면 멈춘다
+ * 장바구니에서 고른 묶음을 차례로 결제한다. 취소·실패하면 멈추고, 끝나면 목록을 다시 불러온다
+ * - 묶음마다 교통수단별 결제창이 열린다 (서버가 묶음·교통수단마다 결제 기록을 따로 만든다)
  */
-async function goToPayment() {
-  try {
-    const response = await fetch("/api/cart/list");
-    if (!response.ok) throw new Error("장바구니를 불러오지 못했습니다.");
-    const groupIds = Object.keys(await response.json());
-    if (groupIds.length === 0) {
-      alert("결제할 경로가 없습니다.");
-      return;
-    }
-    for (const groupId of groupIds) {
-      const result = await processGroupPayment(groupId);
-      if (result.status !== "PAID") {
-        alert(result.message);
-        return;
-      }
-    }
-    alert("장바구니의 모든 경로를 결제했습니다.");
-  } catch (error) {
-    alert(error.message);
+async function paySelectedGroups() {
+  const groupIds = selectedGroupIds();
+  if (groupIds.length === 0) {
+    alert("결제할 묶음을 골라 주세요.");
+    return;
   }
+  const button = document.querySelector(".btn-cart-pay");
+  button.disabled = true;
+  let paidCount = 0;
+  let message = "";
+  for (const groupId of groupIds) {
+    const result = await processGroupPayment(groupId);
+    if (result.status !== "PAID") {
+      message = paidCount ? `${paidCount}개 묶음을 결제했습니다. ${result.message}` : result.message;
+      break;
+    }
+    paidCount++;
+  }
+  await loadCartList();
+  alert(message || (groupIds.length === 1 ? "결제가 완료되었습니다." : `${paidCount}개 묶음을 모두 결제했습니다.`));
 }
