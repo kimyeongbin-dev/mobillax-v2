@@ -3,6 +3,7 @@ package MobilLax.Domain.Payment;
 import MobilLax.Config.UserFacingException;
 import MobilLax.Domain.Cart.CartItemEntity;
 import MobilLax.Domain.Cart.CartItemRepository;
+import MobilLax.Domain.Cart.CartPayability;
 import MobilLax.Domain.Cart.CartItemRequestDTO;
 import MobilLax.Domain.Cart.DepartureCheck;
 import MobilLax.Domain.Trip.TripVerifier;
@@ -54,14 +55,10 @@ public class PaymentController {
         // 삭제했거나 이미 결제한 묶음은 다시 결제 준비하지 않는다
         List<CartItemEntity> items = cartItemRepository.findActiveByGroupId(email, groupId.toString());
         if (items.isEmpty()) throw new UserFacingException("결제할 항목이 없습니다.");
-        String now = DepartureCheck.now();
-        if (items.stream().anyMatch(i -> DepartureCheck.isDeparted(i.getDepartureTime(), now))) {
-            throw new UserFacingException("출발 시각이 지났거나 알 수 없는 편이 있어 결제할 수 없습니다. 이 묶음을 삭제하고 편을 다시 골라 주세요.");
-        }
-        // 담을 때 서버가 운임을 확인한 항목만 (v2.2 이전에 담은 항목은 브라우저가 보낸 운임이라 결제하지 않는다)
-        if (items.stream().anyMatch(i -> !Boolean.TRUE.equals(i.getFareVerified()))) {
-            throw new UserFacingException("운임을 확인하지 않은 항목이 있어 결제할 수 없습니다. 이 묶음을 삭제하고 편을 다시 골라 주세요.");
-        }
+        // 장바구니 화면이 미리 보여 주는 것과 같은 규칙 (출발한 편, 운임을 확인하지 않은 항목)
+        CartPayability.blockReason(items, DepartureCheck.now()).ifPresent(reason -> {
+            throw new UserFacingException(reason);
+        });
 
         return prepareByTransport(email, groupId.toString(), items, CartItemEntity::getMode,
                 CartItemEntity::getRoutePayment, CartItemEntity::getStartName, CartItemEntity::getEndName,
