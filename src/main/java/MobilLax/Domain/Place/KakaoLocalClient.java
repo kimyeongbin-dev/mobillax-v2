@@ -13,6 +13,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -74,6 +76,31 @@ public class KakaoLocalClient {
     /** 장소 이름 → 좌표 (첫 번째 검색 결과) */
     public Optional<Coord> keywordToCoord(String keyword) {
         return firstCoord(get("/search/keyword.json", Map.of("query", keyword)));
+    }
+
+    /**
+     * 좌표 주변의 카테고리 장소 (가까운 순)
+     * - 결과는 응답으로만 쓰고 저장하지 않는다 (카카오 약관)
+     *
+     * @param categoryCode 카카오 카테고리 그룹 코드 (서버가 정한 값만)
+     * @param radius       반경(m), 카카오 최대 20000
+     * @param size         최대 개수, 카카오 최대 15
+     */
+    public List<KakaoPlace> categorySearch(String categoryCode, double lat, double lon, int radius, int size) {
+        JsonNode docs = get("/search/category.json", Map.of(
+                "category_group_code", categoryCode,
+                "x", String.valueOf(lon), "y", String.valueOf(lat),
+                "radius", String.valueOf(radius), "size", String.valueOf(size), "sort", "distance"));
+        List<KakaoPlace> places = new ArrayList<>();
+        docs.forEach(doc -> places.add(new KakaoPlace(
+                doc.path("id").asText(""),
+                doc.path("place_name").asText(""),
+                doc.path("category_name").asText(""),
+                doc.path("road_address_name").asText(""),
+                doc.path("address_name").asText(""),
+                doc.path("phone").asText(""),
+                doc.path("distance").asInt(-1))));
+        return places;
     }
 
     private Optional<Coord> firstCoord(JsonNode docs) {

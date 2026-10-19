@@ -75,6 +75,8 @@ class SecurityRegressionTests {
             mvc.perform(get("/api/session")).andExpect(status().isUnauthorized());
             mvc.perform(get("/api/terminals").param("name", "동서울"))
                     .andExpect(status().isUnauthorized());
+            mvc.perform(get("/api/nearby").param("category", "CAFE").param("lat", "37.55").param("lon", "126.97"))
+                    .andExpect(status().isUnauthorized());
             mvc.perform(post("/payment/sdk-ready/" + UUID.randomUUID()).with(csrf()))
                     .andExpect(status().isUnauthorized());
             mvc.perform(post("/payment/complete").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json))
@@ -85,7 +87,7 @@ class SecurityRegressionTests {
         void privatePagesRedirectToLogin() throws Exception {
             // v2.3: /health/db 는 /health·/health/live(로그인 없이 UP/DOWN 만, S7)로 바뀌어 목록에서 뺐다
             for (String page : new String[]{"/cart", "/mypage", "/mypage/edit", "/mypage/password",
-                    "/mypage/payments", "/route"}) {
+                    "/mypage/payments", "/route", "/compare", "/nearby"}) {
                 mvc.perform(get(page)).andExpect(status().is3xxRedirection()).andExpect(redirectedUrlPattern("**/login"));
             }
         }
