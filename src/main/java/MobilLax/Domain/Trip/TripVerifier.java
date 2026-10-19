@@ -1,6 +1,6 @@
 package MobilLax.Domain.Trip;
 
-import MobilLax.Config.UserFacingException;
+import MobilLax.Common.Error.UserFacingException;
 import MobilLax.Domain.Cart.CartItemRequestDTO;
 import MobilLax.Domain.Cart.DepartureCheck;
 import MobilLax.Domain.Place.TransitKind;

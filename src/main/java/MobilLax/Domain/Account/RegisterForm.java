@@ -1,4 +1,4 @@
-package MobilLax.Model;
+package MobilLax.Domain.Account;
 
 import MobilLax.Common.Validation.AccountEmail;
 import MobilLax.Common.Validation.Password;

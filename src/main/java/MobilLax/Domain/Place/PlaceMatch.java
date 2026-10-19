@@ -1,5 +1,6 @@
 package MobilLax.Domain.Place;
 
+import MobilLax.Common.Time.KoreaTime;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -62,7 +63,7 @@ public class PlaceMatch {
         this.place = place;
         this.method = method;
         this.distanceMeters = distanceMeters;
-        this.matchedAt = LocalDateTime.now();
+        this.matchedAt = KoreaTime.now();
     }
 
     /** TMAP 데이터를 저장해 둘 수 있는 최대 시간 (TMAP 대중교통 API 이용약관) */

@@ -5,7 +5,7 @@ import MobilLax.Common.Validation.DateYmd;
 import MobilLax.Common.Validation.TagoId;
 import MobilLax.Common.Validation.TransitKindName;
 import MobilLax.Domain.Place.TransitKind;
-import MobilLax.Model.TransitRouteRequest;
+import MobilLax.Domain.Route.TransitRouteRequest;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 import java.util.Comparator;
@@ -68,7 +67,7 @@ public class TripController {
         } catch (RuntimeException e) {
             return badRequest("교통수단 또는 날짜가 올바르지 않습니다."); // 20261399 처럼 형식만 맞는 날짜
         }
-        LocalDate today = LocalDate.now(KoreaTime.ZONE);
+        LocalDate today = KoreaTime.today();
         if (date.isBefore(today) || date.isAfter(today.plusDays(TransitRouteRequest.MAX_DAYS_AHEAD))) {
             return badRequest("오늘부터 " + TransitRouteRequest.MAX_DAYS_AHEAD + "일 안의 날짜만 조회할 수 있습니다.");
         }
@@ -83,7 +82,7 @@ public class TripController {
         }
 
         boolean bookableDate = date.equals(today);
-        String now = LocalDateTime.now(KoreaTime.ZONE).format(MINUTE);
+        String now = KoreaTime.now().format(MINUTE);
         List<TripView> views = trips.stream()
                 .filter(t -> !t.departAt().isEmpty() && t.fare() > 0)
                 .sorted(Comparator.comparing(TagoTripClient.Trip::departAt))

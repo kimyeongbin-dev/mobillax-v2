@@ -20,15 +20,15 @@
     <div class="search-box">
       <div class="input-group">
         <i class="fas fa-location-arrow"></i>
-        <input type="text" id="fromInput" placeholder="출발지 입력" onfocus="currentFocusType='from'; updateSuggestHeader(); showSuggestionBox();" oninput="showSuggestions(this.value)">
+        <input type="text" id="fromInput" placeholder="출발지 입력" autocomplete="off">
         <button aria-label="검색">
           <i class="fas fa-search"></i>
         </button>
       </div>
-      <button class="switch-button" onclick="swapInputs()">⇄</button>
+      <button type="button" class="switch-button" id="swapButton" aria-label="출발지와 도착지 바꾸기">⇄</button>
       <div class="input-group">
         <i class="fas fa-map-marker-alt"></i>
-        <input type="text" id="toInput" placeholder="도착지 입력" onfocus="currentFocusType='to'; updateSuggestHeader(); showSuggestionBox();" oninput="showSuggestions(this.value)">
+        <input type="text" id="toInput" placeholder="도착지 입력" autocomplete="off">
         <button><i class="fas fa-search"></i></button>
       </div>
     </div>
@@ -41,7 +41,7 @@
       <div class="suggest-header">출발지 검색</div>
     </div>
     <div class="search-action">
-      <button class="find-route-button" onclick="showRouteResults()">길찾기</button>
+      <button type="button" class="find-route-button" id="findRouteButton">길찾기</button>
     </div>
     <div class="mode-select">
       <div class="mode-item" data-mode="transit">
@@ -53,9 +53,9 @@
       <a class="mode-item" data-mode="fare" th:href="@{/compare}">
         <i class="fas fa-receipt"></i><span>요금비교</span>
       </a>
-      <div class="mode-item" data-mode="local" role="link" tabindex="0" onclick="openNearby()" onkeydown="if (event.key === 'Enter') openNearby()">
+      <a class="mode-item" data-mode="local" th:href="@{/nearby}" id="nearbyMenu">
         <i class="fas fa-map-marker-alt"></i><span>주변정보</span>
-      </div>
+      </a>
     </div>
     <div class="related-links">
       관련

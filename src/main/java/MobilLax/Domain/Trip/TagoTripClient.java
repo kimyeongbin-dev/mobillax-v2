@@ -1,6 +1,6 @@
 package MobilLax.Domain.Trip;
 
-import MobilLax.Config.BusApiProperties;
+import MobilLax.Config.TagoApiProperties;
 import MobilLax.Domain.Place.TransitKind;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,15 +39,15 @@ public class TagoTripClient {
     }
 
     private final RestTemplate restTemplate;
-    private final BusApiProperties busApiProperties;
+    private final TagoApiProperties tagoApiProperties;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public TagoTripClient(RestTemplateBuilder builder, BusApiProperties busApiProperties) {
+    public TagoTripClient(RestTemplateBuilder builder, TagoApiProperties tagoApiProperties) {
         this.restTemplate = builder
                 .setConnectTimeout(Duration.ofSeconds(5))
                 .setReadTimeout(Duration.ofSeconds(15))
                 .build();
-        this.busApiProperties = busApiProperties;
+        this.tagoApiProperties = tagoApiProperties;
     }
 
     /**
@@ -88,7 +88,7 @@ public class TagoTripClient {
     }
 
     private List<Trip> fetch(String operation, String query, java.util.function.Function<JsonNode, Trip> mapper) {
-        URI uri = URI.create(BASE + operation + "?serviceKey=" + busApiProperties.getKey()
+        URI uri = URI.create(BASE + operation + "?serviceKey=" + tagoApiProperties.getKey()
                 + "&_type=json&numOfRows=" + PAGE_SIZE + "&pageNo=1" + query);
         JsonNode body;
         try {

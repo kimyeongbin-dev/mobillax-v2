@@ -1,6 +1,6 @@
 package MobilLax.Domain.Place;
 
-import MobilLax.Config.BusApiProperties;
+import MobilLax.Config.TagoApiProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -36,15 +36,15 @@ public class TagoPlaceClient {
     }
 
     private final RestTemplate restTemplate;
-    private final BusApiProperties busApiProperties;
+    private final TagoApiProperties tagoApiProperties;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public TagoPlaceClient(RestTemplateBuilder builder, BusApiProperties busApiProperties) {
+    public TagoPlaceClient(RestTemplateBuilder builder, TagoApiProperties tagoApiProperties) {
         this.restTemplate = builder
                 .setConnectTimeout(Duration.ofSeconds(5))
                 .setReadTimeout(Duration.ofSeconds(15))
                 .build();
-        this.busApiProperties = busApiProperties;
+        this.tagoApiProperties = tagoApiProperties;
     }
 
     public List<TagoCity> trainCities() {
@@ -76,7 +76,7 @@ public class TagoPlaceClient {
     private <T> List<T> fetchAll(String operation, String extraQuery, Function<JsonNode, T> mapper) {
         List<T> result = new ArrayList<>();
         for (int page = 1; page <= MAX_PAGES; page++) {
-            URI uri = URI.create(BASE + operation + "?serviceKey=" + busApiProperties.getKey()
+            URI uri = URI.create(BASE + operation + "?serviceKey=" + tagoApiProperties.getKey()
                     + "&_type=json&numOfRows=" + PAGE_SIZE + "&pageNo=" + page + extraQuery);
             JsonNode body = readBody(restTemplate.getForObject(uri, String.class), operation);
             JsonNode items = body.path("items").path("item");

@@ -1,54 +1,32 @@
-/**
- * UserAccountController.java
- *
- * ✅ 파일 목적: 사용자 로그인 및 회원가입과 관련된 HTTP 요청을 처리하는 Spring MVC 컨트롤러 클래스입니다.
- *              사용자 인증 화면 렌더링 및 폼 제출을 처리합니다.
- *
- * 작성자: 김영빈
- * 마지막 수정일: 2025-05-11
- */
+package MobilLax.Domain.Account;
 
-package MobilLax.Controller;
-
-import MobilLax.Config.UserFacingException;
+import MobilLax.Common.Error.UserFacingException;
 import MobilLax.Common.Validation.FormErrors;
 import MobilLax.Common.Validation.PlainText;
-import MobilLax.Model.RegisterForm;
-import MobilLax.Service.UserAccountService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
- * ✅ 클래스 설명:
- * 사용자 로그인, 회원가입 폼 페이지 요청 및 회원가입 처리를 담당하는 컨트롤러입니다.
- * Thymeleaf 등 템플릿 엔진을 사용하는 MVC 구조에서 사용됩니다.
+ * 로그인·회원가입 화면과 회원가입 처리 (로그인 처리 자체는 Spring Security 폼 로그인, SecurityConfig)
  */
 @Controller
+@RequiredArgsConstructor
 public class UserAccountController {
 
     private final UserAccountService userAccountService;
 
     /**
-     * 생성자 주입
-     * @param userAccountService 사용자 서비스 로직을 담당하는 서비스 클래스
-     */
-    public UserAccountController(UserAccountService userAccountService) {
-        this.userAccountService = userAccountService;
-    }
-
-    /**
-     * ✅ 로그인 폼 요청 핸들러
-     * 로그인 페이지를 렌더링하며, 에러나 로그아웃 메시지를 모델에 추가합니다.
-     *
-     * @param error 로그인 실패 여부 (Spring Security에서 전달)
-     * @param logout 로그아웃 성공 여부
-     * @param model View에 전달할 메시지 설정
-     * @return 로그인 뷰 템플릿 경로 (member/login.html)
+     * @param error  로그인 실패 표시 (Spring Security 가 ?error 로 보냄). 값은 쓰지 않고 정해진 문구만 보인다
+     * @param logout 로그아웃 완료 표시 (?logout)
      */
     @GetMapping("/login")
     public String showLoginForm(@RequestParam(value = "error", required = false) @Size(max = 20) @PlainText String error,
@@ -63,14 +41,6 @@ public class UserAccountController {
         return "member/login";
     }
 
-    /**
-     * ✅ 회원가입 폼 요청 핸들러
-     * 회원가입 페이지를 렌더링하며, 전달된 에러 메시지를 출력합니다.
-     *
-     * @param error 회원가입 실패 시 전달된 오류 메시지
-     * @param model View에 전달할 모델 객체
-     * @return 회원가입 뷰 템플릿 경로 (member/register.html)
-     */
     @GetMapping("/register")
     public String showSignupForm(@RequestParam(value = "error", required = false) @Size(max = 20) @PlainText String error,
                                  Model model) {
@@ -80,22 +50,12 @@ public class UserAccountController {
         return "member/register";
     }
 
-    /**
-     * ✅ 회원가입 처리 핸들러
-     * POST 방식으로 전송된 회원가입 정보를 받아 유효성 검사 및 사용자 등록을 수행합니다.
-     *
-     * @param name 사용자 이름
-     * @param email 사용자 이메일
-     * @param password 사용자 비밀번호
-     * @param model View에 전달할 메시지 (성공 또는 오류)
-     * @return 회원가입 성공 시 로그인 페이지로 리디렉션, 실패 시 다시 회원가입 페이지로 이동
-     */
+    /** 형식(이름·이메일·비밀번호)은 RegisterForm 의 제약으로, 중복 이메일은 서비스가 확인한다 (S10) */
     @PostMapping("/register")
     public String register(@Valid @ModelAttribute RegisterForm form,
                            BindingResult binding,
                            Model model,
                            RedirectAttributes redirectAttributes) {
-        // 형식(이름·이메일·비밀번호)은 RegisterForm 의 제약으로, 중복 이메일은 서비스가 확인한다 (S10)
         if (binding.hasErrors()) {
             model.addAttribute("error", FormErrors.first(binding, "name", "email", "password"));
             return "member/register";

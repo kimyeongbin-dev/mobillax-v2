@@ -12,14 +12,14 @@ MobilLax가 사용하는 환경 변수와 각 키의 발급 방법을 정리한 
 | 구분 | 변수 | 발급처 | 사용 위치 | 필수 |
 |---|---|---|---|---|
 | DB | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `DB_ROOT_PASSWORD` | 직접 정함 | docker compose MySQL, Spring datasource | ✅ |
-| TMAP | `TMAP_APPKEY` | SK open API | 서버 전용: `RouteServiceImpl` (대중교통 경로). 브라우저로 보내지 않음 (S9) | ✅ |
+| TMAP | `TMAP_APPKEY` | SK open API | 서버 전용: `TmapTransitClient` (대중교통 경로). 브라우저로 보내지 않음 (S9) | ✅ |
 | 카카오 | `KAKAO_JS_APPKEY` | Kakao Developers | 브라우저: `home`(장소 검색)·`route`(경로 지도) 카카오 지도 SDK. 브라우저로 가는 유일한 키 | ✅ |
 | 카카오 | `KAKAO_APPKEY` | Kakao Developers (같은 앱의 REST API 키) | 서버: `KakaoLocalClient` (장소 매칭의 좌표↔주소 변환, 결과는 저장하지 않음) | ⬜ |
 | 포트원 | `PORTONE_STORE_ID` | 포트원 관리자콘솔 | 결제창 호출 (`PaymentController` → `payment.js`) | ✅ |
 | 포트원 | `PORTONE_CHANNEL_KEY` | 포트원 관리자콘솔 | 결제창 호출 | ✅ |
 | 포트원 | `PORTONE_APPKEY` | 포트원 관리자콘솔 (V2 API Secret) | 결제 완료 서버 확인·취소 (`PortOneClient`, v2.2) | ✅ |
-| 공공데이터 | `BUS_API_KEY` | 공공데이터포털 | 서버: `TerminalService` (`/api/terminals`, 시외버스 터미널 조회) | ⬜ |
-| 공공데이터 | `BUS_API_URL_CTYCODE`, `BUS_API_URL_TERMINAL`, `BUS_API_URL_SCHEDULE` | 고정 URL | 위와 동일 | `.env.example` 값 그대로 |
+| 공공데이터 | `BUS_API_KEY` | 공공데이터포털 | 서버: `TagoTripClient`·`TagoPlaceClient` (기차·버스·항공 편과 역·터미널 조회, `TagoApiProperties`) | ⬜ |
+| 공공데이터 | `BUS_API_URL_CTYCODE`, `BUS_API_URL_TERMINAL`, `BUS_API_URL_SCHEDULE` | 고정 URL | v2.8부터 쓰지 않음 (주소는 클라이언트 코드에 있음). `.env`에 남아 있어도 되고 지워도 됨 | - |
 | 도로명주소 | `JUSO_SEARCH_KEY` | 주소기반산업지원서비스 (business.juso.go.kr) | 서버: `JusoClient` (TAGO 역·터미널·공항 주소 찾기) | ⬜ |
 
 나머지 변수(`SPRING_*`, `JPA_*`, `LOGGING_*` 등)는 `.env.example`의 값을 그대로 두면 됩니다.
@@ -173,9 +173,6 @@ PORTONE_APPKEY=<V2 API Secret>
 ### `.env` 입력
 ```
 BUS_API_KEY=<일반 인증키(Encoding)>
-BUS_API_URL_CTYCODE=https://apis.data.go.kr/1613000/SuburbsBusInfo/GetCtyCodeList
-BUS_API_URL_TERMINAL=https://apis.data.go.kr/1613000/SuburbsBusInfo/GetSuberbsBusTrminlList
-BUS_API_URL_SCHEDULE=https://apis.data.go.kr/1613000/SuburbsBusInfo/GetStrtpntAlocFndSuberbsBusInfo
 ```
 
 ---

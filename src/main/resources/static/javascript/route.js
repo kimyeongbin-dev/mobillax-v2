@@ -232,8 +232,6 @@ function renderSteps(itinerary, bookable) {
 
   itinerary.legs.forEach((leg, index) => {
     const mode = leg.mode || "UNKNOWN";
-    const iconClass = getIcon(mode); // 아이콘용 클래스 (단, 출력은 제거됨)
-    const rawRoute = leg.route || "노선 정보 없음";
     const stepDescription = getStepDescription(leg);
     const startName = leg.start?.name || "출발지 없음";
     const endName = leg.end?.name || "도착지 없음";
@@ -241,7 +239,7 @@ function renderSteps(itinerary, bookable) {
     const stepElement = document.createElement("div");
     stepElement.classList.add("route-step");
     stepElement.dataset.index = index;
-    stepElement.dataset.leg = JSON.stringify(leg); // ← 여기에 실제 leg 정보 저장
+    stepElement.dataset.leg = JSON.stringify(leg); // 장바구니·결제 요청을 만들 때 쓴다 (collectBookingLegs)
 
     // 예매 대상(기차·고속·시외버스·항공)은 편을 고르면 선택되고, 나머지는 안내 전용
     if (isPayableLeg(leg)) {
@@ -282,21 +280,6 @@ function renderSteps(itinerary, bookable) {
       container.appendChild(arrow);
     }
   });
-}
-
-/**
- * 교통 수단에 따른 아이콘 클래스명 반환 (사용자 표시용)
- * @param {string} mode - 교통 수단 코드
- * @returns {string} 아이콘 클래스명
- */
-function getIcon(mode) {
-  const icons = {
-    BUS: "bus",
-    SUBWAY: "subway",
-    WALK: "walking",
-    TAXI: "car",
-  };
-  return icons[mode] || "map-marker-alt";
 }
 
 /**

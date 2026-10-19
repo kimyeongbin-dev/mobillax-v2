@@ -1,4 +1,4 @@
-package MobilLax.Model;
+package MobilLax.Domain.Route;
 
 import MobilLax.Common.Validation.DateTimeMinute;
 import MobilLax.Common.Validation.KoreanLatitude;

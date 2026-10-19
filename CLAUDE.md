@@ -35,7 +35,9 @@ AI 코딩 도구(Claude Code)가 이 저장소에서 작업할 때 지키는 규
 ## 코드 품질
 - 공통 관심사(인증, CSRF, 입력 검증, 출력 이스케이프, 예외 응답, 로그 마스킹)는 기능 코드에 흩지 않는다. 공통 계층(필터·어드바이스·공용 모듈)에 한 번 구현하고, 새 기능은 그 계층을 거치게 한다.
 - 규칙 값(정규식·범위·문구)은 한 곳에 둔다(`InputRules`, `AccountRules`, 재사용 제약 어노테이션). 같은 검사를 다시 쓰지 않는다.
-- 규칙을 빠뜨리면 빌드가 실패하도록 구조 테스트로 강제한다(`InputValidationCoverageTests`, `npm run test:web`).
+- 규칙을 빠뜨리면 빌드가 실패하도록 구조 테스트로 강제한다(`InputValidationCoverageTests`, `ArchitectureRulesTests`, `npm run test:web`).
+- 클래스는 `Common`·`Config`·`Domain/<기능>`에만 둔다. 컨트롤러는 저장소를 직접 쓰지 않고, 로그인 사용자는 `Principal`로 받아 서비스에 넘긴다. 시각은 `KoreaTime.today()`·`now()`로 얻는다.
+- 템플릿에 인라인 이벤트(`onclick` 등)와 본문 있는 `<script>`를 쓰지 않는다. 제출 전 확인은 `<form data-confirm>`.
 - 계층마다 책임을 하나만 둔다. 형식은 DTO, 업무 규칙은 서비스, 외부 연동은 클라이언트 클래스가 맡고, 컨트롤러는 요청과 응답만 다룬다.
 - 의도를 드러내는 이름, 한 가지 일을 하는 함수, 이름 붙인 상수를 쓰고, 쓰지 않는 코드는 지운다.
 - 구조만 바꾸는 리팩터링은 `refactor:` 커밋으로 나누고, 기존 테스트가 그대로 통과해야 한다.

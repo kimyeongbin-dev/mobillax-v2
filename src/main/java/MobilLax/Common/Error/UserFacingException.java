@@ -1,4 +1,4 @@
-package MobilLax.Config;
+package MobilLax.Common.Error;
 
 /**
  * 사용자에게 그대로 보여 줄 문구를 담은 요청 거절 (400) — 보안 규칙 S5
