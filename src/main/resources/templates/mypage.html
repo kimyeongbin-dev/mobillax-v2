@@ -43,19 +43,11 @@
                     <li><a th:href="@{/mypage/password}">비밀번호 변경</a></li>
                     <li><span class="coming-soon" title="준비 중인 기능입니다">알림 설정 (준비 중)</span></li>
                     <li>
-                        <form id="deleteForm" th:action="@{/mypage/delete}" method="post" style="display: inline;">
-                            <a href="#" onclick="confirmDelete()">회원 탈퇴</a>
+                        <form th:action="@{/mypage/delete}" method="post" class="inline-form" data-confirm="정말 탈퇴하시겠습니까?">
+                            <button type="submit" class="link-button">회원 탈퇴</button>
                         </form>
                     </li>
                 </ul>
-
-                <script>
-                    function confirmDelete() {
-                        if (confirm("정말 탈퇴하시겠습니까?")) {
-                            document.getElementById('deleteForm').submit();
-                        }
-                    }
-                </script>
 
             </div>
         </div>

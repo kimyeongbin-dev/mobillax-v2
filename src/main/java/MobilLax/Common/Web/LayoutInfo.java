@@ -4,9 +4,6 @@ import MobilLax.Domain.Cart.CartService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -24,13 +21,12 @@ public class LayoutInfo {
 
     /** 로그인한 사용자인지 (헤더 메뉴 분기) */
     public boolean loggedIn() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken);
+        return CurrentUser.email().isPresent();
     }
 
     /** 헤더의 장바구니 묶음 수 */
     public int cartCount() {
-        return loggedIn() ? cartService.getCartGroupCount(SecurityContextHolder.getContext().getAuthentication().getName()) : 0;
+        return CurrentUser.email().map(cartService::getCartGroupCount).orElse(0);
     }
 
     /** 로그인 세션이 비활성으로 유지되는 시간(초). 로그인하지 않았거나 세션이 없으면 0 (타이머를 그리지 않음) */

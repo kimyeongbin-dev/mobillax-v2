@@ -1,17 +1,17 @@
 package MobilLax.Domain.Payment;
 
+import MobilLax.Common.Time.KoreaTime;
 import MobilLax.Domain.Trip.TripDisplay;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
-public class PaymentService {
+public class PaymentHistoryService {
 
     /** 결제 내역에 보이는 상태: 확인된 결제와 실패·취소. 준비만 하고 버린 PENDING 은 보이지 않는다 */
     private static final List<PaymentEntity.PaymentStatus> HISTORY_STATUSES =
@@ -29,7 +29,7 @@ public class PaymentService {
     }
 
     public int getMonthlyPaymentTotal(String email) {
-        LocalDate start = LocalDate.now().withDayOfMonth(1);
+        LocalDate start = KoreaTime.today().withDayOfMonth(1);
         LocalDate end = start.plusMonths(1).withDayOfMonth(1).minusDays(1);
 
         // 결제가 확인되고 예매 내역에 보이는 것만 (준비·실패 결제, 사용자가 내역에서 삭제한 결제는 빼고)
@@ -66,7 +66,7 @@ public class PaymentService {
                 .filter(p -> email.equals(p.getEmail()) && HISTORY_STATUSES.contains(p.getStatus()))
                 .orElseThrow(NoSuchElementException::new);
         if (payment.getHiddenAt() == null) {
-            payment.setHiddenAt(LocalDateTime.now());
+            payment.setHiddenAt(KoreaTime.now());
             paymentRepository.save(payment);
         }
     }

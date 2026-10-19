@@ -1,9 +1,7 @@
-package MobilLax.Controller;
+package MobilLax.Domain.Route;
 
 import MobilLax.Common.Time.KoreaTime;
 import MobilLax.Domain.Health.HealthService;
-import MobilLax.Model.TransitRouteRequest;
-import MobilLax.Service.RouteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -13,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 
-import java.time.LocalDate;
 
 /**
  * 대중교통 경로 검색 API
@@ -28,19 +25,19 @@ import java.time.LocalDate;
 public class RouteController {
 
 
-    private final RouteService routeService;
+    private final TmapTransitClient tmapClient;
     private final HealthService healthService;
 
     @PostMapping(value = "/transit", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> searchTransit(@RequestBody TransitRouteRequest request) {
         // 좌표(국내)·출발 일시 형식은 RequestBodyValidationAdvice 가 TransitRouteRequest 의 제약으로 먼저 검사한다
-        if (!request.isDepartAtValid(LocalDate.now(KoreaTime.ZONE))) {
+        if (!request.isDepartAtValid(KoreaTime.today())) {
             return error(HttpStatus.BAD_REQUEST,
                     "출발 일시가 올바르지 않습니다. 오늘부터 " + TransitRouteRequest.MAX_DAYS_AHEAD + "일 안에서 선택해 주세요.");
         }
 
         try {
-            String routes = routeService.searchTransitRoutes(request);
+            String routes = tmapClient.searchTransitRoutes(request);
             healthService.record(HealthService.Component.TMAP, true);
             return ResponseEntity.ok(routes);
         } catch (HttpStatusCodeException e) {

@@ -1,6 +1,6 @@
 package MobilLax;
 
-import MobilLax.Model.TransitRouteRequest;
+import MobilLax.Domain.Route.TransitRouteRequest;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;

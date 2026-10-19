@@ -7,7 +7,7 @@ import MobilLax.Domain.Place.TransitKind;
 import MobilLax.Domain.Place.TransitPlace;
 import MobilLax.Domain.Place.TransitPlaceRepository;
 import MobilLax.Domain.Trip.TagoTripClient;
-import MobilLax.Repository.UserAccountRepository;
+import MobilLax.Domain.Account.UserAccountRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

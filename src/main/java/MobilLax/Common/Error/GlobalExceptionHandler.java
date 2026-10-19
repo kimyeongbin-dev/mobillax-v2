@@ -1,4 +1,4 @@
-package MobilLax.Config;
+package MobilLax.Common.Error;
 
 import MobilLax.Common.Validation.InvalidInputException;
 import lombok.extern.slf4j.Slf4j;

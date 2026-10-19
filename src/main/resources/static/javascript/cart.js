@@ -1,5 +1,5 @@
 /* global html, raw, collectBookingLegs -- safe-html.js, transport.js */
-/* exported summarizeSelection, selectedGroupIds, closeCartPopup, closeNoRoutePopup, goToCart */
+/* exported summarizeSelection, selectedGroupIds */
 /**
  * cart.js
  *
@@ -193,11 +193,13 @@ function renderGroup(group, checked) {
 }
 
 /**
- * 장바구니 담기 버튼 이벤트 등록 (상세 화면)
+ * 상세 화면: 장바구니 담기 버튼과 안내 창 닫기 버튼
  */
 document.addEventListener("DOMContentLoaded", () => {
-  const cartButton = document.querySelector(".btn-cart");
-  cartButton?.addEventListener("click", handleAddToCart);
+  document.querySelector(".btn-cart")?.addEventListener("click", handleAddToCart);
+  document
+    .querySelectorAll(".cart-popup [data-popup-close]")
+    .forEach((button) => button.addEventListener("click", () => button.closest(".cart-popup").classList.add("hidden")));
 });
 
 /**
@@ -235,37 +237,12 @@ async function handleAddToCart() {
   }
 }
 
-/**
- * 장바구니 팝업 표시
- */
+/** 장바구니에 담았다는 안내 창 */
 function showCartPopup() {
   document.getElementById("cartPopup")?.classList.remove("hidden");
 }
 
-/**
- * 장바구니 팝업 닫기
- */
-function closeCartPopup() {
-  document.getElementById("cartPopup")?.classList.add("hidden");
-}
-
-/**
- * 선택 안됨 알림 팝업 표시
- */
+/** 고른 경로가 없다는 안내 창 */
 function showNoRoutePopup() {
   document.getElementById("noRoutePopup")?.classList.remove("hidden");
-}
-
-/**
- * 선택 안됨 알림 팝업 닫기
- */
-function closeNoRoutePopup() {
-  document.getElementById("noRoutePopup")?.classList.add("hidden");
-}
-
-/**
- * 장바구니로 이동
- */
-function goToCart() {
-  location.href = "/cart";
 }

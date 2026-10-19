@@ -1,11 +1,14 @@
 /* global html, raw, LAST_SEARCH_KEY, hasPayableLeg, buildRouteRequest, isBookableDate, preferOperating -- transport.js */
-/* exported openNearby -- home.html 의 주변정보 메뉴 */
 /* global formatMinutes, itineraryFare, getTransferCount, getPathSummary, removeDuplicateItineraries -- itinerary.js */
-let selectedFrom = null; //출발지 선택 상태 저장용 변수
-let selectedTo = null; //도착지 선택 상태 저장용 변수
-let currentFocusType = null; //현재 선택 상태 저장용 변수
+/**
+ * 홈(경로 검색) 화면: 장소 자동완성, 출발 일시, 추천 경로 3개, 주변정보로 장소 넘기기
+ * - 이벤트는 모두 여기서 addEventListener 로 건다 (템플릿에 인라인 이벤트 없음, 보안 규칙 S10)
+ */
+let selectedFrom = null; // 고른 출발지 {name, x, y}
+let selectedTo = null; // 고른 도착지 {name, x, y}
+let currentFocusType = null; // 지금 입력 중인 칸 ("from" | "to")
 
-//검색창 (출발지/도착지) 상단 변경
+// 자동완성 상자 머리글 (출발지/도착지)
 function updateSuggestHeader() {
   const header = document.querySelector(".suggest-header");
   if (header) {
@@ -13,17 +16,20 @@ function updateSuggestHeader() {
   }
 }
 
-//input에 focus했을때 updateSuggestHeader() 쓰기
 document.addEventListener("DOMContentLoaded", () => {
   initDepartInput();
-  document.getElementById("fromInput").addEventListener("focus", () => {
-    currentFocusType = "from";
-    updateSuggestHeader();
-  });
-  document.getElementById("toInput").addEventListener("focus", () => {
-    currentFocusType = "to";
-    updateSuggestHeader();
-  });
+  for (const type of ["from", "to"]) {
+    const input = document.getElementById(`${type}Input`);
+    input.addEventListener("focus", () => {
+      currentFocusType = type;
+      updateSuggestHeader();
+      showSuggestionBox();
+    });
+    input.addEventListener("input", () => showSuggestions(input.value));
+  }
+  document.getElementById("swapButton").addEventListener("click", swapInputs);
+  document.getElementById("findRouteButton").addEventListener("click", showRouteResults);
+  document.getElementById("nearbyMenu").addEventListener("click", rememberNearbyPlaces);
 });
 
 // 출발 일시 입력 범위: 오늘부터 14일 뒤까지 (서버 TransitRouteRequest.MAX_DAYS_AHEAD 와 같음)
@@ -118,13 +124,12 @@ function selectSuggestion(name, type, x, y) {
   }
 }
 
-// 출발지-도착지 입력값 바꾸기
+// 출발지·도착지 바꾸기: 입력칸 글자와 고른 장소(좌표)를 함께 바꾼다
 function swapInputs() {
   const fromInput = document.getElementById("fromInput");
   const toInput = document.getElementById("toInput");
-  const temp = fromInput.value;
-  fromInput.value = toInput.value;
-  toInput.value = temp;
+  [fromInput.value, toInput.value] = [toInput.value, fromInput.value];
+  [selectedFrom, selectedTo] = [selectedTo, selectedFrom];
 }
 
 // 추천 경로 카드에 보일 요약 (계산 규칙은 itinerary.js)
@@ -267,9 +272,10 @@ function getRouteErrorMessage(data) {
 }
 
 // 주변정보: 이 화면에서 고른 출발·도착지를 넘긴다 (탭을 닫으면 지워지는 sessionStorage, 서버에는 저장하지 않음)
+// 메뉴는 /nearby 링크라, 여기서는 넘길 값만 저장하고 이동은 막지 않는다
 const NEARBY_PLACES_KEY = "nearbyPlaces";
 
-function openNearby() {
+function rememberNearbyPlaces() {
   try {
     if (selectedFrom || selectedTo) {
       sessionStorage.setItem(NEARBY_PLACES_KEY, JSON.stringify({ from: selectedFrom, to: selectedTo }));
@@ -277,5 +283,4 @@ function openNearby() {
   } catch {
     // 저장할 수 없으면 주변정보 화면이 마지막 검색의 출발·도착지를 쓴다
   }
-  location.href = "/nearby";
 }

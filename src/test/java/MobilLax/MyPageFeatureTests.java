@@ -2,8 +2,8 @@ package MobilLax;
 
 import MobilLax.Domain.Payment.PaymentEntity;
 import MobilLax.Domain.Payment.PaymentRepository;
-import MobilLax.Model.UserAccount;
-import MobilLax.Repository.UserAccountRepository;
+import MobilLax.Domain.Account.UserAccount;
+import MobilLax.Domain.Account.UserAccountRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
