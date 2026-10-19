@@ -4,7 +4,7 @@
  * - 안내 전용: 시내버스, 지하철, 도보 등 (현장 결제)
  * 규칙 문서: docs/PUBLIC_DATA_API.md
  */
-/* exported TRANSFER_OPTIONS, getTransferMinutes, setTransferMinutes, PAYABLE_MODES, isOperatingLeg, isPayableLeg, preferOperating, nowStamp, formatHm, collectBookingLegs, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt */
+/* exported TRANSFER_OPTIONS, getTransferMinutes, setTransferMinutes, PAYABLE_MODES, isOperatingLeg, isPayableLeg, preferOperating, nowStamp, formatHm, collectBookingLegs, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt, addMinutes, connectionReference, pickTripIndex, describeFareTotal, getIncludeLocalFare, setIncludeLocalFare */
 
 const PAYABLE_MODES = ["TRAIN", "EXPRESSBUS", "AIRPLANE"];
 
@@ -179,6 +179,78 @@ function getTransferMinutes() {
 function setTransferMinutes(minutes) {
   try {
     localStorage.setItem("transferMinutes", String(minutes));
+  } catch {
+    // 저장할 수 없으면 이번 화면에서만 적용
+  }
+}
+
+/** yyyyMMddHHmm 에 분을 더한다 */
+function addMinutes(stamp, minutes) {
+  const d = new Date(
+    Number(stamp.slice(0, 4)),
+    Number(stamp.slice(4, 6)) - 1,
+    Number(stamp.slice(6, 8)),
+    Number(stamp.slice(8, 10)),
+    Number(stamp.slice(10, 12)) + minutes,
+  );
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}${p(d.getHours())}${p(d.getMinutes())}`;
+}
+
+/**
+ * 앞 편을 타고 내린 뒤 다음 편을 탈 수 있는 가장 이른 시각
+ * = 앞 편 도착 + 그 사이 구간(도보·시내 교통) 이동 시간 + 환승 여유
+ * @param {string} arriveAt - 앞 편 도착 yyyyMMddHHmm
+ * @param {number} betweenSeconds - 사이 구간 이동 시간(초)
+ * @param {number} transferMinutes - 환승 여유(분)
+ * @returns {string} yyyyMMddHHmm
+ */
+function connectionReference(arriveAt, betweenSeconds, transferMinutes) {
+  return addMinutes(arriveAt, Math.ceil(betweenSeconds / 60) + transferMinutes);
+}
+
+/**
+ * reference 이후 첫 편 (예매할 수 있는 날이면 예매 가능한 편만). 없으면 -1
+ * @param {Array} trips - 편 목록 (출발 순)
+ * @param {string} reference - yyyyMMddHHmm
+ * @param {boolean} bookableDate - 예매할 수 있는 날짜인지
+ * @returns {number}
+ */
+function pickTripIndex(trips, reference, bookableDate) {
+  return trips.findIndex((t) => t.departAt >= reference && (!bookableDate || t.bookable));
+}
+
+/**
+ * 상세 화면의 금액 줄
+ * - 예매 금액: 고른 편의 운임 합 (결제할 금액)
+ * - 현장 결제 예상: 시내 교통 + 예매 정보가 없는 장거리 구간 (TMAP 요금, 결제하지 않음)
+ * - 사용자가 시내 교통비를 숨기면 예매 금액만 보인다
+ * @returns {string}
+ */
+function describeFareTotal(bookedFare, localFare, onsiteLongFare, includeLocal) {
+  const won = (n) => `${n.toLocaleString("ko-KR")}원`;
+  const onsite = localFare + onsiteLongFare;
+  if (!includeLocal || onsite <= 0) return `예매 금액 ${won(bookedFare)}`;
+  const parts = [];
+  if (localFare > 0) parts.push(`시내 교통 ${won(localFare)}`);
+  if (onsiteLongFare > 0) parts.push(`예매 정보 없는 구간 ${won(onsiteLongFare)}`);
+  return `예매 금액 ${won(bookedFare)} + 현장 결제 예상 ${won(onsite)} (${parts.join(" + ")}) = 총 ${won(bookedFare + onsite)}`;
+}
+
+const INCLUDE_LOCAL_FARE_KEY = "includeLocalFare";
+
+/** 시내 교통비를 금액 줄에 함께 보일지 (브라우저에 저장, 기본은 보임) */
+function getIncludeLocalFare() {
+  try {
+    return localStorage.getItem(INCLUDE_LOCAL_FARE_KEY) !== "false";
+  } catch {
+    return true;
+  }
+}
+
+function setIncludeLocalFare(include) {
+  try {
+    localStorage.setItem(INCLUDE_LOCAL_FARE_KEY, String(include));
   } catch {
     // 저장할 수 없으면 이번 화면에서만 적용
   }
