@@ -37,7 +37,7 @@
   <div id="noRoutePopup" class="cart-popup hidden">
     <h3>경로를 선택해주세요</h3>
     <div class="popup-buttons">
-      <button class="btn-yes" onclick="closeNoRoutePopup()">확인</button>
+      <button type="button" class="btn-yes" data-popup-close>확인</button>
     </div>
   </div>
 
@@ -46,8 +46,8 @@
     <h3>🛒 장바구니에 담겼습니다</h3>
     <p>장바구니로 이동하시겠습니까?</p>
     <div class="popup-buttons">
-      <button class="btn-yes" onclick="goToCart()">예</button>
-      <button class="btn-no" onclick="closeCartPopup()">아니오</button>
+      <a class="btn-yes" th:href="@{/cart}">예</a>
+      <button type="button" class="btn-no" data-popup-close>아니오</button>
     </div>
   </div>
   <div class="map-area">

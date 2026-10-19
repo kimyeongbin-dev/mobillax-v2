@@ -1,6 +1,7 @@
 // ESLint 설정 (flat config)
-// 기존 팀 코드는 여러 <script> 파일이 전역 함수를 공유하는 구조라,
-// 파일 간 참조(no-undef)와 HTML onclick 에서만 쓰는 함수(no-unused-vars)는 경고로 둔다.
+// 화면 스크립트는 여러 <script> 파일이 전역 함수를 공유한다. 다른 파일의 함수는 파일 머리의
+// /* global ... */ 로, 다른 파일이 쓰는 함수는 /* exported ... */ 로 밝힌다.
+// v2.8: 템플릿의 인라인 이벤트를 모두 없애 쓰지 않는 변수·정의되지 않은 이름(no-unused-vars, no-undef)을 오류로 막는다.
 const js = require("@eslint/js");
 const globals = require("globals");
 
@@ -21,8 +22,8 @@ module.exports = [
       },
     },
     rules: {
-      "no-unused-vars": "warn",
-      "no-undef": "warn",
+      "no-unused-vars": "error",
+      "no-undef": "error",
     },
   },
   {

@@ -37,7 +37,7 @@
           <span class="history-amount" th:text="'₩' + ${#numbers.formatInteger(p.amount, 1, 'COMMA')}">₩4,800</span>
           <span class="history-status" th:text="${p.paid} ? '결제 완료' : '결제 실패·취소'">결제 완료</span>
           <form th:action="@{/mypage/payments/hide}" method="post" class="history-hide"
-                onsubmit="return confirm('이 결제를 예매 내역에서 삭제할까요? 다시 보려면 고객센터로 문의해야 합니다.');">
+                data-confirm="이 결제를 예매 내역에서 삭제할까요? 다시 보려면 고객센터로 문의해야 합니다.">
             <input type="hidden" name="paymentId" th:value="${p.paymentId}">
             <button type="submit">내역에서 삭제</button>
           </form>

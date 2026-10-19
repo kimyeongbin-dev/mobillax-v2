@@ -7,6 +7,8 @@
 //      html`...` 이거나 값을 끼워 넣지 않은 고정 문자열이어야 한다
 // 3. 인라인 이벤트 문자열(onclick="...${값}...")에 값을 넣지 않는지
 // 4. 화면이 safe-html.js 를 다른 화면 스크립트보다 먼저 불러오는지
+// 5. 템플릿에 인라인 이벤트 속성(onclick 등)과 본문이 있는 <script> 가 없는지 (v2.8)
+//    이벤트는 화면 스크립트에서 addEventListener 로, 제출 전 확인은 <form data-confirm> (confirm-form.js)
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
@@ -86,7 +88,7 @@ for (const file of fs.readdirSync(dir).filter((f) => f.endsWith(".js") && f !== 
 // 4. 화면 스크립트를 쓰는 템플릿은 safe-html.js 를 먼저 불러온다
 //    직접 불러오거나, 공통 head 조각(fragments/layout :: head, csrf.js → safe-html.js 포함)을 먼저 넣는다
 const templates = path.join(root, "templates");
-const COMMON = /javascript\/(?:csrf|safe-html|session-timer)\.js/;
+const COMMON = /javascript\/(?:csrf|safe-html|confirm-form|session-timer)\.js/;
 const layout = fs.readFileSync(path.join(templates, "fragments", "layout.html"), "utf8");
 const headFragment = layout.slice(layout.indexOf('th:fragment="head"'), layout.indexOf("</th:block>"));
 check(
@@ -102,6 +104,13 @@ const htmlFiles = (base) =>
 for (const file of htmlFiles(templates).filter((f) => !f.includes(`${path.sep}fragments${path.sep}`))) {
   const page = path.relative(templates, file);
   const source = fs.readFileSync(file, "utf8");
+  const inlineEvents = source.match(/<[^>]*\son[a-z]+\s*=/gi) || [];
+  check(
+    inlineEvents.length === 0,
+    `${page}: 인라인 이벤트 속성이 있다 (${inlineEvents.length}곳, addEventListener 를 쓴다)`,
+  );
+  const inlineScripts = source.match(/<script(?![^>]*\s(?:th:)?src=)[^>]*>\s*\S/gi) || [];
+  check(inlineScripts.length === 0, `${page}: 본문이 있는 <script> 가 있다 (화면 스크립트 파일로 옮긴다)`);
   const screens = [...source.matchAll(/javascript\/[\w-]+\.js/g)].filter((m) => !COMMON.test(m[0])).map((m) => m.index);
   if (screens.length === 0) continue;
   const safe = [source.indexOf("javascript/safe-html.js"), source.indexOf("fragments/layout :: head")]
@@ -118,4 +127,6 @@ if (failures.length) {
   failures.forEach((f) => console.error(`  ✗ ${f}`));
   process.exit(1);
 }
-console.log("web-escape: 통과 (html`` 자동 이스케이프, HTML 대입은 html`` 또는 고정 문자열, 인라인 이벤트 없음)");
+console.log(
+  "web-escape: 통과 (html`` 자동 이스케이프, HTML 대입은 html`` 또는 고정 문자열, 템플릿·스크립트에 인라인 이벤트 없음)",
+);
