@@ -178,6 +178,20 @@ class MyPageFeatureTests {
                     paid.getGroupId(), paid.getTransportType(), PaymentEntity.PaymentStatus.SUCCESS)).isTrue();
         }
 
+        /** 이번 달 결제 합계는 사용자가 보는 예매 내역과 맞아야 한다: 숨긴 결제는 빼고 센다 */
+        @Test
+        void monthlyTotalExcludesHiddenPayments() throws Exception {
+            PaymentEntity hidden = payment(USER, PaymentEntity.PaymentStatus.SUCCESS, "숨길역 → 영등포");
+            payment(USER, PaymentEntity.PaymentStatus.SUCCESS, "남길역 → 영등포");
+            payment(USER, PaymentEntity.PaymentStatus.FAIL, "실패역 → 영등포");
+
+            assertThat(mvc.perform(get("/mypage")).andReturn().getResponse().getContentAsString())
+                    .contains("이번 달 결제 ₩9,600");
+            assertThat(hide(hidden.getPaymentId())).isEqualTo(302);
+            assertThat(mvc.perform(get("/mypage")).andReturn().getResponse().getContentAsString())
+                    .contains("이번 달 결제 ₩4,800");
+        }
+
         @Test
         void cannotHideOthersPendingOrUnknownPayments() throws Exception {
             PaymentEntity others = payment(OTHER, PaymentEntity.PaymentStatus.SUCCESS, "남의역 → 영등포");
