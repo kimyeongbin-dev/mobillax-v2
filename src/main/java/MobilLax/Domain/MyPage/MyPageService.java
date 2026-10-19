@@ -2,7 +2,7 @@ package MobilLax.Domain.MyPage;
 
 import MobilLax.Common.Error.UserFacingException;
 import MobilLax.Domain.Cart.CartService;
-import MobilLax.Domain.Payment.PaymentService;
+import MobilLax.Domain.Payment.PaymentHistoryService;
 import MobilLax.Domain.Account.UserAccount;
 import MobilLax.Domain.Account.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,13 +20,13 @@ public class MyPageService {
     private final UserAccountRepository userRepo;
     private final PasswordEncoder passwordEncoder;
     private final CartService cartService;
-    private final PaymentService paymentService;
+    private final PaymentHistoryService paymentHistoryService;
 
     public MyPageDto getMyPageInfo(String email) {
         UserAccount user = userRepo.findByEmail(email).orElseThrow();
 
         String recentRoute = cartService.getRecentRouteSummary(email);
-        int monthlyPayment = paymentService.getMonthlyPaymentTotal(email);
+        int monthlyPayment = paymentHistoryService.getMonthlyPaymentTotal(email);
         int cartCount = cartService.getCartGroupCount(email);
 
         return new MyPageDto(user.getName(), user.getEmail(), recentRoute, monthlyPayment, cartCount);

@@ -3,7 +3,7 @@ package MobilLax.Domain.MyPage;
 import MobilLax.Common.Validation.FormErrors;
 import MobilLax.Common.Validation.PaymentId;
 import MobilLax.Common.Error.UserFacingException;
-import MobilLax.Domain.Payment.PaymentService;
+import MobilLax.Domain.Payment.PaymentHistoryService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -29,7 +29,7 @@ import java.security.Principal;
 public class MyPageController {
 
     private final MyPageService myPageService;
-    private final PaymentService paymentService;
+    private final PaymentHistoryService paymentHistoryService;
 
     @GetMapping("/mypage")
     public String showMyPage(Model model, Principal principal) {
@@ -92,18 +92,18 @@ public class MyPageController {
     /** 결제 내역 (예매 확인, v2.5) */
     @GetMapping("/mypage/payments")
     public String payments(Model model, Principal principal) {
-        model.addAttribute("payments", paymentService.getHistory(principal.getName()));
+        model.addAttribute("payments", paymentHistoryService.getHistory(principal.getName()));
         return "mypage-payments";
     }
 
     /**
-     * 예매 내역에서 삭제 (v2.5): 화면에서만 숨기고 기록은 보관한다 (PaymentService.hide)
+     * 예매 내역에서 삭제 (v2.5): 화면에서만 숨기고 기록은 보관한다 (PaymentHistoryService.hide)
      * 남의 결제·없는 결제·형식이 틀린 번호는 거절된다 (S4·S10)
      */
     @PostMapping("/mypage/payments/hide")
     public String hidePayment(@RequestParam @NotNull @PaymentId String paymentId, Principal principal,
                               RedirectAttributes redirectAttributes) {
-        paymentService.hide(principal.getName(), paymentId);
+        paymentHistoryService.hide(principal.getName(), paymentId);
         redirectAttributes.addFlashAttribute("successMessage",
                 "내역에서 삭제했습니다. 결제 기록은 관련 법령에 따라 보관되며, 다시 보려면 고객센터로 문의해 주세요.");
         return "redirect:/mypage/payments";

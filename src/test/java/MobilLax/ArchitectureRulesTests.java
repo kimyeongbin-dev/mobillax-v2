@@ -3,8 +3,12 @@ package MobilLax;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.data.repository.Repository;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -23,6 +27,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  *   계층별 패키지가 다시 생기면 기능 코드가 흩어지므로 실패한다
  * - 시각: 날짜·시각은 KoreaTime.today()·now() 로만 얻는다. 시간대 없는 now() 는 서버 시간대(UTC)에 따라
  *   날짜가 하루 어긋난 적이 있다 (v2.5)
+ * - 계층: 컨트롤러는 요청·응답만 다룬다. 저장소(Repository)를 직접 쓰지 않고 서비스를 거친다
+ * - 로그인 사용자: 컨트롤러는 Principal 로 받아 서비스에 넘긴다. SecurityContextHolder 는 공통 계층(CurrentUser)만 읽는다
  */
 class ArchitectureRulesTests {
 
@@ -82,5 +88,31 @@ class ArchitectureRulesTests {
         Pattern zoneless = Pattern.compile("\\b(LocalDate|LocalDateTime|LocalTime|ZonedDateTime)\\.now\\(");
         assertThat(sourcesMatching(zoneless, "Common/Time/KoreaTime.java"))
                 .as("KoreaTime 대신 now() 를 직접 부르는 파일").isEmpty();
+    }
+
+    @Test
+    void controllersDoNotUseRepositories() throws Exception {
+        List<String> controllers = new ArrayList<>();
+        List<String> violations = new ArrayList<>();
+        for (String name : appClassNames()) {
+            Class<?> type = Class.forName(name, false, getClass().getClassLoader());
+            if (!type.isAnnotationPresent(Controller.class) && !type.isAnnotationPresent(RestController.class)) {
+                continue;
+            }
+            controllers.add(type.getSimpleName());
+            for (Field field : type.getDeclaredFields()) {
+                if (Repository.class.isAssignableFrom(field.getType())) {
+                    violations.add(type.getSimpleName() + "." + field.getName());
+                }
+            }
+        }
+        assertThat(controllers).as("검사한 컨트롤러").hasSizeGreaterThan(10);
+        assertThat(violations).as("저장소를 직접 쓰는 컨트롤러").isEmpty();
+    }
+
+    @Test
+    void onlyCommonLayerReadsSecurityContext() throws IOException {
+        assertThat(sourcesMatching(Pattern.compile("\\bSecurityContextHolder\\b"), "Common/Web/CurrentUser.java"))
+                .as("SecurityContextHolder 를 직접 읽는 파일 (Principal 이나 CurrentUser 를 쓴다)").isEmpty();
     }
 }

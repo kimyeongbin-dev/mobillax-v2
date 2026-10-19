@@ -11,7 +11,7 @@ import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
-public class PaymentService {
+public class PaymentHistoryService {
 
     /** 결제 내역에 보이는 상태: 확인된 결제와 실패·취소. 준비만 하고 버린 PENDING 은 보이지 않는다 */
     private static final List<PaymentEntity.PaymentStatus> HISTORY_STATUSES =
