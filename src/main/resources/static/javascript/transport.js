@@ -4,9 +4,12 @@
  * - 안내 전용: 시내버스, 지하철, 도보 등 (현장 결제)
  * 규칙 문서: docs/PUBLIC_DATA_API.md
  */
-/* exported TRANSFER_OPTIONS, getTransferMinutes, setTransferMinutes, PAYABLE_MODES, isOperatingLeg, isPayableLeg, preferOperating, nowStamp, formatHm, collectBookingLegs, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt, addMinutes, connectionReference, pickTripIndex, describeFareTotal, getIncludeLocalFare, setIncludeLocalFare */
+/* exported LAST_SEARCH_KEY, TRANSFER_OPTIONS, getTransferMinutes, setTransferMinutes, PAYABLE_MODES, isOperatingLeg, isPayableLeg, preferOperating, isOperatingItinerary, nowStamp, formatHm, collectBookingLegs, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt, addMinutes, connectionReference, pickTripIndex, describeFareTotal, getIncludeLocalFare, setIncludeLocalFare */
 
 const PAYABLE_MODES = ["TRAIN", "EXPRESSBUS", "AIRPLANE"];
+
+// 마지막 경로 검색 결과(TMAP 응답)를 두는 sessionStorage 키. 홈이 저장하고 상세·요금비교가 다시 쓴다 (TMAP 재호출 없음)
+const LAST_SEARCH_KEY = "transitRouteResult";
 
 // TMAP 은 고속버스와 시외버스를 모두 EXPRESSBUS 로 주고 type 으로 구분한다 (23 고속, 22 시외)
 const EXPRESSBUS_TYPE_LABELS = { 22: "시외버스", 23: "고속버스" };
@@ -105,10 +108,17 @@ function formatDepartAt(departAt) {
  * @returns {Array}
  */
 function preferOperating(itineraries) {
-  const operating = itineraries.filter((it) =>
-    it.legs.every((leg) => !PAYABLE_MODES.includes(leg.mode) || isOperatingLeg(leg)),
-  );
+  const operating = itineraries.filter(isOperatingItinerary);
   return operating.length > 0 ? operating : itineraries;
+}
+
+/**
+ * 장거리 구간(기차·고속·시외버스·항공)이 모두 검색 시각에 운행하는 경로인지
+ * @param {object} itinerary - TMAP 경로
+ * @returns {boolean}
+ */
+function isOperatingItinerary(itinerary) {
+  return itinerary.legs.every((leg) => !PAYABLE_MODES.includes(leg.mode) || isOperatingLeg(leg));
 }
 
 /**

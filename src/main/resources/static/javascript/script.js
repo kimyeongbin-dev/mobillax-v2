@@ -1,4 +1,6 @@
-/* global html, raw, hasPayableLeg, buildRouteRequest, isBookableDate, preferOperating -- transport.js */
+/* global html, raw, LAST_SEARCH_KEY, hasPayableLeg, buildRouteRequest, isBookableDate, preferOperating -- transport.js */
+/* exported openNearby -- home.html 의 주변정보 메뉴 */
+/* global formatMinutes, itineraryFare, getTransferCount, getPathSummary, removeDuplicateItineraries -- itinerary.js */
 let selectedFrom = null; //출발지 선택 상태 저장용 변수
 let selectedTo = null; //도착지 선택 상태 저장용 변수
 let currentFocusType = null; //현재 선택 상태 저장용 변수
@@ -125,110 +127,15 @@ function swapInputs() {
   toInput.value = temp;
 }
 
-// Tmap API 응답을 요약 형태로 변환 (시간/요금/환승/요약)
+// 추천 경로 카드에 보일 요약 (계산 규칙은 itinerary.js)
 function formatRouteData(itinerary) {
-  // 시간 계산 (초 → 분)
-  let totalMinutes = Math.round(Number(itinerary.totalTime) / 60);
-  let h = 0;
-  let m = totalMinutes;
-
-  // for문으로 시간(h) 계산
-  for (; m >= 60; m -= 60) {
-    h++;
-  }
-
-  const timeText = `${h}시간 ${m}`;
-
-  // 요금 계산: 모든 leg의 totalFare 합산
-  let totalFare = 0;
-
-  if (itinerary.fare?.regular?.totalFare) {
-    totalFare = itinerary.fare.regular.totalFare;
-  } else {
-    for (const leg of itinerary.legs) {
-      const fare = leg.fare?.regular?.totalFare;
-      if (typeof fare === "number") {
-        totalFare += fare;
-      }
-    }
-  }
-  const fareText = totalFare.toLocaleString("ko-KR");
-
-  // 환승 횟수
-  const transfers = itinerary.transferCount ?? getTransferCount(itinerary.legs);
-
-  // 교통수단 요약
-  const summary = getPathSummary({ legs: itinerary.legs });
-
   return {
-    time: timeText,
-    cost: fareText,
-    transfers,
-    summary,
+    time: formatMinutes(Math.round(Number(itinerary.totalTime) / 60)),
+    cost: itineraryFare(itinerary).toLocaleString("ko-KR"),
+    transfers: itinerary.transferCount ?? getTransferCount(itinerary.legs),
+    summary: getPathSummary(itinerary),
     legs: itinerary.legs,
   };
-}
-
-// 환승 횟수 계산 (WALK 제외, 모드 변경 기준)
-function getTransferCount(legs) {
-  let count = 0;
-  for (let i = 1; i < legs.length; i++) {
-    if (legs[i].mode !== "WALK" && legs[i].mode !== legs[i - 1].mode) {
-      count++;
-    }
-  }
-  return count;
-}
-
-// 모드 + 노선명 요약 라벨 생성
-function getModeLabel(leg) {
-  const name = leg.route || leg.routeName || leg.airline || "";
-  const cleanName = name.replace(/undefined|null/gi, "").trim();
-  switch (leg.mode) {
-    case "WALK":
-      return "🚶 도보";
-    case "BUS":
-      return `${cleanName || "버스"}`;
-    case "SUBWAY":
-      return `${cleanName || "지하철"}`;
-    case "TRAIN":
-      return `${cleanName || "기차"}`;
-    case "AIRPLANE":
-      return `${cleanName || "항공편"}`;
-    case "EXPRESSBUS":
-      return `${cleanName || "고속버스"}`;
-    default:
-      return `${leg.mode}`;
-  }
-}
-
-// 도보 제외 요약 경로 표시용 (아이콘/노선명)
-function getPathSummary(path) {
-  if (!path.legs || path.legs.length === 0) return "경로 없음";
-  const parts = path.legs.filter((leg) => leg.mode !== "WALK").map((leg) => getModeLabel(leg));
-  return parts.join(" → ");
-}
-
-//중복 제거 함수 (시간, 거리, 환승수, legs가 동일한 경우)
-function removeDuplicateItineraries(itineraries) {
-  const seen = new Set();
-  const unique = [];
-
-  for (const route of itineraries) {
-    const pathKey = route.legs
-      .filter((leg) => leg.mode !== "WALK")
-      .map((leg) => `${leg.mode}:${leg.route || leg.routeName || leg.busNo || ""}`)
-      .join("→");
-
-    const key = `${Math.round(route.totalTime / 60)}|${route.transferCount}|${pathKey}`;
-
-    if (!seen.has(key)) {
-      seen.add(key);
-      unique.push(route);
-    }
-  }
-
-  return unique;
 }
 
 //경로 추천 결과 표시 (최단시간/최단거리/최소환승)
@@ -250,9 +157,6 @@ async function showRouteResults() {
     defaultMode.classList.add("active-mode");
   }
 
-  //좌표 확인용 (지워도 상관없음)
-  console.log("출발지 좌표:", selectedFrom);
-  console.log("도착지 좌표:", selectedTo);
   localStorage.setItem("selectedFrom", JSON.stringify(selectedFrom));
   localStorage.setItem("selectedTo", JSON.stringify(selectedTo));
   const departAt = getDepartAt();
@@ -273,33 +177,6 @@ async function showRouteResults() {
   }
 
   itineraries = removeDuplicateItineraries(itineraries);
-
-  // 디버깅용 로그
-  //여기서
-  console.log("전체 경로 itineraries:");
-  console.table(
-    itineraries.map((route, idx) => ({
-      경로: `경로 ${idx + 1}`,
-      총시간_분: Math.round(route.totalTime / 60),
-      총거리_km: (route.totalDistance / 1000).toFixed(1),
-      환승횟수: route.transferCount,
-      요금_원: `${(route.fare?.regular?.totalFare ?? getTotalFareFromLegs(route.legs)).toLocaleString()}원`,
-      이동수단: getPathSummary({ legs: route.legs }),
-    })),
-  );
-
-  console.log("첫 번째 경로의 상세 legs 정보:");
-  console.table(
-    itineraries[0].legs.map((leg, idx) => ({
-      순번: idx + 1,
-      이동수단: leg.mode,
-      출발지: leg.start?.name,
-      도착지: leg.end?.name,
-      소요시간_분: Math.round(leg.sectionTime / 60),
-      요금: leg.fare?.regular?.totalFare ?? 0,
-    })),
-  );
-  //여기까지
 
   // 조건별 최적 경로 찾기
   // 장거리 구간이 운행하지 않는 경로는 다른 경로가 있으면 고르지 않는다 (상세 route.js 와 같은 기준)
@@ -346,7 +223,7 @@ function displayRoutes(data, bookableDate) {
         <div class="route-summary">
           <div class="route-type">${labels[key]}</div>
           <div class="total-info">
-            <span class="time">⏱ ${route.time}분</span>
+            <span class="time">⏱ ${route.time}</span>
             <span class="price">💸 ${route.cost}원</span>
             <span class="transfer-info">🔁 환승 ${route.transfers}회</span>
             ${hasPayableLeg(route) ? (bookableDate ? raw('<span class="bookable">🎫 예매 가능</span>') : raw('<span class="bookable view-only">🗓 조회 전용 (예매는 당일만)</span>')) : ""}
@@ -361,8 +238,7 @@ function displayRoutes(data, bookableDate) {
 }
 
 // 대중교통 경로 검색 (서버가 TMAP 대중교통 API를 대신 호출)
-// 결과는 상세 페이지(route.js)가 다시 호출하지 않도록 sessionStorage 에 저장
-const TRANSIT_ROUTE_CACHE_KEY = "transitRouteResult";
+// 결과는 상세(route.js)·요금비교(compare.js)가 다시 호출하지 않도록 sessionStorage 에 저장 (transport.js LAST_SEARCH_KEY)
 
 async function getTmapRoute(from, to, departAt) {
   const request = buildRouteRequest(from, to, departAt);
@@ -381,7 +257,7 @@ async function getTmapRoute(from, to, departAt) {
     throw new Error(getRouteErrorMessage(data) || `경로 검색에 실패했습니다. (${response.status})`);
   }
 
-  sessionStorage.setItem(TRANSIT_ROUTE_CACHE_KEY, JSON.stringify({ request, data }));
+  sessionStorage.setItem(LAST_SEARCH_KEY, JSON.stringify({ request, data }));
   return data;
 }
 
@@ -390,6 +266,16 @@ function getRouteErrorMessage(data) {
   return data?.result?.message || data?.error?.message || (typeof data?.error === "string" ? data.error : "");
 }
 
-function alertComingSoon() {
-  alert("해당 기능은 준비 중입니다.");
+// 주변정보: 이 화면에서 고른 출발·도착지를 넘긴다 (탭을 닫으면 지워지는 sessionStorage, 서버에는 저장하지 않음)
+const NEARBY_PLACES_KEY = "nearbyPlaces";
+
+function openNearby() {
+  try {
+    if (selectedFrom || selectedTo) {
+      sessionStorage.setItem(NEARBY_PLACES_KEY, JSON.stringify({ from: selectedFrom, to: selectedTo }));
+    }
+  } catch {
+    // 저장할 수 없으면 주변정보 화면이 마지막 검색의 출발·도착지를 쓴다
+  }
+  location.href = "/nearby";
 }
