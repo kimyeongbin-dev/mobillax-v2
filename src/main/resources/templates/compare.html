@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MobilLax - 요금비교</title>
+  <link th:href="@{/css/home-menu.css}" type="text/css" rel="stylesheet">
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
+  <script th:src="@{/javascript/transport.js}"></script>
+  <script th:src="@{/javascript/itinerary.js}"></script>
+  <script th:src="@{/javascript/compare.js}"></script>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('home')}"></header>
+
+<main>
+  <section class="menu-card">
+    <h2><i class="fas fa-receipt"></i> 요금비교</h2>
+    <p class="menu-guide">마지막으로 검색한 경로를 요금·시간·환승으로 비교합니다. 경로를 누르면 상세 경로로 갑니다.</p>
+    <p class="menu-target" id="compareTarget" hidden></p>
+
+    <div class="menu-tabs" id="compareSort" role="group" aria-label="정렬 기준" hidden>
+      <button type="button" data-sort="fare" aria-pressed="true">요금 낮은 순</button>
+      <button type="button" data-sort="time" aria-pressed="false">시간 짧은 순</button>
+      <button type="button" data-sort="transfers" aria-pressed="false">환승 적은 순</button>
+    </div>
+
+    <ol class="compare-list" id="compareList"></ol>
+
+    <div class="menu-empty" id="compareEmpty" hidden>
+      <p>비교할 검색 결과가 없습니다.</p>
+      <p class="menu-note">홈에서 출발지와 도착지를 고르고 길찾기를 하면, 이 화면에서 경로를 비교할 수 있습니다.</p>
+      <a class="menu-button" th:href="@{/home}">경로 찾기</a>
+    </div>
+
+    <p class="menu-note" id="compareNote" hidden>
+      요금은 TMAP 기준 성인 일반 요금입니다. 예매할 때는 고른 편의 운임으로 다시 계산합니다.
+    </p>
+  </section>
+</main>
+</body>
+</html>

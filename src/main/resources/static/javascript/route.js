@@ -1,4 +1,4 @@
-/* global html, raw, PAYABLE_MODES, isOperatingLeg, isPayableLeg, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt, preferOperating, nowStamp, formatHm, TRANSFER_OPTIONS, getTransferMinutes, setTransferMinutes, addMinutes, connectionReference, pickTripIndex, describeFareTotal, getIncludeLocalFare, setIncludeLocalFare, collectBookingLegs -- transport.js */
+/* global html, raw, LAST_SEARCH_KEY, PAYABLE_MODES, isOperatingLeg, isPayableLeg, hasPayableLeg, getTransportLabel, buildRouteRequest, isBookableDate, formatDepartAt, preferOperating, nowStamp, formatHm, TRANSFER_OPTIONS, getTransferMinutes, setTransferMinutes, addMinutes, connectionReference, pickTripIndex, describeFareTotal, getIncludeLocalFare, setIncludeLocalFare, collectBookingLegs -- transport.js */
 /**
  * 상세 경로 페이지 스크립트
  * - 서버가 받아 온 TMAP 대중교통 경로로 요약·단계를 표시하고, 카카오맵에 경로를 그린다 (TMAP 키는 서버 전용, 보안 규칙 S9)
@@ -9,17 +9,21 @@ let resultDrawArr = [];
 let map;
 
 document.addEventListener("DOMContentLoaded", async function () {
-  const type = new URLSearchParams(window.location.search).get("type") || "shortestTime";
+  const params = new URLSearchParams(window.location.search);
+  const type = params.get("type") || "shortestTime";
+  // 요금비교 화면에서 고른 경로: 같은 검색 결과에서의 순서 (숫자가 아니면 무시하고 type 으로 고른다)
+  const chosenIndex = /^\d{1,2}$/.test(params.get("index") || "") ? Number(params.get("index")) : null;
   const titleMap = {
     shortestTime: "최단시간 상세경로",
     shortestDistance: "최단거리 상세경로",
     leastTransfer: "최소환승 상세경로",
   };
+  const title = chosenIndex !== null ? "요금비교에서 고른 경로" : titleMap[type];
 
   const titleElement = document.querySelector("#routeTitle");
-  if (titleElement && titleMap[type]) {
-    titleElement.textContent = titleMap[type];
-    document.title = `MobilLax - ${titleMap[type]}`;
+  if (titleElement && title) {
+    titleElement.textContent = title;
+    document.title = `MobilLax - ${title}`;
   }
 
   map = new kakao.maps.Map(document.getElementById("map_div"), {
@@ -38,7 +42,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     if (!itineraries || itineraries.length === 0) {
       throw new Error(data?.result?.message || "경로 정보를 찾을 수 없습니다.");
     }
-    const bestIndex = getBestItineraryIndex(type, data);
+    const bestIndex =
+      chosenIndex !== null && chosenIndex < itineraries.length ? chosenIndex : getBestItineraryIndex(type, data);
     const itinerary = itineraries[bestIndex];
     renderSummary(itinerary, departAt);
     renderSteps(itinerary, bookable);
@@ -65,7 +70,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 async function loadTransitRoute(from, to, departAt) {
   const request = buildRouteRequest(from, to, departAt);
 
-  const cached = JSON.parse(sessionStorage.getItem("transitRouteResult") || "null");
+  const cached = JSON.parse(sessionStorage.getItem(LAST_SEARCH_KEY) || "null");
   if (cached && JSON.stringify(cached.request) === JSON.stringify(request)) {
     return cached.data;
   }
@@ -84,7 +89,7 @@ async function loadTransitRoute(from, to, departAt) {
         "경로 정보를 불러올 수 없습니다.",
     );
   }
-  sessionStorage.setItem("transitRouteResult", JSON.stringify({ request, data }));
+  sessionStorage.setItem(LAST_SEARCH_KEY, JSON.stringify({ request, data }));
   return data;
 }
 
