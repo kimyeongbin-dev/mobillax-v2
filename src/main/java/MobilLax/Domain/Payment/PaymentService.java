@@ -1,12 +1,12 @@
 package MobilLax.Domain.Payment;
 
+import MobilLax.Domain.Trip.TripDisplay;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
 @Service
@@ -16,9 +16,6 @@ public class PaymentService {
     /** 결제 내역에 보이는 상태: 확인된 결제와 실패·취소. 준비만 하고 버린 PENDING 은 보이지 않는다 */
     private static final List<PaymentEntity.PaymentStatus> HISTORY_STATUSES =
             List.of(PaymentEntity.PaymentStatus.SUCCESS, PaymentEntity.PaymentStatus.FAIL);
-
-    private static final Map<String, String> TRANSPORT_LABEL = Map.of(
-            "TRAIN", "기차", "EXPRESSBUS", "고속·시외버스", "AIRPLANE", "항공");
 
     private final PaymentRepository paymentRepository;
 
@@ -50,7 +47,7 @@ public class PaymentService {
                         p.getPaymentId(),
                         p.getDate(),
                         p.getOrderName() != null ? p.getOrderName() : "주문 정보 없음 (v2.5 이전 결제)",
-                        TRANSPORT_LABEL.getOrDefault(p.getTransportType(), p.getTransportType()),
+                        TripDisplay.transportLabel(p.getTransportType()),
                         p.getAmount(),
                         formatDeparture(p.getDepartureTime()),
                         p.getStatus() == PaymentEntity.PaymentStatus.SUCCESS))
@@ -76,11 +73,7 @@ public class PaymentService {
 
     /** yyyyMMddHHmm → "10월 18일 07:02 출발" */
     static String formatDeparture(String departureTime) {
-        if (departureTime == null || !departureTime.matches("\\d{12}")) {
-            return "";
-        }
-        return Integer.parseInt(departureTime.substring(4, 6)) + "월 "
-                + Integer.parseInt(departureTime.substring(6, 8)) + "일 "
-                + departureTime.substring(8, 10) + ":" + departureTime.substring(10, 12) + " 출발";
+        String time = TripDisplay.departure(departureTime);
+        return time.isEmpty() ? "" : time + " 출발";
     }
 }

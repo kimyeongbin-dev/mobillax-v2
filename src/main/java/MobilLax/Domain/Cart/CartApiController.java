@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 @RestController
 @RequestMapping("/api/cart")
@@ -25,11 +24,11 @@ public class CartApiController {
     }
 
     /**
-     * 장바구니 목록 조회 (UUID 그룹별로)
+     * 장바구니 화면용 묶음 목록 (서버가 만든 표시 값과 결제 가능 여부만, DB 항목은 내보내지 않는다)
      */
     @GetMapping("/list")
-    public ResponseEntity<Map<String, List<CartItemEntity>>> getCartList() {
-        return ResponseEntity.ok(cartService.getGroupedCartItems());
+    public ResponseEntity<List<CartGroupView>> getCartList() {
+        return ResponseEntity.ok(cartService.getCartView());
     }
 
     /**

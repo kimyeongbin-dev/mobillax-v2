@@ -15,16 +15,24 @@
 <header th:replace="~{fragments/layout :: header('cart')}"></header>
 
 <main>
-    <section class="search-card flat">
+    <section class="search-card flat cart-page">
         <h2><i class="fas fa-shopping-cart"></i> 장바구니</h2>
+        <p class="cart-guide">결제할 경로 묶음을 고르세요. 결제창은 교통수단마다 한 번씩 열립니다.</p>
+
+        <div class="cart-toolbar" hidden>
+            <label class="select-all"><input type="checkbox" id="selectAll"> 결제할 수 있는 묶음 전체 선택</label>
+            <button type="button" id="clearCartBtn" class="text-button danger">전체 비우기</button>
+        </div>
+
         <div class="cart-list"></div>
 
-        <div class="cart-actions" style="text-align: right; margin-top: 20px;">
-            <!-- 장바구니 전체 결제 버튼 -->
-            <button class="btn-cart-pay find-route-button">전체 결제하기</button>
-
-            <!-- 장바구니 전체 비우기 버튼 -->
-            <button id="clearCartBtn" class="find-route-button danger">전체 비우기</button>
+        <div class="cart-paybar" hidden>
+            <div class="paybar-summary">
+                <span id="selectedCount">선택한 묶음 없음</span>
+                <strong id="selectedTotal">0원</strong>
+                <span id="selectedWindows" class="paybar-windows"></span>
+            </div>
+            <button type="button" class="btn-cart-pay find-route-button" disabled>선택 결제</button>
         </div>
     </section>
 </main>

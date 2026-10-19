@@ -1,5 +1,6 @@
 package MobilLax.Domain.Cart;
 
+import MobilLax.Domain.Trip.TripDisplay;
 import MobilLax.Domain.Trip.TripVerifier;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -8,8 +9,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -62,17 +66,55 @@ public class CartService {
     }
 
     /**
-     * 로그인된 사용자의 삭제되지 않은 장바구니 항목을 그룹별로 묶어 반환
-     * @return Map<그룹ID, 장바구니 항목 리스트>
+     * 로그인한 사용자의 장바구니 화면 (v2.6, 보안 규칙 S4: 내 활성 항목만)
+     * - 결제할 수 있는 묶음을 먼저, 그 안에서는 출발이 이른 순
      */
-    public Map<String, List<CartItemEntity>> getGroupedCartItems() {
+    @Transactional(readOnly = true)
+    public List<CartGroupView> getCartView() {
         String email = getCurrentUserEmail();
+        String now = DepartureCheck.now();
+        Map<String, List<CartItemEntity>> groups = cartItemRepository.findByEmailAndIsDeletedFalse(email).stream()
+                .sorted(ITEM_ORDER)
+                .collect(Collectors.groupingBy(CartItemEntity::getTotalFareGroupId, LinkedHashMap::new, Collectors.toList()));
 
-        // isDeleted=false 조건으로 활성 상태인 항목만 조회
-        List<CartItemEntity> allItems = cartItemRepository.findByEmailAndIsDeletedFalse(email);
+        return groups.entrySet().stream()
+                .map(e -> toView(e.getKey(), e.getValue(), now))
+                .sorted(Comparator.comparing((CartGroupView v) -> !v.payable())
+                        .thenComparing(v -> firstDeparture(groups.get(v.groupId()))))
+                .toList();
+    }
 
-        return allItems.stream()
-                .collect(Collectors.groupingBy(CartItemEntity::getTotalFareGroupId));
+    /** 출발 순, 출발 일시를 모르는 예전 항목은 담은 순으로 뒤에 */
+    private static final Comparator<CartItemEntity> ITEM_ORDER = Comparator
+            .comparing((CartItemEntity i) -> i.getDepartureTime() == null ? "~" : i.getDepartureTime())
+            .thenComparing(CartItemEntity::getId);
+
+    private static String firstDeparture(List<CartItemEntity> items) {
+        return items.get(0).getDepartureTime() == null ? "" : items.get(0).getDepartureTime();
+    }
+
+    private static CartGroupView toView(String groupId, List<CartItemEntity> items, String now) {
+        CartItemEntity first = items.get(0);
+        CartItemEntity last = items.get(items.size() - 1);
+
+        // 결제 준비(PaymentController)와 같이 교통수단마다 결제창을 한 번씩 연다
+        Map<String, Integer> byTransport = items.stream().collect(Collectors.groupingBy(
+                CartItemEntity::getMode, LinkedHashMap::new, Collectors.summingInt(CartItemEntity::getRoutePayment)));
+        List<CartGroupView.Payment> payments = byTransport.entrySet().stream()
+                .map(e -> new CartGroupView.Payment(TripDisplay.transportLabel(e.getKey()), e.getValue()))
+                .toList();
+
+        Optional<String> blocked = CartPayability.blockReason(items, now);
+        return new CartGroupView(
+                groupId,
+                first.getStartName() + " → " + last.getEndName(),
+                TripDisplay.departure(first.getDepartureTime()),
+                items.stream().map(i -> new CartGroupView.Item(i.getStartName(), i.getEndName(), i.getRoute(),
+                        i.getRoutePayment(), TripDisplay.departure(i.getDepartureTime()))).toList(),
+                payments,
+                items.stream().mapToInt(CartItemEntity::getRoutePayment).sum(),
+                blocked.isEmpty(),
+                blocked.orElse(""));
     }
 
     /**
