@@ -28,7 +28,8 @@ main {
 }
 
 .mypage-container {
-  width: 90%;
+  box-sizing: border-box;
+  width: calc(100% - 32px);
   max-width: 900px;
   background: white;
   padding: 30px;
@@ -160,7 +161,8 @@ footer {
 
 /* 프로필 수정·비밀번호 변경 폼 */
 .edit-profile-container {
-  width: 90%;
+  box-sizing: border-box;
+  width: calc(100% - 32px);
   max-width: 480px;
   background: white;
   padding: 30px;
@@ -287,4 +289,13 @@ footer {
   font-size: 0.8em;
   text-decoration: underline;
   cursor: pointer;
+}
+
+/* 휴대폰 폭 (v2.10): 폭 90%에 안쪽 여백 30px이 더해져 카드 오른쪽이 화면 밖으로 잘렸다 (위의 border-box 로 해결).
+   좁은 화면에서는 안쪽 여백도 줄인다 */
+@media (max-width: 560px) {
+  .mypage-container,
+  .edit-profile-container {
+    padding: 20px 16px;
+  }
 }
