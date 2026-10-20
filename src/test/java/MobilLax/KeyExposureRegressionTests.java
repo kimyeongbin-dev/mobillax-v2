@@ -77,7 +77,7 @@ class KeyExposureRegressionTests {
     /** 화면 경로 → 응답 본문 (로그인 전 공개 화면, 로그인 후 화면, 모든 정적 JS) */
     private Map<String, String> browserResponses(boolean loggedIn) throws Exception {
         Map<String, String> bodies = new LinkedHashMap<>();
-        List<String> paths = new ArrayList<>(List.of("/", "/home", "/login", "/register"));
+        List<String> paths = new ArrayList<>(List.of("/", "/home", "/login", "/register", "/route", "/compare", "/nearby"));
         if (loggedIn) {
             paths.addAll(List.of("/route", "/cart", "/mypage", "/mypage/edit"));
         }

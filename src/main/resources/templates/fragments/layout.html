@@ -2,11 +2,12 @@
 <!--
   공통 레이아웃 조각 (v2.5) — 모든 화면이 이 조각을 쓴다 (scripts/web-layout.test.js 가 검사)
 
-  head            : 공통 CSS·아이콘, 세션 만료 시간(meta), 공통 스크립트(csrf.js → safe-html.js → confirm-form.js → session-timer.js)
+  head            : 공통 CSS·아이콘, 세션 만료 시간(meta), 공통 스크립트(csrf.js → safe-html.js → confirm-form.js → login-link.js → session-timer.js)
                     화면 스크립트보다 먼저 넣는다
   header(active)  : 상단 메뉴. 로그인했으면 경로 검색·장바구니(묶음 수)·예매 내역·마이페이지·로그아웃·세션 타이머
                     active: home | cart | payments | mypage | (빈 문자열)
-  compactNav      : 헤더가 없는 화면(지도 화면)용 작은 메뉴와 세션 타이머
+  compactNav      : 헤더가 없는 화면(지도 화면)용 작은 메뉴와 세션 타이머. 비로그인이면 로그인 링크
+  data-login-next : 로그인 링크가 지금 화면으로 돌아오게 한다 (login-link.js)
 
   값은 LayoutInfo(@layout) 가 화면을 그릴 때만 계산한다
 -->
@@ -19,6 +20,7 @@
     <script th:src="@{/javascript/csrf.js}"></script>
     <script th:src="@{/javascript/safe-html.js}"></script>
     <script th:src="@{/javascript/confirm-form.js}"></script>
+    <script th:src="@{/javascript/login-link.js}"></script>
     <script th:src="@{/javascript/session-timer.js}" defer></script>
   </th:block>
 </head>
@@ -44,7 +46,7 @@
       </form>
     </th:block>
     <th:block th:unless="${@layout.loggedIn()}">
-      <a th:href="@{/login}"><i class="fas fa-sign-in-alt"></i>로그인</a>
+      <a th:href="@{/login}" data-login-next><i class="fas fa-sign-in-alt"></i>로그인</a>
       <a th:href="@{/register}"><i class="fas fa-user-plus"></i>회원가입</a>
     </th:block>
   </nav>
@@ -59,6 +61,9 @@
     <a th:href="@{/cart}"><i class="fas fa-shopping-cart"></i> 장바구니<span th:if="${cartCount > 0}" th:text="' (' + ${cartCount} + ')'"></span></a>
     <a th:href="@{/mypage/payments}"><i class="fas fa-ticket-alt"></i> 예매 내역</a>
     <a th:href="@{/mypage}"><i class="fas fa-user"></i> 마이페이지</a>
+  </th:block>
+  <th:block th:unless="${@layout.loggedIn()}">
+    <a th:href="@{/login}" data-login-next><i class="fas fa-sign-in-alt"></i> 로그인</a>
   </th:block>
 </nav>
 

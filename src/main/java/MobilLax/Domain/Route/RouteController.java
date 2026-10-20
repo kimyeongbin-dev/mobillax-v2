@@ -1,5 +1,7 @@
 package MobilLax.Domain.Route;
 
+import MobilLax.Common.RateLimit.RateLimitPolicy;
+import MobilLax.Common.RateLimit.RateLimited;
 import MobilLax.Common.Time.KoreaTime;
 import MobilLax.Domain.Health.HealthService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.springframework.web.client.ResourceAccessException;
  * 대중교통 경로 검색 API
  * - 브라우저 대신 서버가 TMAP 을 호출해 REST 키가 브라우저에 노출되지 않게 함
  * - 응답은 TMAP JSON 원문을 그대로 전달 (프론트의 경로 표시 코드가 TMAP 응답 형식을 사용)
+ * - 로그인 없이도 쓴다. TMAP 하루 한도를 지키려고 호출 횟수를 제한한다 (RateLimitPolicy.ROUTE_SEARCH, S11)
  * - 오류 응답도 TMAP 과 같은 {"result": {"message": ...}} 형식으로 맞춤
  */
 @Slf4j
@@ -28,6 +31,7 @@ public class RouteController {
     private final TmapTransitClient tmapClient;
     private final HealthService healthService;
 
+    @RateLimited(RateLimitPolicy.ROUTE_SEARCH)
     @PostMapping(value = "/transit", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> searchTransit(@RequestBody TransitRouteRequest request) {
         // 좌표(국내)·출발 일시 형식은 RequestBodyValidationAdvice 가 TransitRouteRequest 의 제약으로 먼저 검사한다

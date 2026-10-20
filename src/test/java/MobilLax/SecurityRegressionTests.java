@@ -61,21 +61,18 @@ class SecurityRegressionTests {
                     .andExpect(content().string(org.hamcrest.Matchers.containsString("로그인이 필요합니다")));
         }
 
+        /** v2.9: 조회 API(경로 검색·편 조회·장소 매칭·주변정보)는 비로그인도 쓴다 (호출 횟수 제한 S11). 나머지는 그대로 */
         @Test
         void everyApiAndPaymentEndpointNeedsLogin() throws Exception {
             String json = "{}";
             mvc.perform(post("/api/cart/add").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json))
                     .andExpect(status().isUnauthorized());
-            mvc.perform(post("/api/route/transit").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json))
-                    .andExpect(status().isUnauthorized());
-            mvc.perform(post("/api/trips").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json))
-                    .andExpect(status().isUnauthorized());
-            mvc.perform(post("/api/place/match").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json))
-                    .andExpect(status().isUnauthorized());
+            mvc.perform(get("/api/cart/list")).andExpect(status().isUnauthorized());
+            mvc.perform(delete("/api/cart/clear").with(csrf())).andExpect(status().isUnauthorized());
             mvc.perform(get("/api/session")).andExpect(status().isUnauthorized());
             mvc.perform(get("/api/terminals").param("name", "동서울"))
                     .andExpect(status().isUnauthorized());
-            mvc.perform(get("/api/nearby").param("category", "CAFE").param("lat", "37.55").param("lon", "126.97"))
+            mvc.perform(post("/payment/direct-sdk-ready").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json))
                     .andExpect(status().isUnauthorized());
             mvc.perform(post("/payment/sdk-ready/" + UUID.randomUUID()).with(csrf()))
                     .andExpect(status().isUnauthorized());
@@ -86,17 +83,37 @@ class SecurityRegressionTests {
         @Test
         void privatePagesRedirectToLogin() throws Exception {
             // v2.3: /health/db 는 /health·/health/live(로그인 없이 UP/DOWN 만, S7)로 바뀌어 목록에서 뺐다
+            // v2.9: /route·/compare·/nearby 는 비로그인도 연다 (publicPagesStayOpen)
             for (String page : new String[]{"/cart", "/mypage", "/mypage/edit", "/mypage/password",
-                    "/mypage/payments", "/route", "/compare", "/nearby"}) {
+                    "/mypage/payments"}) {
                 mvc.perform(get(page)).andExpect(status().is3xxRedirection()).andExpect(redirectedUrlPattern("**/login"));
             }
         }
 
         @Test
         void publicPagesStayOpen() throws Exception {
-            for (String page : new String[]{"/home", "/login", "/register"}) {
+            for (String page : new String[]{"/home", "/login", "/register", "/route", "/compare", "/nearby"}) {
                 mvc.perform(get(page)).andExpect(status().isOk());
             }
+        }
+
+        /** 조회 API 는 로그인 없이 컨트롤러까지 간다 (빈 본문이라 입력 검증에서 400, 로그인 요구 401 이 아님) */
+        @Test
+        void searchApisAreOpenWithoutLogin() throws Exception {
+            for (String api : new String[]{"/api/route/transit", "/api/trips", "/api/place/match"}) {
+                mvc.perform(post(api).with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{}"))
+                        .andExpect(status().isBadRequest());
+            }
+            mvc.perform(get("/api/nearby").param("category", "CAFE").param("lat", "999").param("lon", "126.97"))
+                    .andExpect(status().isBadRequest());
+        }
+
+        /** 비로그인 상세 화면: 예매 버튼 대신 "로그인하고 예매하기" (담기·결제 API 는 위에서 401) */
+        @Test
+        void anonymousRouteOffersLoginInsteadOfBooking() throws Exception {
+            String body = mvc.perform(get("/route")).andReturn().getResponse().getContentAsString();
+            assertThat(body).contains("data-login-next").contains("로그인하고 예매하기")
+                    .doesNotContain("btn-cart").doesNotContain("btn-direct-pay");
         }
 
         @Test

@@ -1,5 +1,7 @@
 package MobilLax.Domain.Place;
 
+import MobilLax.Common.RateLimit.RateLimitPolicy;
+import MobilLax.Common.RateLimit.RateLimited;
 import MobilLax.Common.Validation.KoreanLatitude;
 import MobilLax.Common.Validation.KoreanLongitude;
 import MobilLax.Common.Validation.PayableMode;
@@ -59,6 +61,7 @@ public class PlaceMatchController {
     public record MatchResponse(String kind, String kindLabel, PlaceMatchService.MatchResult result) {
     }
 
+    @RateLimited(RateLimitPolicy.EXTERNAL_LOOKUP)
     @PostMapping("/match")
     public ResponseEntity<List<MatchResponse>> match(@RequestBody MatchRequest request) {
         // 개수·형식은 RequestBodyValidationAdvice 가 MatchRequest 의 제약으로 먼저 검사한다
