@@ -111,12 +111,12 @@ public class CartService {
                 blocked.orElse(""));
     }
 
-    /** 장바구니 전체 비우기: 이 사용자의 장바구니 행을 DB 에서 지운다 (결제 기록은 payments 에 남는다) */
+    /** 장바구니 전체 비우기: 행을 지우지 않고 isDeleted 로 표시해 화면에서만 뺀다 (v2.10, 묶음 삭제와 같은 방식) */
     public void clearCart(String email) {
-        cartItemRepository.deleteByEmail(email);
+        cartItemRepository.markAllAsDeletedByEmail(email);
     }
 
-    /** 묶음 하나 삭제: 지우지 않고 isDeleted 로 표시한다 (보안 규칙 S4: 내 묶음만) */
+    /** 묶음 하나 삭제: 행을 지우지 않고 isDeleted 로 표시한다 (보안 규칙 S4: 내 묶음만) */
     public void deleteGroup(String email, String groupId) {
         cartItemRepository.markAsDeletedByEmailAndGroupId(email, groupId);
     }
