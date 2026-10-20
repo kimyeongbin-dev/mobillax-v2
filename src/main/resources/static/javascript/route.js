@@ -646,7 +646,7 @@ async function loadTrips(element, kind, depId, arrId, reference, departAt) {
       body: JSON.stringify({ kind, depId, arrId, date }),
     });
     data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data?.error || data?.message || `HTTP ${response.status}`);
+    if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
   } catch (error) {
     console.error("편 조회 실패:", error);
     element.dataset.tripError = "true";
