@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 계정 상세 (v2.11): 숨긴 결제까지 보이고, 정지·해제·잠금 풀기는 지금 OTP 번호로 다시 확인한다 (보안 규칙 S12) -->
+<!-- 계정 상세 (v2.11): 숨긴 결제까지 보이고, 개인정보 보기·정지·해제·잠금 풀기는 지금 OTP 번호로 다시 확인한다 (보안 규칙 S12) -->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
@@ -20,6 +20,17 @@
     <h2 th:text="'계정 #' + ${user.id()}">계정</h2>
     <p><span th:text="${user.email()}"></span> · <span th:text="${user.name()}"></span>
       · 가입 <span th:text="${#temporals.format(user.joinedAt(), 'yyyy-MM-dd')}"></span></p>
+    <div class="revealed" th:if="${revealed != null}">
+      <p><strong>이메일</strong> <span th:text="${revealed.email()}"></span></p>
+      <p><strong>이름</strong> <span th:text="${revealed.name()}"></span></p>
+      <p class="hint">이 화면에서만 보입니다. 새로고침하거나 다른 화면으로 가면 다시 가려집니다. 열람 기록이 감사 로그에 남았습니다.</p>
+    </div>
+    <form class="inline-form" th:unless="${revealed != null}" th:action="@{/admin/users/{id}/reveal(id=${user.id()})}"
+          method="post" autocomplete="off">
+      <input name="reason" maxlength="100" required placeholder="열람 이유 (예: 문의 답변)">
+      <input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="OTP 6자리">
+      <button type="submit">개인정보 보기</button>
+    </form>
     <p>
       <span class="badge admin" th:if="${user.admin()}">관리자</span>
       <span class="badge danger" th:if="${user.suspended()}">정지</span>

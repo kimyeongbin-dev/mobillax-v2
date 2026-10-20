@@ -312,6 +312,40 @@ class AdminSecurityRegressionTests {
         }
 
         @Test
+        void revealNeedsTheCurrentCodeAndAReasonAndIsAudited() throws Exception {
+            MockHttpSession admin = elevated();
+            String path = "/admin/users/" + memberId + "/reveal";
+
+            mvc.perform(post(path).with(csrf()).session(admin).param("code", "000000").param("reason", "문의 답변"))
+                    .andExpect(redirectedUrl("/admin/users/" + memberId));
+            mvc.perform(post(path).with(csrf()).session(admin).param("code", currentCode()))
+                    .andExpect(status().isBadRequest());
+
+            String page = mvc.perform(post(path).with(csrf()).session(admin).param("code", currentCode()).param("reason", "문의 답변"))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+            assertThat(page).contains(MEMBER).contains("관리자검사");
+            assertThat(auditActions()).contains(AdminAuditLog.Action.STEP_UP_FAILED, AdminAuditLog.Action.PII_REVEALED);
+
+            String detail = mvc.perform(get("/admin/users/" + memberId).session(admin))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+            assertThat(detail).as("다시 열면 가려진다 (세션에 남기지 않음)").doesNotContain(MEMBER);
+        }
+
+        @Test
+        void revealIsLimitedPerHourEvenWithTheRightCode() throws Exception {
+            MockHttpSession admin = elevated();
+            String path = "/admin/users/" + memberId + "/reveal";
+            for (int i = 0; i < 10; i++) {
+                mvc.perform(post(path).with(csrf()).session(admin).param("code", currentCode()).param("reason", "점검"))
+                        .andExpect(status().isOk());
+                nextStep();
+            }
+            MvcResult result = mvc.perform(post(path).with(csrf()).session(admin).param("code", currentCode()).param("reason", "점검"))
+                    .andExpect(redirectedUrl("/admin/users/" + memberId)).andReturn();
+            assertThat(String.valueOf(result.getFlashMap().get("error"))).contains("개인정보 열람 가능 횟수");
+        }
+
+        @Test
         void detailShowsPaymentsTheUserHid() throws Exception {
             paymentRepository.save(PaymentEntity.builder().email(MEMBER).paymentId("payment-s12-hidden").amount(21600)
                     .date(java.time.LocalDate.of(2026, 10, 20)).groupId("g-s12").transportType("TRAIN")

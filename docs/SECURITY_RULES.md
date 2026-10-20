@@ -7,20 +7,20 @@
 
 ## 규칙과 상태
 
-| #   | 규칙                                                                                                                                                     | 상태     | 회귀 테스트                                                              |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------ |
-| S1  | 결제 금액은 서버가 정하고, PortOne에서 확인한 뒤에만 완료로 기록한다                                                                                     | ✅ v2.2  | `PaymentVerificationRegressionTests`                                     |
-| S2  | 로그인하지 않으면 장바구니·결제·개인 화면을 쓸 수 없다. API는 로그인 페이지로 보내지 않고 401 JSON으로 응답한다. 조회 화면·API는 비로그인에게 연다(v2.9) | ✅ v2.1  | `SecurityRegressionTests.S2_AnonymousBlocked`                            |
-| S3  | 상태를 바꾸는 요청(POST·PUT·DELETE)은 CSRF 토큰이 있어야 한다. 로그아웃은 POST로만 된다                                                                  | ✅ v2.1  | `SecurityRegressionTests.S3_Csrf`, `CsrfCookieRegressionTests`           |
-| S4  | 다른 사용자의 장바구니·결제 기록은 보거나 바꿀 수 없다                                                                                                   | ✅ v2.1  | `SecurityRegressionTests.S4_Ownership`                                   |
-| S5  | 응답에 예외 메시지·SQL·내부 주소 같은 내부 정보를 넣지 않는다                                                                                            | ✅ v2.3  | `ErrorAndLogRegressionTests`                                             |
-| S6  | 로그에 SQL 바인드 값·보안 디버그 로그·키를 남기지 않는다                                                                                                 | ✅ v2.3  | `ErrorAndLogRegressionTests`, `LogSecretMaskingTests`                    |
-| S7  | 헬스체크: 실패하면 503, 로그인 없이 상태만 응답(데이터·내부 정보 없음), DB와 외부 API를 모두 확인                                                        | ✅ v2.3  | `HealthRegressionTests`, `HealthServiceTests`                            |
-| S8  | 컨테이너는 root가 아닌 사용자로 실행하고, 비밀번호를 명령 인자에 넣지 않는다                                                                             | ✅ v2.3  | `npm run test:infra` (`scripts/infra-rules.test.js`)                     |
-| S9  | 서버용 키는 브라우저로 보내지 않는다. 브라우저에는 도메인 제한된 카카오 JavaScript 키만 허용한다                                                         | ✅ v2.3  | `KeyExposureRegressionTests`                                             |
-| S10 | 브라우저에서 오는 모든 값은 서버가 형식·길이·범위를 검증하고, 화면에는 이스케이프해서 그린다                                                             | ✅ v2.4  | `InputValidationRegressionTests`, `npm run test:web`                     |
-| S11 | 로그인 없이 여는 API는 호출 횟수를 제한하고, 비밀번호를 여러 번 틀리면 잠시 확인하지 않는다                                                              | ✅ v2.9  | `RateLimitRegressionTests`, `RateLimitCoverageTests`, `RateLimiterTests` |
-| S12 | 관리자는 지정 이메일 한 명이고, 비밀번호와 OTP(TOTP)를 모두 확인해야 관리자 권한을 받는다. 민감한 작업은 OTP를 다시 확인하고 감사 로그에 남긴다          | ✅ v2.11 | `AdminSecurityRegressionTests`, `TotpTests`, `AdminBootstrapTests`       |
+| #   | 규칙                                                                                                                                                            | 상태     | 회귀 테스트                                                              |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------ |
+| S1  | 결제 금액은 서버가 정하고, PortOne에서 확인한 뒤에만 완료로 기록한다                                                                                            | ✅ v2.2  | `PaymentVerificationRegressionTests`                                     |
+| S2  | 로그인하지 않으면 장바구니·결제·개인 화면을 쓸 수 없다. API는 로그인 페이지로 보내지 않고 401 JSON으로 응답한다. 조회 화면·API는 비로그인에게 연다(v2.9)        | ✅ v2.1  | `SecurityRegressionTests.S2_AnonymousBlocked`                            |
+| S3  | 상태를 바꾸는 요청(POST·PUT·DELETE)은 CSRF 토큰이 있어야 한다. 로그아웃은 POST로만 된다                                                                         | ✅ v2.1  | `SecurityRegressionTests.S3_Csrf`, `CsrfCookieRegressionTests`           |
+| S4  | 다른 사용자의 장바구니·결제 기록은 보거나 바꿀 수 없다                                                                                                          | ✅ v2.1  | `SecurityRegressionTests.S4_Ownership`                                   |
+| S5  | 응답에 예외 메시지·SQL·내부 주소 같은 내부 정보를 넣지 않는다                                                                                                   | ✅ v2.3  | `ErrorAndLogRegressionTests`                                             |
+| S6  | 로그에 SQL 바인드 값·보안 디버그 로그·키를 남기지 않는다                                                                                                        | ✅ v2.3  | `ErrorAndLogRegressionTests`, `LogSecretMaskingTests`                    |
+| S7  | 헬스체크: 실패하면 503, 로그인 없이 상태만 응답(데이터·내부 정보 없음), DB와 외부 API를 모두 확인                                                               | ✅ v2.3  | `HealthRegressionTests`, `HealthServiceTests`                            |
+| S8  | 컨테이너는 root가 아닌 사용자로 실행하고, 비밀번호를 명령 인자에 넣지 않는다                                                                                    | ✅ v2.3  | `npm run test:infra` (`scripts/infra-rules.test.js`)                     |
+| S9  | 서버용 키는 브라우저로 보내지 않는다. 브라우저에는 도메인 제한된 카카오 JavaScript 키만 허용한다                                                                | ✅ v2.3  | `KeyExposureRegressionTests`                                             |
+| S10 | 브라우저에서 오는 모든 값은 서버가 형식·길이·범위를 검증하고, 화면에는 이스케이프해서 그린다                                                                    | ✅ v2.4  | `InputValidationRegressionTests`, `npm run test:web`                     |
+| S11 | 로그인 없이 여는 API는 호출 횟수를 제한하고, 비밀번호를 여러 번 틀리면 잠시 확인하지 않는다                                                                     | ✅ v2.9  | `RateLimitRegressionTests`, `RateLimitCoverageTests`, `RateLimiterTests` |
+| S12 | 관리자는 지정 이메일 한 명이고, 비밀번호와 OTP(TOTP)를 모두 확인해야 관리자 권한을 받는다. 민감한 작업과 개인정보 열람은 OTP를 다시 확인하고 감사 로그에 남긴다 | ✅ v2.11 | `AdminSecurityRegressionTests`, `TotpTests`, `AdminBootstrapTests`       |
 
 ## S1. 결제 금액과 결제 완료 확인 (v2.2)
 
@@ -303,6 +303,9 @@
 **관리자 화면에서 지키는 것**
 
 - 계정 목록·상세의 이메일·이름은 가려서 보여 줍니다(`k***@gmail.com`, `김**`).
+- **실제 이메일·이름은 계정 하나씩만 엽니다.** 계정 상세에서 열람 이유와 지금 OTP 번호를 함께 받고, 확인되면 그 응답에서만 보여 줍니다. 세션·DB에 남기지 않아 새로고침하면 다시 가려집니다. 감사 로그에 "개인정보 열람"으로 이유와 함께 남습니다.
+  - 열람은 관리자 한 명당 1시간 10건, 하루 30건까지입니다(`RateLimitPolicy.ADMIN_PII_REVEAL`). 세션을 빼앗겨도 한 명씩 열어 회원 명단을 모으지 못하게 늦춥니다. 횟수는 OTP 확인보다 먼저 세어, 틀린 번호도 한 번으로 셉니다.
+  - 여러 계정을 한 번에 펼치거나 내려받는 기능은 두지 않습니다.
 - 계정 정지·정지 해제·로그인 잠금 풀기는 **지금 OTP 번호를 다시 받아야** 합니다(`stepUp`). 세션을 잠깐 빌린 사람이 할 수 없습니다.
 - 관리자 계정은 정지할 수 없습니다.
 - 정지하면 그 계정의 로그인 세션을 바로 끝냅니다(세션 등록부). 정지된 계정은 비밀번호를 맞혀도 로그인되지 않고 "이용 정지" 안내를 받습니다. 안내는 비밀번호를 맞힌 사람에게만 보입니다.
@@ -311,7 +314,7 @@
 
 **감사 로그 (`admin_audit_log`)**
 
-- OTP 등록·확인·실패, 복구 코드 사용, 계정 목록·상세 조회, 정지·해제·잠금 풀기, 재확인 실패를 남깁니다. 누가·언제·어디서(IP)·누구에게(대상 계정 ID)를 기록합니다. 검색어는 길이만 남깁니다.
+- OTP 등록·확인·실패, 복구 코드 사용, 계정 목록·상세 조회, 개인정보 열람(이유 포함), 정지·해제·잠금 풀기, 재확인 실패를 남깁니다. 누가·언제·어디서(IP)·누구에게(대상 계정 ID)를 기록합니다. 검색어는 길이만 남깁니다.
 - **추가만 합니다.** 엔티티에 수정자가 없고, 저장소는 `JpaRepository`가 아닌 `Repository`로 저장·조회만 엽니다. 실패한 시도도 남도록 별도 트랜잭션(`REQUIRES_NEW`)으로 저장합니다.
 
 **배포(v3) 때 할 일**
@@ -327,8 +330,9 @@
   - 같은 번호 재사용 거절, 5번 실패 뒤 맞는 번호도 잠김, 복구 코드 한 번만
   - 비밀값 암호화 저장, CSRF
   - 이메일·이름 가림, 틀린 재확인 번호로는 정지되지 않음, 정지 즉시 세션 종료와 로그인 차단, 관리자 정지 거절, 숨긴 결제 표시
+  - 개인정보 열람: 틀린 번호·이유 없음은 거절, 성공하면 감사 로그에 남고 다시 열면 가려짐, 맞는 번호여도 1시간 11번째는 거절
   - 감사 로그가 추가만 되는지(구조)
-- 일부러 깨 보기: 비밀번호 로그인만으로 `ROLE_ADMIN`을 주게 바꾸면 11개 실패, 정지에서 OTP 재확인을 빼면 정지 테스트가 실패했습니다.
+- 일부러 깨 보기: 비밀번호 로그인만으로 `ROLE_ADMIN`을 주게 바꾸면 11개 실패, 정지에서 OTP 재확인을 빼면 정지 테스트가 실패했습니다. 열람 횟수 한도를 빼면 한도 테스트가 실패했습니다.
 - `TotpTests`: RFC 6238 부록 B 시험 값, 시계 차이·재사용, Base32(RFC 4648), 암호화 왕복·변조 감지·키 길이, 가림 규칙
 - `AdminBootstrapTests`: 지정 이메일만 관리자, 비우거나 없는 이메일이면 관리자 없음
 - 테스트는 감사 로그를 별도 트랜잭션에서 읽고 지웁니다(MySQL 스냅샷 때문에 테스트 트랜잭션에서는 나중에 커밋된 행이 안 보일 수 있음).

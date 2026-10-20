@@ -5,6 +5,7 @@ import MobilLax.Common.Validation.OtpCode;
 import MobilLax.Common.Validation.PlainText;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,9 @@ public class AdminController {
     private final AdminAccountService accountService;
     private final AdminAuditService auditService;
 
+    /** 열람 이유 최대 길이 (감사 로그 내용 칸 200자 안에 들어가게) */
+    static final int REASON_MAX = 100;
+
     @GetMapping
     public String dashboard(Model model) {
         model.addAttribute("summary", accountService.summary());
@@ -51,6 +55,23 @@ public class AdminController {
     public String user(@PathVariable Long id, Principal principal, HttpServletRequest request, Model model) {
         model.addAttribute("detail", accountService.detail(principal.getName(), id, request.getRemoteAddr()));
         return "admin/user-detail";
+    }
+
+    /** 개인정보 보기: 성공하면 리다이렉트하지 않고 이 응답에만 실제 값을 담는다 (새로고침·뒤로 가기로 다시 보이지 않게) */
+    @PostMapping("/users/{id}/reveal")
+    public String reveal(@PathVariable Long id, @RequestParam @NotNull @OtpCode String code,
+                         @RequestParam @NotBlank @Size(max = REASON_MAX) @PlainText String reason,
+                         Principal principal, HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            AdminAccountService.Revealed revealed = accountService.reveal(principal.getName(), id, code, reason.trim(),
+                    request.getRemoteAddr());
+            model.addAttribute("revealed", revealed);
+            model.addAttribute("detail", accountService.detail(principal.getName(), id, request.getRemoteAddr()));
+            return "admin/user-detail";
+        } catch (UserFacingException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/admin/users/" + id;
+        }
     }
 
     @PostMapping("/users/{id}/suspend")

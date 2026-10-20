@@ -148,6 +148,23 @@ main.admin {
   background: #d92d20;
 }
 
+.revealed {
+  margin: 8px 0;
+  padding: 12px 16px;
+  border: 1px solid #f5c26b;
+  border-radius: 10px;
+  background: #fff8eb;
+}
+
+.revealed p {
+  margin: 4px 0;
+}
+
+.revealed .hint {
+  font-size: 0.85rem;
+  color: #6b5a2e;
+}
+
 .otp-box {
   display: flex;
   flex-wrap: wrap;

@@ -1,6 +1,9 @@
 package MobilLax.Domain.Admin;
 
 import MobilLax.Common.Error.UserFacingException;
+import MobilLax.Common.RateLimit.ClientKey;
+import MobilLax.Common.RateLimit.RateLimitPolicy;
+import MobilLax.Common.RateLimit.RateLimiter;
 import MobilLax.Common.Time.KoreaTime;
 import MobilLax.Domain.Account.AccountRoles;
 import MobilLax.Domain.Account.PasswordAttemptGuard;
@@ -23,6 +26,7 @@ import java.util.NoSuchElementException;
 /**
  * 관리자 계정 관리 (v2.11, 보안 규칙 S12)
  * - 화면에는 가린 이메일·이름만 내보낸다 (AdminMasking)
+ * - 실제 값은 계정 하나씩, 이유와 지금 OTP 번호를 받고 그 응답에서만 보여 준다 (reveal). 횟수도 제한한다
  * - 정지·해제·잠금 풀기는 지금 OTP 번호로 다시 확인하고(stepUp), 모두 감사 로그에 남긴다
  * - 관리자 계정은 정지할 수 없다 (관리자를 바꾸려면 ADMIN_EMAIL 을 바꾼다)
  * - 정지하면 그 계정의 로그인 세션을 바로 끝낸다 (다음 요청부터 로그인 화면으로)
@@ -39,6 +43,7 @@ public class AdminAccountService {
     private final AdminOtpService otpService;
     private final AdminAuditService audit;
     private final SessionRegistry sessionRegistry;
+    private final RateLimiter rateLimiter;
 
     public record UserRow(Long id, String email, String name, boolean admin, boolean suspended, boolean loginLocked,
                           LocalDateTime joinedAt) {
@@ -49,6 +54,10 @@ public class AdminAccountService {
     }
 
     public record Summary(long users, long suspended) {
+    }
+
+    /** 가리지 않은 이메일·이름. 세션이나 DB 에 남기지 않고 한 번의 응답에만 담는다 */
+    public record Revealed(String email, String name) {
     }
 
     @Transactional(readOnly = true)
@@ -84,6 +93,22 @@ public class AdminAccountService {
         }
         expireSessions(account.getEmail());
         audit.record(adminEmail, AdminAuditLog.Action.USER_SUSPENDED, userId, null, clientIp);
+    }
+
+    /**
+     * 개인정보 열람: 횟수 한도 → 지금 OTP 번호 → 감사 로그(이유 포함) 순서로 확인한다
+     * 한도는 OTP 확인보다 먼저 센다. 번호를 틀려도 한 번으로 세어, 한도를 넘긴 뒤 번호를 맞혀 보는 시도도 막는다
+     */
+    @Transactional
+    public Revealed reveal(String adminEmail, Long userId, String otpCode, String reason, String clientIp) {
+        UserAccount account = find(userId);
+        RateLimiter.Decision decision = rateLimiter.acquire(RateLimitPolicy.ADMIN_PII_REVEAL, ClientKey.member(adminEmail));
+        if (!decision.allowed()) {
+            throw new UserFacingException(RateLimitPolicy.ADMIN_PII_REVEAL.message(decision, true));
+        }
+        otpService.stepUp(adminEmail, otpCode, userId, clientIp);
+        audit.record(adminEmail, AdminAuditLog.Action.PII_REVEALED, userId, "사유: " + reason, clientIp);
+        return new Revealed(account.getEmail(), account.getName());
     }
 
     @Transactional
