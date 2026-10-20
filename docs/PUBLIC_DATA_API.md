@@ -79,7 +79,7 @@ MobilLax가 결제 대상으로 삼는 장거리 교통수단(**기차, 고속�
 | 오퍼레이션 | 용도 | 요청 | 응답 |
 |---|---|---|---|
 | `GetCtyCodeList` | 도시 코드 목록 | 없음 | `cityCode`, `cityName` |
-| `GetSuberbsBusTrminlList` | 시외버스 터미널 목록 (현재 `/api/terminals`에서 사용) | `terminalNm`, `cityCode` | `terminalId`, `terminalNm`, `cityName` |
+| `GetSuberbsBusTrminlList` | 시외버스 터미널 목록 (역·터미널 매칭 기준 데이터, `TagoPlaceClient`) | `terminalNm`, `cityCode` | `terminalId`, `terminalNm`, `cityName` |
 | `GetSuberbsBusGradList` | 시외버스 등급 | 없음 | `gradeId`, `gradeNm` |
 | **`GetStrtpntAlocFndSuberbsBusInfo`** | 출발·도착 터미널 기준 배차와 운임 | `depTerminalId*`, `arrTerminalId*`, `depPlandTime`(YYYYMMDD) | `routeId`, `gradeNm`, `depPlandTime`·`arrPlandTime`(YYYYMMDDHHMI), `depPlaceNm`, `arrPlaceNm`, `charge`(운임, 원) |
 

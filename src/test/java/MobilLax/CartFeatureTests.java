@@ -17,6 +17,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
@@ -128,5 +129,21 @@ class CartFeatureTests {
         item(early, "TRAIN", "이른역", "대전", 1000, FUTURE + "0600", true);
 
         assertThat(list()).extracting(v -> v.get("groupId").asText()).containsExactly(early, late, departed);
+    }
+
+    /** v2.10: 묶음 삭제와 전체 비우기 모두 행을 지우지 않고 화면에서만 뺀다 (최근 이용 경로는 남는다) */
+    @Test
+    void deleteAndClearOnlyHideRows() throws Exception {
+        String first = UUID.randomUUID().toString();
+        String second = UUID.randomUUID().toString();
+        item(first, "TRAIN", "서울", "대전", 1000, FUTURE + "0800", true);
+        item(second, "TRAIN", "대전", "부산", 1000, FUTURE + "1200", true);
+
+        mvc.perform(delete("/api/cart/group/" + first).with(csrf()));
+        assertThat(list()).extracting(v -> v.get("groupId").asText()).containsExactly(second);
+
+        mvc.perform(delete("/api/cart/clear").with(csrf()));
+        assertThat(list()).isEmpty();
+        assertThat(cartItemRepository.findByEmailOrderByIdDesc(USER)).as("행은 남는다").hasSize(2);
     }
 }
