@@ -107,7 +107,9 @@ body {
   border-top: 1px solid #eee;
   background-color: #ededed;
 }
-.sidebar-footer button {
+.sidebar-footer button,
+.sidebar-footer .btn-login-to-book {
+  box-sizing: border-box;
   width: 100%;
   padding: 12px 0;
   border: none;
@@ -143,6 +145,17 @@ body {
 }
 
 .btn-direct-pay:hover {
+  background-color: #1d6fd4;
+  transform: translateY(-1px);
+}
+
+/* 비로그인: 예매 버튼 대신 로그인 링크 (v2.9) */
+.btn-login-to-book {
+  background-color: #2f80ed;
+  color: #ffffff;
+  text-decoration: none;
+}
+.btn-login-to-book:hover {
   background-color: #1d6fd4;
   transform: translateY(-1px);
 }

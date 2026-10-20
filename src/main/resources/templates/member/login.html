@@ -44,6 +44,9 @@
         <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
       </th:block>
 
+      <!-- 로그인 뒤 돌아갈 화면 (서버가 허용한 내부 화면만 싣는다, LoginRedirect) -->
+      <input th:if="${next != null}" type="hidden" name="next" th:value="${next}">
+
       <!-- 이메일 입력 -->
       <input type="email" name="email" placeholder="이메일" required class="form-input">
 

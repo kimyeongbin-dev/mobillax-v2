@@ -334,7 +334,8 @@ function setBookingNotice(text, showButtons) {
     notice.classList.add("booking-notice");
   }
   notice.textContent = text;
-  footer.querySelectorAll("button").forEach((button) => (button.style.display = showButtons ? "" : "none"));
+  // 예매 버튼(로그인), "로그인하고 예매하기" 링크(비로그인)
+  footer.querySelectorAll("button, a").forEach((action) => (action.style.display = showButtons ? "" : "none"));
   if (showButtons) footer.before(notice);
   else footer.prepend(notice);
 }
@@ -645,7 +646,7 @@ async function loadTrips(element, kind, depId, arrId, reference, departAt) {
       body: JSON.stringify({ kind, depId, arrId, date }),
     });
     data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data?.message || `HTTP ${response.status}`);
+    if (!response.ok) throw new Error(data?.error || data?.message || `HTTP ${response.status}`);
   } catch (error) {
     console.error("편 조회 실패:", error);
     element.dataset.tripError = "true";

@@ -88,7 +88,7 @@ for (const file of fs.readdirSync(dir).filter((f) => f.endsWith(".js") && f !== 
 // 4. 화면 스크립트를 쓰는 템플릿은 safe-html.js 를 먼저 불러온다
 //    직접 불러오거나, 공통 head 조각(fragments/layout :: head, csrf.js → safe-html.js 포함)을 먼저 넣는다
 const templates = path.join(root, "templates");
-const COMMON = /javascript\/(?:csrf|safe-html|confirm-form|session-timer)\.js/;
+const COMMON = /javascript\/(?:csrf|safe-html|confirm-form|login-link|session-timer)\.js/;
 const layout = fs.readFileSync(path.join(templates, "fragments", "layout.html"), "utf8");
 const headFragment = layout.slice(layout.indexOf('th:fragment="head"'), layout.indexOf("</th:block>"));
 check(

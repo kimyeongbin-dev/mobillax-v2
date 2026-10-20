@@ -26,12 +26,18 @@
     </div>
     <div class="sidebar-content"></div>
     <div class="sidebar-footer">
-      <button class="btn-cart">
-        <i class="fas fa-shopping-cart"></i> 장바구니 담기
-      </button>
-      <button class="btn-direct-pay find-route-button">
-        <i class="fas fa-credit-card"></i> 결제하기
-      </button>
+      <th:block th:if="${@layout.loggedIn()}">
+        <button class="btn-cart">
+          <i class="fas fa-shopping-cart"></i> 장바구니 담기
+        </button>
+        <button class="btn-direct-pay find-route-button">
+          <i class="fas fa-credit-card"></i> 결제하기
+        </button>
+      </th:block>
+      <!-- 비로그인: 조회는 되고, 예매는 로그인 뒤 이 화면으로 돌아와서 (v2.9) -->
+      <a th:unless="${@layout.loggedIn()}" th:href="@{/login}" data-login-next class="btn-login-to-book">
+        <i class="fas fa-sign-in-alt"></i> 로그인하고 예매하기
+      </a>
     </div>
   </div>
   <div id="noRoutePopup" class="cart-popup hidden">

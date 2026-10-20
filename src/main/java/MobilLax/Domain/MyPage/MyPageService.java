@@ -1,8 +1,10 @@
 package MobilLax.Domain.MyPage;
 
 import MobilLax.Common.Error.UserFacingException;
+import MobilLax.Common.RateLimit.RateLimiter;
 import MobilLax.Domain.Cart.CartService;
 import MobilLax.Domain.Payment.PaymentHistoryService;
+import MobilLax.Domain.Account.PasswordAttemptGuard;
 import MobilLax.Domain.Account.UserAccount;
 import MobilLax.Domain.Account.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class MyPageService {
     private final PasswordEncoder passwordEncoder;
     private final CartService cartService;
     private final PaymentHistoryService paymentHistoryService;
+    private final PasswordAttemptGuard passwordAttemptGuard;
 
     public MyPageDto getMyPageInfo(String email) {
         UserAccount user = userRepo.findByEmail(email).orElseThrow();
@@ -41,14 +44,21 @@ public class MyPageService {
     /**
      * 비밀번호 변경 (v2.5)
      * - 현재 비밀번호가 맞아야 한다: 세션을 잠깐 빌린 사람이 비밀번호를 바꿔 계정을 빼앗지 못하게
+     *   여러 번 틀리면 잠시 확인하지 않는다 (PasswordAttemptGuard, 보안 규칙 S11)
      * - 지금과 같은 비밀번호로는 바꾸지 않는다
      */
     @Transactional
     public void changePassword(String email, String currentPassword, String newPassword) {
         UserAccount user = userRepo.findByEmail(email).orElseThrow();
+        RateLimiter.Decision attempt = passwordAttemptGuard.checkCurrentPassword(email);
+        if (!attempt.allowed()) {
+            throw new UserFacingException("현재 비밀번호를 여러 번 틀렸습니다. " + attempt.retryAfterText() + " 뒤에 다시 시도해 주세요.");
+        }
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            passwordAttemptGuard.currentPasswordFailed(email);
             throw new UserFacingException("현재 비밀번호가 맞지 않습니다.");
         }
+        passwordAttemptGuard.currentPasswordMatched(email);
         if (passwordEncoder.matches(newPassword, user.getPassword())) {
             throw new UserFacingException("새 비밀번호는 지금 비밀번호와 달라야 합니다.");
         }

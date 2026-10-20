@@ -1,5 +1,7 @@
 package MobilLax.Domain.Trip;
 
+import MobilLax.Common.RateLimit.RateLimitPolicy;
+import MobilLax.Common.RateLimit.RateLimited;
 import MobilLax.Common.Time.KoreaTime;
 import MobilLax.Common.Validation.DateYmd;
 import MobilLax.Common.Validation.TagoId;
@@ -57,6 +59,7 @@ public class TripController {
     public record TripResponse(boolean bookableDate, List<TripView> trips) {
     }
 
+    @RateLimited(RateLimitPolicy.EXTERNAL_LOOKUP)
     @PostMapping
     public ResponseEntity<?> trips(@RequestBody TripRequest request) {
         // 형식은 RequestBodyValidationAdvice 가 TripRequest 의 제약으로 먼저 검사한다
