@@ -69,7 +69,7 @@
     <h2>이 계정에 대한 관리자 활동</h2>
     <ul>
       <li th:each="log : ${detail.history()}"
-          th:text="${#temporals.format(log.createdAt, 'yyyy-MM-dd HH:mm')} + ' ' + ${log.action} + ' (' + ${log.adminEmail} + ')'"></li>
+          th:text="${#temporals.format(log.createdAt, 'yyyy-MM-dd HH:mm')} + ' ' + ${log.action.label()} + ' (' + ${log.adminEmail} + ')'"></li>
     </ul>
   </section>
 </main>

@@ -73,7 +73,7 @@ public class PaymentHistoryService {
                         TripDisplay.transportLabel(p.getTransportType()),
                         p.getAmount(),
                         formatDeparture(p.getDepartureTime()),
-                        p.getStatus() == null ? "" : p.getStatus().name(),
+                        p.getStatus() == null ? "" : p.getStatus().label(),
                         p.getHiddenAt() != null))
                 .toList();
     }

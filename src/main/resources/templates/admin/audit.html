@@ -22,7 +22,7 @@
         <tr th:each="log : ${logs}">
           <td th:text="${#temporals.format(log.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
           <td th:text="${log.adminEmail}"></td>
-          <td th:text="${log.action}"></td>
+          <td th:text="${log.action.label()}"></td>
           <td th:text="${log.targetUserId}"></td>
           <td th:text="${log.detail}"></td>
           <td th:text="${log.clientIp}"></td>

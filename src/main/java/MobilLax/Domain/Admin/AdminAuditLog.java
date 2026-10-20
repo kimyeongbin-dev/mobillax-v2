@@ -28,8 +28,28 @@ public class AdminAuditLog {
 
     /** 남기는 일의 종류 */
     public enum Action {
-        OTP_SETUP_STARTED, OTP_ENABLED, OTP_VERIFIED, OTP_FAILED, RECOVERY_CODE_USED,
-        USER_LIST_VIEWED, USER_DETAIL_VIEWED, USER_SUSPENDED, USER_UNSUSPENDED, LOGIN_UNLOCKED, STEP_UP_FAILED
+        OTP_SETUP_STARTED("OTP 등록 시작"),
+        OTP_ENABLED("OTP 등록 완료"),
+        OTP_VERIFIED("OTP 확인"),
+        OTP_FAILED("OTP 틀림"),
+        RECOVERY_CODE_USED("복구 코드 사용"),
+        USER_LIST_VIEWED("계정 목록 조회"),
+        USER_DETAIL_VIEWED("계정 상세 조회"),
+        USER_SUSPENDED("이용 정지"),
+        USER_UNSUSPENDED("정지 해제"),
+        LOGIN_UNLOCKED("로그인 잠금 풀기"),
+        STEP_UP_FAILED("재확인 OTP 틀림");
+
+        private final String label;
+
+        Action(String label) {
+            this.label = label;
+        }
+
+        /** 화면에 보이는 이름 (DB 에는 영문 이름으로 저장) */
+        public String label() {
+            return label;
+        }
     }
 
     @Id

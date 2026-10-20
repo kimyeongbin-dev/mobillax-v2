@@ -31,7 +31,7 @@
         <tr th:each="log : ${recentLogs}">
           <td th:text="${#temporals.format(log.createdAt, 'MM-dd HH:mm:ss')}"></td>
           <td th:text="${log.adminEmail}"></td>
-          <td th:text="${log.action}"></td>
+          <td th:text="${log.action.label()}"></td>
           <td th:text="${log.targetUserId}"></td>
         </tr>
         </tbody>

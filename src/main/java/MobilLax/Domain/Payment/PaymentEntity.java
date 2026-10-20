@@ -49,6 +49,17 @@ public class PaymentEntity {
     private java.time.LocalDateTime hiddenAt;
 
     public enum PaymentStatus {
-        PENDING, SUCCESS, FAIL
+        PENDING("결제 대기"), SUCCESS("결제 완료"), FAIL("실패·취소");
+
+        private final String label;
+
+        PaymentStatus(String label) {
+            this.label = label;
+        }
+
+        /** 화면에 보이는 이름 */
+        public String label() {
+            return label;
+        }
     }
 }
