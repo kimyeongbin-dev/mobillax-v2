@@ -23,10 +23,14 @@ public class AccountUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) {
         UserAccount account = userAccountRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("계정을 찾을 수 없습니다."));
+        // 관리자도 비밀번호만으로는 관리자 권한을 받지 않는다. OTP 확인 뒤 ADMIN 을 더한다 (보안 규칙 S12)
+        String[] roles = AccountRoles.ADMIN.equals(account.getRole())
+                ? new String[]{AccountRoles.USER, AccountRoles.ADMIN_PENDING}
+                : new String[]{AccountRoles.USER};
         return User.builder()
                 .username(account.getEmail())
                 .password(account.getPassword())
-                .roles(account.getRole())
+                .roles(roles)
                 .build();
     }
 }

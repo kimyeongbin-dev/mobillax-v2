@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserAccountService {
 
-    private static final String DEFAULT_ROLE = "USER";
 
     private final UserAccountRepository userAccountRepository;
     private final PasswordEncoder passwordEncoder;
@@ -37,7 +36,13 @@ public class UserAccountService {
         userAccount.setName(name);
         userAccount.setEmail(email);
         userAccount.setPassword(passwordEncoder.encode(password));
-        userAccount.setRole(DEFAULT_ROLE);
+        userAccount.setRole(AccountRoles.USER);
         userAccountRepository.save(userAccount);
+    }
+
+    /** 관리자가 이용을 정지한 계정인지 (로그인 성공 직후 확인, v2.11) */
+    @Transactional(readOnly = true)
+    public boolean isSuspended(String email) {
+        return userAccountRepository.findByEmail(email).map(account -> account.getSuspendedAt() != null).orElse(false);
     }
 }

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!-- OTP 등록 완료: 복구 코드를 이 화면에서 한 번만 보여 준다 (서버에는 해시만 남는다, v2.11) -->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MobilLax - 복구 코드</title>
+  <link th:href="@{/css/admin.css}" rel="stylesheet" type="text/css">
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('admin')}"></header>
+
+<main class="admin">
+  <section class="admin-card">
+    <h2>OTP 등록을 마쳤습니다</h2>
+    <p class="notice warning">아래 복구 코드는 <strong>지금 한 번만</strong> 보입니다. 휴대폰을 잃어버렸을 때 OTP 대신 하나씩 쓸 수 있으니, 안전한 곳에 적어 두세요.</p>
+    <ul class="recovery-codes">
+      <li th:each="code : ${recoveryCodes}" th:text="${code}"></li>
+    </ul>
+    <a class="admin-button" th:href="@{/admin}">관리자 화면으로</a>
+  </section>
+</main>
+</body>
+</html>

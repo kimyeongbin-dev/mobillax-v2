@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<!-- 관리자 요약 (v2.11): OTP 까지 확인한 관리자만 (SecurityConfig, 보안 규칙 S12) -->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MobilLax - 관리자</title>
+  <link th:href="@{/css/admin.css}" rel="stylesheet" type="text/css">
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('admin')}"></header>
+
+<main class="admin">
+  <nav th:replace="~{fragments/admin-nav :: nav('home')}"></nav>
+  <p class="notice warning" th:if="${warning != null}" th:text="${warning}"></p>
+  <section class="admin-card">
+    <h2>요약</h2>
+    <div class="summary-grid">
+      <div>전체 계정<strong th:text="${summary.users()}">0</strong></div>
+      <div>정지된 계정<strong th:text="${summary.suspended()}">0</strong></div>
+    </div>
+    <p><small>접속·이용 통계는 v2.13 에서 더합니다. 관리자 세션은 10분 동안 아무것도 하지 않으면 끝납니다.</small></p>
+  </section>
+  <section class="admin-card">
+    <h2>최근 관리자 활동</h2>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>시각</th><th>관리자</th><th>일</th><th>대상 ID</th></tr></thead>
+        <tbody>
+        <tr th:each="log : ${recentLogs}">
+          <td th:text="${#temporals.format(log.createdAt, 'MM-dd HH:mm:ss')}"></td>
+          <td th:text="${log.adminEmail}"></td>
+          <td th:text="${log.action}"></td>
+          <td th:text="${log.targetUserId}"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+</body>
+</html>

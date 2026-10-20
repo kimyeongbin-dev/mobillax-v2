@@ -28,6 +28,16 @@ public class PaymentHistoryService {
                               String departure, boolean paid) {
     }
 
+    /**
+     * 관리자가 보는 결제 한 줄 (v2.11): 사용자가 숨긴 결제와 준비·실패 결제도 보인다
+     *
+     * @param status SUCCESS, FAIL, PENDING
+     * @param hidden 사용자가 예매 내역에서 삭제(숨김)했는지
+     */
+    public record AdminPaymentItem(LocalDate date, String orderName, String transport, int amount, String departure,
+                                   String status, boolean hidden) {
+    }
+
     public int getMonthlyPaymentTotal(String email) {
         LocalDate start = KoreaTime.today().withDayOfMonth(1);
         LocalDate end = start.plusMonths(1).withDayOfMonth(1).minusDays(1);
@@ -54,10 +64,24 @@ public class PaymentHistoryService {
                 .toList();
     }
 
+    /** 관리자 계정 상세용 결제 기록 (최근 50건, 숨긴 결제 포함). 관리자 확인(OTP)을 거친 화면에서만 부른다 */
+    public List<AdminPaymentItem> getAllForAdmin(String email) {
+        return paymentRepository.findTop50ByEmailOrderByIdDesc(email).stream()
+                .map(p -> new AdminPaymentItem(
+                        p.getDate(),
+                        p.getOrderName() != null ? p.getOrderName() : "주문 정보 없음",
+                        TripDisplay.transportLabel(p.getTransportType()),
+                        p.getAmount(),
+                        formatDeparture(p.getDepartureTime()),
+                        p.getStatus() == null ? "" : p.getStatus().name(),
+                        p.getHiddenAt() != null))
+                .toList();
+    }
+
     /**
      * 예매 내역에서 삭제 (v2.5) — 사용자 화면에서만 숨기고 기록은 남긴다
      * - 법정 보존 기간 동안 보관하고, 중복 결제 확인(S1)·환불·분쟁 대응에 그대로 쓴다
-     * - 숨긴 내역은 사용자가 직접 다시 볼 수 없고, 고객센터 문의로 관리자가 확인한다 (관리자 기능은 이후 버전)
+     * - 숨긴 내역은 사용자가 직접 다시 볼 수 없고, 고객센터 문의로 관리자가 확인한다 (관리자 계정 상세, v2.11)
      * - 내 기록이고 내역에 보이는 상태(완료·실패)일 때만. 아니면 없는 기록과 같은 404 (보안 규칙 S4)
      * - 이미 숨긴 기록을 다시 숨겨도 처음 숨긴 시각을 유지한다
      */

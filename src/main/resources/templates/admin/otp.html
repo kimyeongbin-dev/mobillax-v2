@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!-- 관리자 2단계 인증 (v2.11, 보안 규칙 S12): 등록(QR) 또는 확인(6자리 번호·복구 코드) -->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MobilLax - 관리자 인증</title>
+  <link th:href="@{/css/admin.css}" rel="stylesheet" type="text/css">
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('admin')}"></header>
+
+<main class="admin">
+  <section class="admin-card">
+    <h2>관리자 2단계 인증</h2>
+    <p class="notice error" th:if="${error != null}" th:text="${error}"></p>
+
+    <th:block th:if="${status == 'NOT_CONFIGURED'}">
+      <p class="notice error">관리자 OTP 키(ADMIN_OTP_KEY)가 설정되지 않아 관리자 화면을 열 수 없습니다. 서버 설정을 확인해 주세요.</p>
+    </th:block>
+
+    <th:block th:if="${status == 'NEEDS_SETUP'}">
+      <p>인증 앱(Google Authenticator, Microsoft Authenticator 등)으로 아래 QR 코드를 찍거나 키를 직접 입력한 뒤, 앱에 뜬 6자리 번호를 입력해 주세요.</p>
+      <div class="otp-box">
+        <!-- 서버가 숫자 좌표로만 그린 SVG (QrSvg). 비밀값은 외부로 보내지 않는다 -->
+        <div th:utext="${setup.qrSvg()}"></div>
+        <div>
+          <p>직접 입력 키</p>
+          <p class="otp-key" th:text="${setup.manualKey()}"></p>
+          <p><small>이 화면을 다시 열면 새 키가 만들어집니다. 등록을 마칠 때까지 화면을 닫지 마세요.</small></p>
+        </div>
+      </div>
+      <form class="inline-form" th:action="@{/admin/otp/setup}" method="post" autocomplete="off">
+        <input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="6자리 번호" autocomplete="one-time-code">
+        <button type="submit">등록 마치기</button>
+      </form>
+    </th:block>
+
+    <th:block th:if="${status == 'READY'}">
+      <p>인증 앱에 뜬 6자리 번호를 입력해 주세요.</p>
+      <form class="inline-form" th:action="@{/admin/otp/verify}" method="post" autocomplete="off">
+        <input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="6자리 번호" autocomplete="one-time-code">
+        <button type="submit">확인</button>
+      </form>
+      <details>
+        <summary>휴대폰을 잃어버렸다면: 복구 코드로 들어가기</summary>
+        <form class="inline-form" th:action="@{/admin/otp/recovery}" method="post" autocomplete="off">
+          <input name="recoveryCode" pattern="[a-z0-9]{4}-[a-z0-9]{4}" maxlength="9" required placeholder="xxxx-xxxx">
+          <button type="submit">복구 코드 사용</button>
+        </form>
+      </details>
+    </th:block>
+  </section>
+</main>
+</body>
+</html>

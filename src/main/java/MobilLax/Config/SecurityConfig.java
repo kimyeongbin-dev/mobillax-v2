@@ -1,6 +1,14 @@
 package MobilLax.Config;
 
+import MobilLax.Domain.Account.AccountRoles;
 import MobilLax.Domain.Account.LoginRedirect;
+import MobilLax.Domain.Account.UserAccountService;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.access.AccessDeniedHandlerImpl;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 import MobilLax.Domain.Account.PasswordAttemptGuard;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,6 +66,8 @@ public class SecurityConfig {
      */
     public static final String[] ANONYMOUS_API_PATHS = {"/api/route/transit", "/api/place/match", "/api/trips", "/api/nearby"};
 
+    static final String ADMIN_OTP_PAGE = "/admin/otp";
+
     /** 화면이 아니라 fetch 로 부르는 경로: 로그인이 안 되어 있으면 로그인 페이지로 보내지 않고 401 JSON */
     static final String[] API_PATHS = {"/api/**", "/payment/**"};
 
@@ -69,7 +79,8 @@ public class SecurityConfig {
      * - 로그아웃은 POST 만 (CSRF 보호를 켜면 GET /logout 으로는 로그아웃되지 않는다)
      */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, PasswordAttemptGuard passwordAttemptGuard)
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, PasswordAttemptGuard passwordAttemptGuard,
+                                                   UserAccountService userAccountService, SessionRegistry sessionRegistry)
             throws Exception {
         http.csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
@@ -80,7 +91,9 @@ public class SecurityConfig {
         http.authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(PUBLIC_PATHS).permitAll()
                 .requestMatchers(ANONYMOUS_API_PATHS).permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                // 관리자(v2.11, S12): 비밀번호만 맞힌 관리자는 OTP 화면만, OTP 까지 확인해야 나머지 관리자 화면
+                .requestMatchers("/admin/otp", "/admin/otp/**").hasRole(AccountRoles.ADMIN_PENDING)
+                .requestMatchers("/admin", "/admin/**").hasRole(AccountRoles.ADMIN)
                 .requestMatchers("/user/**").hasRole("USER")
                 .anyRequest().authenticated());
 
@@ -91,6 +104,18 @@ public class SecurityConfig {
                 .passwordParameter("password")
                 .successHandler((request, response, authentication) -> {
                     passwordAttemptGuard.loginSucceeded(request.getParameter("email"));
+                    // 정지 계정: 비밀번호를 맞힌 사람에게만 정지 사실을 알리고 바로 로그아웃 (v2.11)
+                    if (userAccountService.isSuspended(authentication.getName())) {
+                        new SecurityContextLogoutHandler().logout(request, response, authentication);
+                        response.sendRedirect(request.getContextPath() + "/login?suspended");
+                        return;
+                    }
+                    // 관리자 계정은 OTP 화면으로 (관리자 권한은 OTP 확인 뒤에 더한다)
+                    if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority()
+                            .equals(AccountRoles.authority(AccountRoles.ADMIN_PENDING)))) {
+                        response.sendRedirect(request.getContextPath() + ADMIN_OTP_PAGE);
+                        return;
+                    }
                     response.sendRedirect(request.getContextPath()
                             + LoginRedirect.safe(request.getParameter(LoginRedirect.PARAM)).orElse(LoginRedirect.DEFAULT));
                 })
@@ -101,6 +126,12 @@ public class SecurityConfig {
                 .permitAll());
         http.addFilterBefore(new LoginAttemptFilter(passwordAttemptGuard), UsernamePasswordAuthenticationFilter.class);
 
+        // 세션 등록부: 관리자가 계정을 정지하면 그 계정의 세션을 바로 끝낸다 (AdminAccountService)
+        http.sessionManagement(session -> session
+                .maximumSessions(-1)
+                .sessionRegistry(sessionRegistry)
+                .expiredUrl("/login?suspended"));
+
         http.logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout")
@@ -110,9 +141,35 @@ public class SecurityConfig {
                 .map(AntPathRequestMatcher::new).toArray(AntPathRequestMatcher[]::new);
         http.exceptionHandling(e -> e
                 .defaultAuthenticationEntryPointFor(new JsonUnauthorizedEntryPoint(), new OrRequestMatcher(apiMatchers))
-                .defaultAuthenticationEntryPointFor(new LoginUrlAuthenticationEntryPoint("/login"), AnyRequestMatcher.INSTANCE));
+                .defaultAuthenticationEntryPointFor(new LoginUrlAuthenticationEntryPoint("/login"), AnyRequestMatcher.INSTANCE)
+                .accessDeniedHandler(adminAwareAccessDenied()));
 
         return http.build();
+    }
+
+    /** 세션 등록부 (정지한 계정의 세션 끝내기) */
+    @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
+
+    /** 세션 생성·종료·ID 변경을 세션 등록부에 알린다 */
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
+    }
+
+    /** 권한 없음: OTP 를 아직 확인하지 않은 관리자가 관리자 화면을 열면 OTP 화면으로, 나머지는 403 */
+    static AccessDeniedHandler adminAwareAccessDenied() {
+        AccessDeniedHandlerImpl forbidden = new AccessDeniedHandlerImpl();
+        return (request, response, exception) -> {
+            if (request.isUserInRole(AccountRoles.ADMIN_PENDING) && !request.isUserInRole(AccountRoles.ADMIN)
+                    && request.getRequestURI().startsWith(request.getContextPath() + "/admin")) {
+                response.sendRedirect(request.getContextPath() + ADMIN_OTP_PAGE);
+                return;
+            }
+            forbidden.handle(request, response, exception);
+        };
     }
 
     /** 로그인 화면 주소: 실패 표시(error·locked)와 돌아갈 화면(next)을 붙인다 */

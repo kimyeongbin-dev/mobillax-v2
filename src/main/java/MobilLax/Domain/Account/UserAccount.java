@@ -31,9 +31,13 @@ public class UserAccount {
     @Column(nullable = false)
     private String password;
 
-    /** 권한 (USER, ADMIN) */
+    /** 권한 (AccountRoles.USER, ADMIN). ADMIN 은 ADMIN_EMAIL 로만 지정된다 (AdminBootstrap) */
     @Column(nullable = false)
     private String role;
+
+    /** 관리자가 이용을 정지한 시각 (v2.11). 비어 있으면 정상 */
+    @Column(name = "suspended_at")
+    private LocalDateTime suspendedAt;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
