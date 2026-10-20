@@ -1,6 +1,9 @@
 package MobilLax.Domain.Account;
 
 import MobilLax.Common.Error.UserFacingException;
+import MobilLax.Common.RateLimit.ClientKey;
+import MobilLax.Common.RateLimit.RateLimitPolicy;
+import MobilLax.Common.RateLimit.RateLimiter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,10 +21,15 @@ public class UserAccountService {
 
     private final UserAccountRepository userAccountRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RateLimiter rateLimiter;
 
-    /** @throws UserFacingException 이미 가입한 이메일 */
+    /** @throws UserFacingException 한 곳(IP)에서 가입을 너무 많이 시도함(S11), 이미 가입한 이메일 */
     @Transactional
-    public void registerUser(String name, String email, String password) {
+    public void registerUser(String name, String email, String password, ClientKey client) {
+        RateLimiter.Decision decision = rateLimiter.acquire(RateLimitPolicy.REGISTER, client);
+        if (!decision.allowed()) {
+            throw new UserFacingException(RateLimitPolicy.REGISTER.message(decision, client.member()));
+        }
         if (userAccountRepository.existsByEmail(email)) {
             throw new UserFacingException("이 이메일은 이미 사용 중입니다.");
         }

@@ -1,5 +1,7 @@
 package MobilLax.Domain.Nearby;
 
+import MobilLax.Common.RateLimit.RateLimitPolicy;
+import MobilLax.Common.RateLimit.RateLimited;
 import MobilLax.Common.Validation.KoreanLatitude;
 import MobilLax.Common.Validation.KoreanLongitude;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class NearbyController {
         return "nearby";
     }
 
+    @RateLimited(RateLimitPolicy.EXTERNAL_LOOKUP)
     @GetMapping("/api/nearby")
     @ResponseBody
     public List<NearbyPlaceView> search(@RequestParam NearbyCategory category,

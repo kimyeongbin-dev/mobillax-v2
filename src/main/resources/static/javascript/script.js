@@ -255,9 +255,6 @@ async function getTmapRoute(from, to, departAt) {
   });
   const data = await response.json().catch(() => ({}));
 
-  if (response.status === 401) {
-    throw new Error("로그인 후 경로를 검색할 수 있습니다.");
-  }
   if (!response.ok) {
     throw new Error(getRouteErrorMessage(data) || `경로 검색에 실패했습니다. (${response.status})`);
   }
