@@ -27,18 +27,23 @@ public class UserAccountController {
     /** 몇 분 남았는지는 알리지 않는다 (이메일마다 다르고, 잠긴 이메일인지 알려 주지 않으려고) */
     static final String LOCKED_MESSAGE = "로그인에 여러 번 실패해 잠시 막았습니다. 15분 안에 다시 시도할 수 있습니다.";
 
+    /** 관리자가 정지한 계정 (v2.11). 비밀번호를 맞혔을 때만 이 안내로 온다 */
+    static final String SUSPENDED_MESSAGE = "이용이 정지된 계정입니다. 문의가 필요하면 고객센터로 연락해 주세요.";
+
     private final UserAccountService userAccountService;
 
     /**
      * @param error  로그인 실패 표시 (Spring Security 가 ?error 로 보냄). 값은 쓰지 않고 정해진 문구만 보인다
      * @param logout 로그아웃 완료 표시 (?logout)
      * @param locked 로그인 실패가 많아 잠시 막음 (?locked, 보안 규칙 S11)
+     * @param suspended 관리자가 정지한 계정이거나 정지로 세션이 끝남 (?suspended, S12)
      * @param next   로그인 뒤 돌아갈 화면. 허용한 내부 화면만 폼에 다시 싣는다 (LoginRedirect)
      */
     @GetMapping("/login")
     public String showLoginForm(@RequestParam(value = "error", required = false) @Size(max = 20) @PlainText String error,
                                 @RequestParam(value = "logout", required = false) @Size(max = 20) @PlainText String logout,
                                 @RequestParam(value = "locked", required = false) @Size(max = 20) @PlainText String locked,
+                                @RequestParam(value = "suspended", required = false) @Size(max = 20) @PlainText String suspended,
                                 @RequestParam(value = LoginRedirect.PARAM, required = false) @Size(max = 40) @PlainText String next,
                                 Model model) {
         if (error != null) {
@@ -46,6 +51,9 @@ public class UserAccountController {
         }
         if (locked != null) {
             model.addAttribute("error", LOCKED_MESSAGE);
+        }
+        if (suspended != null) {
+            model.addAttribute("error", SUSPENDED_MESSAGE);
         }
         LoginRedirect.safe(next).ifPresent(path -> model.addAttribute("next", path));
         if (logout != null) {

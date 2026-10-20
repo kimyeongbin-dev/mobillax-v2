@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!-- 감사 로그 (v2.11): 최근 100건. 기록은 추가만 되고 화면에서 고치거나 지울 수 없다 (보안 규칙 S12) -->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MobilLax - 감사 로그</title>
+  <link th:href="@{/css/admin.css}" rel="stylesheet" type="text/css">
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('admin')}"></header>
+
+<main class="admin">
+  <nav th:replace="~{fragments/admin-nav :: nav('audit')}"></nav>
+  <section class="admin-card">
+    <h2>감사 로그</h2>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>시각</th><th>관리자</th><th>일</th><th>대상 ID</th><th>내용</th><th>IP</th></tr></thead>
+        <tbody>
+        <tr th:each="log : ${logs}">
+          <td th:text="${#temporals.format(log.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
+          <td th:text="${log.adminEmail}"></td>
+          <td th:text="${log.action.label()}"></td>
+          <td th:text="${log.targetUserId}"></td>
+          <td th:text="${log.detail}"></td>
+          <td th:text="${log.clientIp}"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+</body>
+</html>

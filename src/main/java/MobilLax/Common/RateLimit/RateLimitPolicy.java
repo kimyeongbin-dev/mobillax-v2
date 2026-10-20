@@ -21,7 +21,10 @@ public enum RateLimitPolicy {
     EXTERNAL_LOOKUP("조회", List.of(perMinute(60)), List.of(perMinute(20), perDay(300)), null),
 
     /** 회원가입: 한 곳에서 계정을 대량으로 만들지 못하게 (로그인한 사용자는 가입 화면을 쓰지 않는다) */
-    REGISTER("회원가입", List.of(), List.of(perHour(10)), null);
+    REGISTER("회원가입", List.of(), List.of(perHour(10)), null),
+
+    /** 관리자의 개인정보 열람 (S12): 세션을 빼앗겨도 한 명씩 열어 회원 명단을 모으지 못하게 늦춘다 */
+    ADMIN_PII_REVEAL("개인정보 열람", List.of(perHour(10), perDay(30)), List.of(), null);
 
     private final String label;
     private final List<Limit> memberLimits;

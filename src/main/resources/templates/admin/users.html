@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!-- 계정 관리 목록 (v2.11): 이메일·이름은 가려서 보여 준다 (AdminMasking, 보안 규칙 S12) -->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MobilLax - 계정 관리</title>
+  <link th:href="@{/css/admin.css}" rel="stylesheet" type="text/css">
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('admin')}"></header>
+
+<main class="admin">
+  <nav th:replace="~{fragments/admin-nav :: nav('users')}"></nav>
+  <section class="admin-card">
+    <h2>계정 관리</h2>
+    <form class="inline-form" th:action="@{/admin/users}" method="get">
+      <input name="q" th:value="${q}" maxlength="100" placeholder="이메일 일부로 검색">
+      <button type="submit">검색</button>
+    </form>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>ID</th><th>이메일</th><th>이름</th><th>상태</th><th>가입</th></tr></thead>
+        <tbody>
+        <tr th:each="user : ${users.content}">
+          <td><a th:href="@{/admin/users/{id}(id=${user.id()})}" th:text="${user.id()}"></a></td>
+          <td><a th:href="@{/admin/users/{id}(id=${user.id()})}" th:text="${user.email()}"></a></td>
+          <td th:text="${user.name()}"></td>
+          <td>
+            <span class="badge admin" th:if="${user.admin()}">관리자</span>
+            <span class="badge danger" th:if="${user.suspended()}">정지</span>
+            <span class="badge danger" th:if="${user.loginLocked()}">로그인 잠김</span>
+            <span class="badge" th:unless="${user.admin() or user.suspended() or user.loginLocked()}">정상</span>
+          </td>
+          <td th:text="${#temporals.format(user.joinedAt(), 'yyyy-MM-dd')}"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <p th:if="${users.empty}">찾은 계정이 없습니다.</p>
+    <div class="pager">
+      <a th:if="${users.hasPrevious()}" th:href="@{/admin/users(q=${q}, page=${users.number - 1})}">이전</a>
+      <span th:text="${users.number + 1} + ' / ' + ${users.totalPages == 0 ? 1 : users.totalPages}"></span>
+      <a th:if="${users.hasNext()}" th:href="@{/admin/users(q=${q}, page=${users.number + 1})}">다음</a>
+    </div>
+  </section>
+</main>
+</body>
+</html>

@@ -14,8 +14,13 @@ public record ClientKey(String value, boolean member) {
     public static ClientKey of(HttpServletRequest request) {
         Principal principal = request.getUserPrincipal();
         if (principal != null) {
-            return new ClientKey("member:" + principal.getName(), true);
+            return member(principal.getName());
         }
         return new ClientKey("ip:" + request.getRemoteAddr(), false);
+    }
+
+    /** 요청 밖(서비스)에서 로그인 사용자 한 명의 한도를 셀 때 */
+    public static ClientKey member(String email) {
+        return new ClientKey("member:" + email, true);
     }
 }

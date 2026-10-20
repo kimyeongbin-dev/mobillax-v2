@@ -33,7 +33,7 @@ public class PaymentEntity {
     private String groupId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "varchar(20)")
     private PaymentStatus status;
 
     // 결제 내역 화면용 (v2.5): 서버가 결제 준비 때 TAGO 값으로 만든 주문명과 가장 이른 출발 일시. 그 전 기록은 null
@@ -49,6 +49,17 @@ public class PaymentEntity {
     private java.time.LocalDateTime hiddenAt;
 
     public enum PaymentStatus {
-        PENDING, SUCCESS, FAIL
+        PENDING("결제 대기"), SUCCESS("결제 완료"), FAIL("실패·취소");
+
+        private final String label;
+
+        PaymentStatus(String label) {
+            this.label = label;
+        }
+
+        /** 화면에 보이는 이름 */
+        public String label() {
+            return label;
+        }
     }
 }
