@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!-- 관리자 1:1 문의 보기·답변 (v2.12, 보안 규칙 S12): 답변은 지금 OTP 번호로 다시 확인하고, 한 번만 단다 -->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MobilLax - 문의 답변</title>
+  <link th:href="@{/css/admin.css}" rel="stylesheet" type="text/css">
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('admin')}"></header>
+
+<main class="admin">
+  <nav th:replace="~{fragments/admin-nav :: nav('inquiries')}"></nav>
+  <p class="notice error" th:if="${error != null}" th:text="${error}"></p>
+  <p class="notice success" th:if="${successMessage != null}" th:text="${successMessage}"></p>
+
+  <section class="admin-card">
+    <p>
+      <span class="badge" th:text="${inquiry.category.label()}">예매·결제</span>
+      <span class="badge" th:classappend="${inquiry.answered()} ? 'admin' : 'danger'" th:text="${inquiry.status.label()}">답변 대기</span>
+      문의 #<span th:text="${inquiry.id}"></span> ·
+      <a th:href="@{/admin/users/{id}(id=${inquiry.userId})}" th:text="'계정 #' + ${inquiry.userId}">계정</a> ·
+      <span th:text="${#temporals.format(inquiry.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+    </p>
+    <h2 th:text="${inquiry.title}">제목</h2>
+    <div class="message-text" th:text="${inquiry.content}">내용</div>
+  </section>
+
+  <section class="admin-card" th:if="${inquiry.answered()}">
+    <h2>보낸 답변</h2>
+    <p><small th:text="${#temporals.format(inquiry.answeredAt, 'yyyy-MM-dd HH:mm')} + ' · ' + ${inquiry.answeredBy}"></small></p>
+    <div class="message-text" th:text="${inquiry.answer}">답변</div>
+  </section>
+
+  <section class="admin-card" th:unless="${inquiry.answered()}">
+    <h2>답변하기</h2>
+    <p><small>답변은 사용자 마이페이지에만 보이고, 보낸 뒤에는 고칠 수 없습니다. 사용자 화면에는 "MobilLax 고객센터"로 표시됩니다.</small></p>
+    <form th:action="@{/admin/inquiries/{id}/answer(id=${inquiry.id})}" method="post" autocomplete="off" class="answer-form"
+          data-confirm="이 답변을 보낼까요? 보낸 뒤에는 고칠 수 없습니다.">
+      <textarea name="answer" required maxlength="2000" rows="8" th:text="${draft}"></textarea>
+      <div class="inline-form">
+        <input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="OTP 6자리">
+        <button type="submit">답변 보내기</button>
+      </div>
+    </form>
+  </section>
+</main>
+</body>
+</html>

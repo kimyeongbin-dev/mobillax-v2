@@ -202,3 +202,36 @@ main.admin {
     padding: 18px 14px;
   }
 }
+
+/* 1:1 문의 (v2.12) */
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-tabs a {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #eef1f5;
+}
+
+.admin-tabs a.active {
+  background: #2f80ed;
+  color: #fff;
+}
+
+/* 사용자가 쓴 글: 이스케이프된 문자열의 줄바꿈만 살린다 */
+.message-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+
+.answer-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccd3dd;
+  border-radius: 8px;
+  font: inherit;
+}
