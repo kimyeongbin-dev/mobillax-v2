@@ -14,4 +14,6 @@ public interface PaymentRepository extends JpaRepository<PaymentEntity, Long> {
     /** 결제 내역 화면: 내 결제 중 주어진 상태이고 숨기지 않은 것만, 최근 순 (v2.5) */
     List<PaymentEntity> findTop50ByEmailAndStatusInAndHiddenAtIsNullOrderByIdDesc(
             String email, Collection<PaymentEntity.PaymentStatus> statuses);
+    /** 관리자 계정 상세: 숨긴 결제·준비 중 결제까지 모두, 최근 순 (v2.11) */
+    List<PaymentEntity> findTop50ByEmailOrderByIdDesc(String email);
 }

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<!-- 계정 상세 (v2.11): 숨긴 결제까지 보이고, 개인정보 보기·정지·해제·잠금 풀기는 지금 OTP 번호로 다시 확인한다 (보안 규칙 S12) -->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MobilLax - 계정 상세</title>
+  <link th:href="@{/css/admin.css}" rel="stylesheet" type="text/css">
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('admin')}"></header>
+
+<main class="admin" th:with="user=${detail.user()}">
+  <nav th:replace="~{fragments/admin-nav :: nav('users')}"></nav>
+  <p class="notice error" th:if="${error != null}" th:text="${error}"></p>
+  <p class="notice success" th:if="${successMessage != null}" th:text="${successMessage}"></p>
+
+  <section class="admin-card">
+    <h2 th:text="'계정 #' + ${user.id()}">계정</h2>
+    <p><span th:text="${user.email()}"></span> · <span th:text="${user.name()}"></span>
+      · 가입 <span th:text="${#temporals.format(user.joinedAt(), 'yyyy-MM-dd')}"></span></p>
+    <div class="revealed" th:if="${revealed != null}">
+      <p><strong>이메일</strong> <span th:text="${revealed.email()}"></span></p>
+      <p><strong>이름</strong> <span th:text="${revealed.name()}"></span></p>
+      <p class="hint">이 화면에서만 보입니다. 새로고침하거나 다른 화면으로 가면 다시 가려집니다. 열람 기록이 감사 로그에 남았습니다.</p>
+    </div>
+    <form class="inline-form" th:unless="${revealed != null}" th:action="@{/admin/users/{id}/reveal(id=${user.id()})}"
+          method="post" autocomplete="off">
+      <input name="reason" maxlength="100" required placeholder="열람 이유 (예: 문의 답변)">
+      <input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="OTP 6자리">
+      <button type="submit">개인정보 보기</button>
+    </form>
+    <p>
+      <span class="badge admin" th:if="${user.admin()}">관리자</span>
+      <span class="badge danger" th:if="${user.suspended()}">정지</span>
+      <span class="badge danger" th:if="${user.loginLocked()}">로그인 잠김</span>
+    </p>
+
+    <th:block th:unless="${user.admin()}">
+      <form class="inline-form" th:unless="${user.suspended()}" th:action="@{/admin/users/{id}/suspend(id=${user.id()})}"
+            method="post" autocomplete="off" data-confirm="이 계정의 이용을 정지할까요? 열려 있던 로그인도 끝납니다.">
+        <input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="OTP 6자리">
+        <button type="submit" class="danger">이용 정지</button>
+      </form>
+      <form class="inline-form" th:if="${user.suspended()}" th:action="@{/admin/users/{id}/unsuspend(id=${user.id()})}"
+            method="post" autocomplete="off">
+        <input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="OTP 6자리">
+        <button type="submit">정지 풀기</button>
+      </form>
+    </th:block>
+    <form class="inline-form" th:if="${user.loginLocked()}" th:action="@{/admin/users/{id}/unlock(id=${user.id()})}"
+          method="post" autocomplete="off">
+      <input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="OTP 6자리">
+      <button type="submit">로그인 잠금 풀기</button>
+    </form>
+  </section>
+
+  <section class="admin-card">
+    <h2>결제 기록 (사용자가 숨긴 내역 포함, 최근 50건)</h2>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>결제일</th><th>주문</th><th>교통수단</th><th>금액</th><th>출발</th><th>상태</th></tr></thead>
+        <tbody>
+        <tr th:each="p : ${detail.payments()}">
+          <td th:text="${p.date()}"></td>
+          <td th:text="${p.orderName()}"></td>
+          <td th:text="${p.transport()}"></td>
+          <td th:text="${#numbers.formatInteger(p.amount(), 1, 'COMMA')} + '원'"></td>
+          <td th:text="${p.departure()}"></td>
+          <td><span th:text="${p.status()}"></span> <span class="badge" th:if="${p.hidden()}">사용자가 숨김</span></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <p th:if="${#lists.isEmpty(detail.payments())}">결제 기록이 없습니다.</p>
+  </section>
+
+  <section class="admin-card">
+    <h2>이 계정에 대한 관리자 활동</h2>
+    <ul>
+      <li th:each="log : ${detail.history()}"
+          th:text="${#temporals.format(log.createdAt, 'yyyy-MM-dd HH:mm')} + ' ' + ${log.action.label()} + ' (' + ${log.adminEmail} + ')'"></li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

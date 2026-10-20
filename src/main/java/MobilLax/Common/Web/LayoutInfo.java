@@ -24,6 +24,11 @@ public class LayoutInfo {
         return CurrentUser.email().isPresent();
     }
 
+    /** 관리자 계정인지 (헤더의 "관리자" 메뉴, v2.11). OTP 확인 전에도 보여 주고, 누르면 OTP 화면으로 간다 */
+    public boolean adminMenu() {
+        return CurrentUser.hasAuthority("ROLE_ADMIN_PENDING");
+    }
+
     /** 헤더의 장바구니 묶음 수 */
     public int cartCount() {
         return CurrentUser.email().map(cartService::getCartGroupCount).orElse(0);

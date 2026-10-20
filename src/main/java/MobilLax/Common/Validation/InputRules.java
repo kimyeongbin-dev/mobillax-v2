@@ -32,6 +32,12 @@ public final class InputRules {
     /** 서버가 결제 준비 때 만든 결제 번호 (payment-UUID) */
     public static final String PAYMENT_ID = "payment-[A-Za-z0-9-]{1,80}";
 
+    /** 관리자 OTP: 인증 앱의 6자리 숫자 (v2.11) */
+    public static final String OTP_CODE = "\\d{6}";
+
+    /** 관리자 OTP 복구 코드: 소문자·숫자 4자리 두 묶음 (예: k3f9-2m7q) */
+    public static final String RECOVERY_CODE = "[a-z0-9]{4}-[a-z0-9]{4}";
+
     /** 장소 이름 등 짧은 표시용 문자열: 꺾쇠·따옴표·제어 문자 없이 */
     public static final String PLAIN_TEXT = "[^<>\"'`\\p{Cntrl}]*";
 
