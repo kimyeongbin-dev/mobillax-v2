@@ -28,6 +28,7 @@ AI 코딩 도구(Claude Code)가 이 저장소에서 작업할 때 지키는 규
 - [docs/SECURITY_RULES.md](docs/SECURITY_RULES.md)의 규칙은 기능을 고쳐도 깨지면 안 된다. 각 규칙은 회귀 테스트(`SecurityRegressionTests` 등)로 고정되어 있다.
 - 회귀 테스트를 지우거나, 단언을 약하게 바꾸거나, 실패하는 테스트를 건너뛰게 하지 않는다. 규칙을 바꿔야 하면 문서·테스트를 같은 PR에서 고치고 이유를 적는다.
 - 새 API를 만들면 로그인 필요 여부(S2)·CSRF(S3)·소유권(S4)을 확인하고 테스트를 추가한다.
+- 관리자 화면(`/admin/**`)은 OTP까지 확인한 `ROLE_ADMIN`만 연다(S12). 비밀번호 로그인은 `ADMIN_PENDING`만 준다. 관리자 기능을 더하면 감사 로그(`AdminAuditService`)를 남기고, 개인정보는 가려서(`AdminMasking`) 보이며, 상태를 바꾸는 작업은 OTP를 다시 확인한다(`stepUp`). 없는 계정은 반드시 `UsernameNotFoundException`으로 알린다(응답 시간차, S11).
 - 로그인 없이 여는 API는 `SecurityConfig.ANONYMOUS_API_PATHS`에 넣고 `@RateLimited`를 붙인다(S11, `RateLimitCoverageTests`). 한도 값은 `RateLimitPolicy`에만 둔다.
 - 브라우저에서 오는 값은 모두 서버가 검증한다(S10).
   - 요청 DTO에 `Common/Validation`의 제약 어노테이션을 붙인다. 본문은 `RequestBodyValidationAdvice`가 자동으로 검사한다.
