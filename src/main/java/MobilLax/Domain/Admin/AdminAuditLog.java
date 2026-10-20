@@ -35,6 +35,7 @@ public class AdminAuditLog {
         RECOVERY_CODE_USED("복구 코드 사용"),
         USER_LIST_VIEWED("계정 목록 조회"),
         USER_DETAIL_VIEWED("계정 상세 조회"),
+        PII_REVEALED("개인정보 열람"),
         USER_SUSPENDED("이용 정지"),
         USER_UNSUSPENDED("정지 해제"),
         LOGIN_UNLOCKED("로그인 잠금 풀기"),
@@ -60,7 +61,7 @@ public class AdminAuditLog {
     private String adminEmail;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 40)
+    @Column(nullable = false, columnDefinition = "varchar(40)")
     private Action action;
 
     /** 대상 계정 ID (없으면 null). 이메일 대신 ID 로 남겨 로그에 개인정보를 줄인다 */

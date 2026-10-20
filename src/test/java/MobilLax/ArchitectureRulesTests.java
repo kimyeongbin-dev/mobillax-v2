@@ -1,6 +1,8 @@
 package MobilLax;
 
 import org.junit.jupiter.api.Test;
+import jakarta.persistence.Column;
+import jakarta.persistence.Enumerated;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.data.repository.Repository;
@@ -29,6 +31,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  *   날짜가 하루 어긋난 적이 있다 (v2.5)
  * - 계층: 컨트롤러는 요청·응답만 다룬다. 저장소(Repository)를 직접 쓰지 않고 서비스를 거친다
  * - 로그인 사용자: 컨트롤러는 Principal 로 받아 서비스에 넘긴다. SecurityContextHolder 는 공통 계층(CurrentUser)만 읽는다
+ * - enum 칸: 문자열 칸(varchar)으로 만든다. Hibernate 6 는 MySQL 에서 enum('A','B') 형으로 만드는데, ddl-auto=update 는
+ *   기존 칸을 고치지 않아 값을 하나 더하면 저장이 실패한다 (v2.11 감사 로그에서 겪음)
  */
 class ArchitectureRulesTests {
 
@@ -114,5 +118,26 @@ class ArchitectureRulesTests {
     void onlyCommonLayerReadsSecurityContext() throws IOException {
         assertThat(sourcesMatching(Pattern.compile("\\bSecurityContextHolder\\b"), "Common/Web/CurrentUser.java"))
                 .as("SecurityContextHolder 를 직접 읽는 파일 (Principal 이나 CurrentUser 를 쓴다)").isEmpty();
+    }
+
+    @Test
+    void enumColumnsAreVarchar() throws Exception {
+        List<String> checked = new ArrayList<>();
+        List<String> violations = new ArrayList<>();
+        for (String name : appClassNames()) {
+            Class<?> type = Class.forName(name, false, getClass().getClassLoader());
+            for (Field field : type.getDeclaredFields()) {
+                if (!field.isAnnotationPresent(Enumerated.class)) {
+                    continue;
+                }
+                checked.add(type.getSimpleName() + "." + field.getName());
+                Column column = field.getAnnotation(Column.class);
+                if (column == null || !column.columnDefinition().startsWith("varchar(")) {
+                    violations.add(type.getSimpleName() + "." + field.getName());
+                }
+            }
+        }
+        assertThat(checked).as("검사한 enum 칸").hasSizeGreaterThan(3);
+        assertThat(violations).as("columnDefinition = \"varchar(n)\" 이 없는 enum 칸").isEmpty();
     }
 }
