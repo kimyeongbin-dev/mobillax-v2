@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!-- 1:1 문의 작성 (v2.12): 입력 제한은 안내용이고, 실제 검사는 서버가 한다 (InquiryForm, 보안 규칙 S10) -->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MobilLax - 문의하기</title>
+  <link th:href="@{/css/mypage.css}" rel="stylesheet" type="text/css">
+  <link th:href="@{/css/inquiry.css}" rel="stylesheet" type="text/css">
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('mypage')}"></header>
+
+<main>
+  <section class="mypage-container inquiry-form">
+    <h2>문의하기</h2>
+    <p class="notice error" th:if="${error != null}" th:text="${error}"></p>
+    <p class="history-help">비밀번호나 카드 번호 같은 민감한 정보는 적지 말아 주세요.</p>
+    <form th:action="@{/mypage/inquiries}" th:object="${form}" method="post" accept-charset="UTF-8">
+      <div class="form-group">
+        <label for="category">문의 종류</label>
+        <select id="category" th:field="*{category}" required>
+          <option value="">골라 주세요</option>
+          <option th:each="c : ${categories}" th:value="${c}" th:text="${c.label()}">예매·결제</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="title">제목 <small>(100자까지)</small></label>
+        <input id="title" th:field="*{title}" required maxlength="100">
+      </div>
+      <div class="form-group">
+        <label for="content">내용 <small>(2,000자까지)</small></label>
+        <textarea id="content" th:field="*{content}" required maxlength="2000" rows="10"></textarea>
+      </div>
+      <div class="form-buttons">
+        <button type="submit">보내기</button>
+        <a th:href="@{/mypage/inquiries}" class="cancel-button">취소</a>
+      </div>
+    </form>
+  </section>
+</main>
+
+<footer>
+  <div>© 2025 MobilLax. All rights reserved.</div>
+</footer>
+</body>
+</html>

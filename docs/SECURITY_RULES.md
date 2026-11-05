@@ -7,20 +7,20 @@
 
 ## 규칙과 상태
 
-| #   | 규칙                                                                                                                                                            | 상태     | 회귀 테스트                                                              |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------ |
-| S1  | 결제 금액은 서버가 정하고, PortOne에서 확인한 뒤에만 완료로 기록한다                                                                                            | ✅ v2.2  | `PaymentVerificationRegressionTests`                                     |
-| S2  | 로그인하지 않으면 장바구니·결제·개인 화면을 쓸 수 없다. API는 로그인 페이지로 보내지 않고 401 JSON으로 응답한다. 조회 화면·API는 비로그인에게 연다(v2.9)        | ✅ v2.1  | `SecurityRegressionTests.S2_AnonymousBlocked`                            |
-| S3  | 상태를 바꾸는 요청(POST·PUT·DELETE)은 CSRF 토큰이 있어야 한다. 로그아웃은 POST로만 된다                                                                         | ✅ v2.1  | `SecurityRegressionTests.S3_Csrf`, `CsrfCookieRegressionTests`           |
-| S4  | 다른 사용자의 장바구니·결제 기록은 보거나 바꿀 수 없다                                                                                                          | ✅ v2.1  | `SecurityRegressionTests.S4_Ownership`                                   |
-| S5  | 응답에 예외 메시지·SQL·내부 주소 같은 내부 정보를 넣지 않는다                                                                                                   | ✅ v2.3  | `ErrorAndLogRegressionTests`                                             |
-| S6  | 로그에 SQL 바인드 값·보안 디버그 로그·키를 남기지 않는다                                                                                                        | ✅ v2.3  | `ErrorAndLogRegressionTests`, `LogSecretMaskingTests`                    |
-| S7  | 헬스체크: 실패하면 503, 로그인 없이 상태만 응답(데이터·내부 정보 없음), DB와 외부 API를 모두 확인                                                               | ✅ v2.3  | `HealthRegressionTests`, `HealthServiceTests`                            |
-| S8  | 컨테이너는 root가 아닌 사용자로 실행하고, 비밀번호를 명령 인자에 넣지 않는다                                                                                    | ✅ v2.3  | `npm run test:infra` (`scripts/infra-rules.test.js`)                     |
-| S9  | 서버용 키는 브라우저로 보내지 않는다. 브라우저에는 도메인 제한된 카카오 JavaScript 키만 허용한다                                                                | ✅ v2.3  | `KeyExposureRegressionTests`                                             |
-| S10 | 브라우저에서 오는 모든 값은 서버가 형식·길이·범위를 검증하고, 화면에는 이스케이프해서 그린다                                                                    | ✅ v2.4  | `InputValidationRegressionTests`, `npm run test:web`                     |
-| S11 | 로그인 없이 여는 API는 호출 횟수를 제한하고, 비밀번호를 여러 번 틀리면 잠시 확인하지 않는다                                                                     | ✅ v2.9  | `RateLimitRegressionTests`, `RateLimitCoverageTests`, `RateLimiterTests` |
-| S12 | 관리자는 지정 이메일 한 명이고, 비밀번호와 OTP(TOTP)를 모두 확인해야 관리자 권한을 받는다. 민감한 작업과 개인정보 열람은 OTP를 다시 확인하고 감사 로그에 남긴다 | ✅ v2.11 | `AdminSecurityRegressionTests`, `TotpTests`, `AdminBootstrapTests`       |
+| #   | 규칙                                                                                                                                                                    | 상태     | 회귀 테스트                                                                                  |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------- |
+| S1  | 결제 금액은 서버가 정하고, PortOne에서 확인한 뒤에만 완료로 기록한다                                                                                                    | ✅ v2.2  | `PaymentVerificationRegressionTests`                                                         |
+| S2  | 로그인하지 않으면 장바구니·결제·개인 화면을 쓸 수 없다. API는 로그인 페이지로 보내지 않고 401 JSON으로 응답한다. 조회 화면·API는 비로그인에게 연다(v2.9)                | ✅ v2.1  | `SecurityRegressionTests.S2_AnonymousBlocked`                                                |
+| S3  | 상태를 바꾸는 요청(POST·PUT·DELETE)은 CSRF 토큰이 있어야 한다. 로그아웃은 POST로만 된다                                                                                 | ✅ v2.1  | `SecurityRegressionTests.S3_Csrf`, `CsrfCookieRegressionTests`                               |
+| S4  | 다른 사용자의 장바구니·결제 기록은 보거나 바꿀 수 없다                                                                                                                  | ✅ v2.1  | `SecurityRegressionTests.S4_Ownership`                                                       |
+| S5  | 응답에 예외 메시지·SQL·내부 주소 같은 내부 정보를 넣지 않는다                                                                                                           | ✅ v2.3  | `ErrorAndLogRegressionTests`                                                                 |
+| S6  | 로그에 SQL 바인드 값·보안 디버그 로그·키를 남기지 않는다                                                                                                                | ✅ v2.3  | `ErrorAndLogRegressionTests`, `LogSecretMaskingTests`                                        |
+| S7  | 헬스체크: 실패하면 503, 로그인 없이 상태만 응답(데이터·내부 정보 없음), DB와 외부 API를 모두 확인                                                                       | ✅ v2.3  | `HealthRegressionTests`, `HealthServiceTests`                                                |
+| S8  | 컨테이너는 root가 아닌 사용자로 실행하고, 비밀번호를 명령 인자에 넣지 않는다                                                                                            | ✅ v2.3  | `npm run test:infra` (`scripts/infra-rules.test.js`)                                         |
+| S9  | 서버용 키는 브라우저로 보내지 않는다. 브라우저에는 도메인 제한된 카카오 JavaScript 키만 허용한다                                                                        | ✅ v2.3  | `KeyExposureRegressionTests`                                                                 |
+| S10 | 브라우저에서 오는 모든 값은 서버가 형식·길이·범위를 검증하고, 화면에는 이스케이프해서 그린다                                                                            | ✅ v2.4  | `InputValidationRegressionTests`, `npm run test:web`                                         |
+| S11 | 로그인 없이 여는 API는 호출 횟수를 제한하고, 비밀번호를 여러 번 틀리면 잠시 확인하지 않는다                                                                             | ✅ v2.9  | `RateLimitRegressionTests`, `RateLimitCoverageTests`, `RateLimiterTests`                     |
+| S12 | 관리자는 지정 이메일 한 명이고, 비밀번호와 OTP(TOTP)를 모두 확인해야 관리자 권한을 받는다. 민감한 작업·개인정보 열람·문의 답변은 OTP를 다시 확인하고 감사 로그에 남긴다 | ✅ v2.11 | `AdminSecurityRegressionTests`, `TotpTests`, `AdminBootstrapTests`, `InquiryRegressionTests` |
 
 ## S1. 결제 금액과 결제 완료 확인 (v2.2)
 
@@ -173,16 +173,16 @@
 
 **구조 (공통 계층에서 강제)**
 
-| 구성                                           | 역할                                                                                                                                                                                                                                                        |
-| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Common/Validation/InputRules`, `AccountRules` | 정규식·범위·계정 규칙을 한 곳에 모음                                                                                                                                                                                                                        |
-| 재사용 제약 어노테이션                         | `@TagoId`, `@TripNo`, `@DateTimeMinute`, `@DateYmd`, `@PaymentId`, `@PayableMode`, `@TransitKindName`, `@PlainText`, `@KoreanLatitude`, `@KoreanLongitude`, `@AccountEmail`, `@UserName`, `@Password`. DTO는 이 어노테이션만 붙이고 정규식을 다시 쓰지 않음 |
-| `RequestBodyValidationAdvice`                  | **모든 `@RequestBody`를 컨트롤러에 넘기기 전에 검사**하는 미들웨어. 컨트롤러가 `@Valid`를 빠뜨려도 검사됨                                                                                                                                                   |
-| 폼·경로·쿼리                                   | 폼 객체는 `@Valid` + `BindingResult`, 경로·쿼리 문자열은 제약 어노테이션(스프링 메서드 검증)                                                                                                                                                                |
-| `GlobalExceptionHandler`                       | 검증 실패를 모두 400 `"입력값이 올바르지 않습니다."`로 응답. 보낸 값은 싣지 않고(S5) 필드 이름만 로그에 남김                                                                                                                                                |
-| `InputValidationCoverageTests`                 | **등록된 모든 컨트롤러 메서드의 입력을 훑어**, 제약이 선언되지 않은 본문·폼·문자열 입력이 있으면 실패. 새 API가 검증을 빠뜨리면 빌드가 깨짐                                                                                                                 |
-| `safe-html.js`의 `` html`...` ``               | 끼워 넣는 값을 모두 자동으로 이스케이프하는 태그 템플릿. 고정 마크업만 `raw()`                                                                                                                                                                              |
-| `scripts/web-escape.test.js`                   | 모든 화면 스크립트의 `innerHTML`·`outerHTML`·`insertAdjacentHTML`·`document.write`가 ` html` ``이나 고정 문자열만 쓰는지, 템플릿이 `safe-html.js`를 먼저 불러오는지 검사                                                                                    |
+| 구성                                           | 역할                                                                                                                                                                                                                                                                               |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Common/Validation/InputRules`, `AccountRules` | 정규식·범위·계정 규칙을 한 곳에 모음                                                                                                                                                                                                                                               |
+| 재사용 제약 어노테이션                         | `@TagoId`, `@TripNo`, `@DateTimeMinute`, `@DateYmd`, `@PaymentId`, `@PayableMode`, `@TransitKindName`, `@PlainText`, `@MessageText`(v2.12), `@KoreanLatitude`, `@KoreanLongitude`, `@AccountEmail`, `@UserName`, `@Password`. DTO는 이 어노테이션만 붙이고 정규식을 다시 쓰지 않음 |
+| `RequestBodyValidationAdvice`                  | **모든 `@RequestBody`를 컨트롤러에 넘기기 전에 검사**하는 미들웨어. 컨트롤러가 `@Valid`를 빠뜨려도 검사됨                                                                                                                                                                          |
+| 폼·경로·쿼리                                   | 폼 객체는 `@Valid` + `BindingResult`, 경로·쿼리 문자열은 제약 어노테이션(스프링 메서드 검증)                                                                                                                                                                                       |
+| `GlobalExceptionHandler`                       | 검증 실패를 모두 400 `"입력값이 올바르지 않습니다."`로 응답. 보낸 값은 싣지 않고(S5) 필드 이름만 로그에 남김                                                                                                                                                                       |
+| `InputValidationCoverageTests`                 | **등록된 모든 컨트롤러 메서드의 입력을 훑어**, 제약이 선언되지 않은 본문·폼·문자열 입력이 있으면 실패. 새 API가 검증을 빠뜨리면 빌드가 깨짐                                                                                                                                        |
+| `safe-html.js`의 `` html`...` ``               | 끼워 넣는 값을 모두 자동으로 이스케이프하는 태그 템플릿. 고정 마크업만 `raw()`                                                                                                                                                                                                     |
+| `scripts/web-escape.test.js`                   | 모든 화면 스크립트의 `innerHTML`·`outerHTML`·`insertAdjacentHTML`·`document.write`가 ` html` ``이나 고정 문자열만 쓰는지, 템플릿이 `safe-html.js`를 먼저 불러오는지, 템플릿이 `th:utext`(이스케이프 없는 출력)를 쓰지 않는지(v2.12, 서버가 그린 OTP 등록 QR만 예외) 검사           |
 
 컨트롤러에는 형식 검사를 직접 쓰지 않고, 날짜 범위(오늘부터 14일)·당일 예매·TAGO 재조회 같은 **업무 규칙만** 남깁니다.
 
@@ -206,6 +206,7 @@
 | 경로 검색                                | 국내 좌표, 출발 일시 형식과 14일 범위(v1.4)                                                                                                                                                                                                                                                       |
 | 편 조회                                  | 교통수단, ID 형식, 날짜 형식과 14일 범위(v1.6)                                                                                                                                                                                                                                                    |
 | 회원가입                                 | 이름 1-30자(깨진 글자·제어 문자 없음), 이메일 형식과 100자, **비밀번호 8-64자이고 UTF-8 72바이트 이하**(BCrypt는 72바이트 뒤를 버림)                                                                                                                                                              |
+| 1:1 문의 (v2.12)                         | 종류는 정해진 값(`Inquiry.Category` enum), 제목 100자·내용 2,000자, 줄바꿈·탭 말고는 제어 문자 없음(`@MessageText`). 따옴표·꺾쇠는 문장에 흔히 쓰여 받고, 화면에는 `th:text`로만 그려 이스케이프. 없는 종류 값의 형 변환 오류 문구는 내부 클래스 이름이 담겨 `FormErrors`가 일반 문구로 바꿈      |
 | 프로필 수정                              | 이름 규칙 동일                                                                                                                                                                                                                                                                                    |
 
 **회귀 테스트**
@@ -312,6 +313,14 @@
 - 사용자가 예매 내역에서 숨긴 결제(S4)는 관리자 계정 상세에서 볼 수 있습니다(문의 대응).
 - 모든 관리자 POST는 CSRF 토큰이 필요합니다(S3).
 
+**1:1 문의 답변 (v2.12)**
+
+- 문의는 이메일 대신 **계정 ID**로 묶습니다. 관리자 문의 화면에는 계정 ID만 보이고, 답변은 앱 안(마이페이지)에서만 보여 관리자가 사용자 이메일을 볼 필요가 없습니다.
+- 답변은 **지금 OTP 번호를 다시 받아야** 보냅니다(`stepUp`). 세션을 빼앗은 사람이 공식 답변으로 사용자를 속이지(피싱) 못하게 하려는 것입니다.
+- 답변은 **한 번만** 달고 고치지 않습니다. 사용자가 받은 공식 답변이 나중에 바뀌지 않게 하려는 것이고, 더 안내할 것은 새 문의로 받습니다. 이미 답한 문의는 OTP를 확인하기 전에 거절합니다(확인 뒤 되돌아가면 쓴 번호가 다시 쓰일 수 있음).
+- 사용자 화면에는 답한 관리자 대신 "MobilLax 고객센터"로 보입니다.
+- 문의 목록·조회·답변을 감사 로그에 남깁니다. 사용자 쪽은 본인 문의만 보고(S4, 남의 번호면 404), 등록은 계정당 1시간 5건·하루 20건입니다(`RateLimitPolicy.INQUIRY`).
+
 **감사 로그 (`admin_audit_log`)**
 
 - OTP 등록·확인·실패, 복구 코드 사용, 계정 목록·상세 조회, 개인정보 열람(이유 포함), 정지·해제·잠금 풀기, 재확인 실패를 남깁니다. 누가·언제·어디서(IP)·누구에게(대상 계정 ID)를 기록합니다. 검색어는 길이만 남깁니다.
@@ -331,8 +340,10 @@
   - 비밀값 암호화 저장, CSRF
   - 이메일·이름 가림, 틀린 재확인 번호로는 정지되지 않음, 정지 즉시 세션 종료와 로그인 차단, 관리자 정지 거절, 숨긴 결제 표시
   - 개인정보 열람: 틀린 번호·이유 없음은 거절, 성공하면 감사 로그에 남고 다시 열면 가려짐, 맞는 번호여도 1시간 11번째는 거절
+  - 1:1 문의(v2.12): 관리자 화면에 이메일 없음, 틀린 번호로는 답하지 않음, 답변은 한 번만, 회원은 답변할 수 없음, 사용자에게 "고객센터"로 보이고 읽으면 "새 답변" 표시가 사라짐
+- `InquiryRegressionTests`(v2.12): 비로그인 차단, CSRF, 남의 문의 404, 줄바꿈 유지와 `<script>` 이스케이프, 입력 검증(빈 제목, 2,000자 초과, 제어 문자, 없는 종류 값의 내부 문구 숨김), 1시간 6번째 등록 거절
   - 감사 로그가 추가만 되는지(구조)
-- 일부러 깨 보기: 비밀번호 로그인만으로 `ROLE_ADMIN`을 주게 바꾸면 11개 실패, 정지에서 OTP 재확인을 빼면 정지 테스트가 실패했습니다. 열람 횟수 한도를 빼면 한도 테스트가 실패했습니다.
+- 일부러 깨 보기: 비밀번호 로그인만으로 `ROLE_ADMIN`을 주게 바꾸면 11개 실패, 정지에서 OTP 재확인을 빼면 정지 테스트가 실패했습니다. 열람 횟수 한도를 빼면 한도 테스트가 실패했습니다. 문의 조회에서 소유권 확인을 빼면 남의 문의 테스트가, 답변에서 OTP 재확인을 빼면 답변 테스트가 실패했습니다.
 - `TotpTests`: RFC 6238 부록 B 시험 값, 시계 차이·재사용, Base32(RFC 4648), 암호화 왕복·변조 감지·키 길이, 가림 규칙
 - `AdminBootstrapTests`: 지정 이메일만 관리자, 비우거나 없는 이메일이면 관리자 없음
 - 테스트는 감사 로그를 별도 트랜잭션에서 읽고 지웁니다(MySQL 스냅샷 때문에 테스트 트랜잭션에서는 나중에 커밋된 행이 안 보일 수 있음).

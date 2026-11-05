@@ -19,6 +19,7 @@
     <div class="summary-grid">
       <div>전체 계정<strong th:text="${summary.users()}">0</strong></div>
       <div>정지된 계정<strong th:text="${summary.suspended()}">0</strong></div>
+      <div><a th:href="@{/admin/inquiries}">답변 대기 문의</a><strong th:text="${waitingInquiries}">0</strong></div>
     </div>
     <p><small>접속·이용 통계는 v2.13 에서 더합니다. 관리자 세션은 10분 동안 아무것도 하지 않으면 끝납니다.</small></p>
   </section>

@@ -5,6 +5,7 @@
 <nav class="admin-nav" th:fragment="nav(active)" aria-label="관리자 메뉴">
   <a th:href="@{/admin}" th:classappend="${active == 'home'} ? 'active'">요약</a>
   <a th:href="@{/admin/users}" th:classappend="${active == 'users'} ? 'active'">계정 관리</a>
+  <a th:href="@{/admin/inquiries}" th:classappend="${active == 'inquiries'} ? 'active'">1:1 문의</a>
   <a th:href="@{/admin/audit}" th:classappend="${active == 'audit'} ? 'active'">감사 로그</a>
 </nav>
 </body>

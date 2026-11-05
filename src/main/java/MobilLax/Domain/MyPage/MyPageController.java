@@ -3,6 +3,7 @@ package MobilLax.Domain.MyPage;
 import MobilLax.Common.Validation.FormErrors;
 import MobilLax.Common.Validation.PaymentId;
 import MobilLax.Common.Error.UserFacingException;
+import MobilLax.Domain.Inquiry.InquiryService;
 import MobilLax.Domain.Payment.PaymentHistoryService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -21,7 +22,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.security.Principal;
 
 /**
- * 마이페이지: 정보 요약, 프로필 수정, 비밀번호 변경, 결제 내역, 회원 탈퇴
+ * 마이페이지: 정보 요약, 프로필 수정, 비밀번호 변경, 결제 내역, 회원 탈퇴 (1:1 문의는 InquiryController)
  * 로그인한 사용자 것만 다룬다 (Principal 의 이메일, 보안 규칙 S4)
  */
 @Controller
@@ -30,6 +31,7 @@ public class MyPageController {
 
     private final MyPageService myPageService;
     private final PaymentHistoryService paymentHistoryService;
+    private final InquiryService inquiryService;
 
     @GetMapping("/mypage")
     public String showMyPage(Model model, Principal principal) {
@@ -39,6 +41,7 @@ public class MyPageController {
         model.addAttribute("recentRoute", dto.getRecentRoute());
         model.addAttribute("monthlyPayment", dto.getTotalPayment());
         model.addAttribute("cartCount", dto.getCartCount());
+        model.addAttribute("newAnswers", inquiryService.newAnswerCount(principal.getName()));
         return "mypage";
     }
 
@@ -105,7 +108,7 @@ public class MyPageController {
                               RedirectAttributes redirectAttributes) {
         paymentHistoryService.hide(principal.getName(), paymentId);
         redirectAttributes.addFlashAttribute("successMessage",
-                "내역에서 삭제했습니다. 결제 기록은 관련 법령에 따라 보관되며, 다시 보려면 고객센터로 문의해 주세요.");
+                "내역에서 삭제했습니다. 결제 기록은 관련 법령에 따라 보관되며, 다시 보려면 마이페이지의 1:1 문의로 요청해 주세요.");
         return "redirect:/mypage/payments";
     }
 

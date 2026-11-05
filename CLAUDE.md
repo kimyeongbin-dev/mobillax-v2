@@ -28,12 +28,12 @@ AI 코딩 도구(Claude Code)가 이 저장소에서 작업할 때 지키는 규
 - [docs/SECURITY_RULES.md](docs/SECURITY_RULES.md)의 규칙은 기능을 고쳐도 깨지면 안 된다. 각 규칙은 회귀 테스트(`SecurityRegressionTests` 등)로 고정되어 있다.
 - 회귀 테스트를 지우거나, 단언을 약하게 바꾸거나, 실패하는 테스트를 건너뛰게 하지 않는다. 규칙을 바꿔야 하면 문서·테스트를 같은 PR에서 고치고 이유를 적는다.
 - 새 API를 만들면 로그인 필요 여부(S2)·CSRF(S3)·소유권(S4)을 확인하고 테스트를 추가한다.
-- 관리자 화면(`/admin/**`)은 OTP까지 확인한 `ROLE_ADMIN`만 연다(S12). 비밀번호 로그인은 `ADMIN_PENDING`만 준다. 관리자 기능을 더하면 감사 로그(`AdminAuditService`)를 남기고, 개인정보는 가려서(`AdminMasking`) 보이며, 상태를 바꾸는 작업과 실제 개인정보 열람은 OTP를 다시 확인한다(`stepUp`). 개인정보는 계정 하나씩, 이유를 받아 그 응답에서만 보인다. 없는 계정은 반드시 `UsernameNotFoundException`으로 알린다(응답 시간차, S11).
+- 관리자 화면(`/admin/**`)은 OTP까지 확인한 `ROLE_ADMIN`만 연다(S12). 비밀번호 로그인은 `ADMIN_PENDING`만 준다. 관리자 기능을 더하면 감사 로그(`AdminAuditService`)를 남기고, 개인정보는 가려서(`AdminMasking`) 보이며, 상태를 바꾸는 작업, 실제 개인정보 열람, 문의 답변은 OTP를 다시 확인한다(`stepUp`). 개인정보는 계정 하나씩, 이유를 받아 그 응답에서만 보인다. 없는 계정은 반드시 `UsernameNotFoundException`으로 알린다(응답 시간차, S11).
 - 로그인 없이 여는 API는 `SecurityConfig.ANONYMOUS_API_PATHS`에 넣고 `@RateLimited`를 붙인다(S11, `RateLimitCoverageTests`). 한도 값은 `RateLimitPolicy`에만 둔다.
 - 브라우저에서 오는 값은 모두 서버가 검증한다(S10).
   - 요청 DTO에 `Common/Validation`의 제약 어노테이션을 붙인다. 본문은 `RequestBodyValidationAdvice`가 자동으로 검사한다.
   - 폼 객체에는 `@Valid`, 경로·쿼리 문자열에는 제약 어노테이션을 붙인다.
-  - 화면에 다시 보일 문자열은 서버 값으로 만든다.
+  - 화면에 다시 보일 문자열은 서버 값으로 만든다. 사용자가 쓰는 글(문의 등)은 `@MessageText`로 받고, 템플릿에서는 `th:text`로만 그린다(`th:utext` 금지, web-escape 검사).
 - 새 화면은 공통 레이아웃 조각(`fragments/layout :: head`, `header(...)` 또는 `compactNav`)을 쓴다. 헤더를 직접 쓰지 않는다(`npm run test:web`의 web-layout 검사).
 - 화면 스크립트에서 HTML을 넣을 때는 `` html`...` `` 태그 템플릿(`safe-html.js`)을 쓰고, 인라인 이벤트 문자열에 값을 넣지 않는다.
 - fetch 로 상태를 바꾸는 화면은 `csrf.js`를 먼저 불러온다.

@@ -45,4 +45,10 @@ public class UserAccountService {
     public boolean isSuspended(String email) {
         return userAccountRepository.findByEmail(email).map(account -> account.getSuspendedAt() != null).orElse(false);
     }
+
+    /** 로그인한 사용자의 계정 ID. 다른 기능은 이메일 대신 이 ID 로 기록을 묶는다 (v2.12 문의) */
+    @Transactional(readOnly = true)
+    public Long idOf(String email) {
+        return userAccountRepository.findByEmail(email).map(UserAccount::getId).orElseThrow();
+    }
 }

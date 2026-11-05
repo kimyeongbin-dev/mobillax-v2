@@ -39,6 +39,9 @@ public class AdminAuditLog {
         USER_SUSPENDED("이용 정지"),
         USER_UNSUSPENDED("정지 해제"),
         LOGIN_UNLOCKED("로그인 잠금 풀기"),
+        INQUIRY_LIST_VIEWED("문의 목록 조회"),
+        INQUIRY_VIEWED("문의 조회"),
+        INQUIRY_ANSWERED("문의 답변"),
         STEP_UP_FAILED("재확인 OTP 틀림");
 
         private final String label;

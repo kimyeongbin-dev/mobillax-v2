@@ -1,0 +1,93 @@
+@charset "utf-8";
+/* 1:1 문의 (v2.12): mypage.css 의 화면 틀·폼 위에 문의 목록·본문만 더한다 */
+
+.inquiry-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.inquiry-button {
+  background: #2f80ed;
+  color: #fff;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-weight: 600;
+}
+
+.inquiry-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+}
+
+.inquiry-list li a {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: #f8f8f8;
+  border-left: 4px solid #f2994a;
+}
+
+.inquiry-list li.answered a {
+  border-left-color: #27ae60;
+}
+
+.inquiry-list strong {
+  flex: 1 1 200px;
+  overflow-wrap: anywhere;
+}
+
+.inquiry-list small,
+.inquiry-meta small {
+  color: #888;
+}
+
+.inquiry-category {
+  font-size: 0.85em;
+  color: #1e3a8a;
+}
+
+.inquiry-status {
+  font-size: 0.85em;
+  color: #555;
+}
+
+.inquiry-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: baseline;
+}
+
+/* 사용자가 쓴 글: 이스케이프된 문자열의 줄바꿈만 살린다 (HTML 로 넣지 않음) */
+.message-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+
+.inquiry-answer {
+  margin: 20px 0;
+  padding: 16px;
+  border-radius: 10px;
+  background: #eef6ee;
+}
+
+.inquiry-answer p {
+  margin: 0 0 8px;
+}
+
+.inquiry-form select,
+.inquiry-form textarea {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1em;
+  font-family: inherit;
+}

@@ -24,7 +24,10 @@ public enum RateLimitPolicy {
     REGISTER("회원가입", List.of(), List.of(perHour(10)), null),
 
     /** 관리자의 개인정보 열람 (S12): 세션을 빼앗겨도 한 명씩 열어 회원 명단을 모으지 못하게 늦춘다 */
-    ADMIN_PII_REVEAL("개인정보 열람", List.of(perHour(10), perDay(30)), List.of(), null);
+    ADMIN_PII_REVEAL("개인정보 열람", List.of(perHour(10), perDay(30)), List.of(), null),
+
+    /** 1:1 문의 등록 (v2.12): 한 계정이 문의를 쏟아내 관리자 화면을 덮지 못하게 */
+    INQUIRY("문의 등록", List.of(perHour(5), perDay(20)), List.of(), null);
 
     private final String label;
     private final List<Limit> memberLimits;
