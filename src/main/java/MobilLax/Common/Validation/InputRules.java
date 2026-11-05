@@ -41,6 +41,13 @@ public final class InputRules {
     /** 장소 이름 등 짧은 표시용 문자열: 꺾쇠·따옴표·제어 문자 없이 */
     public static final String PLAIN_TEXT = "[^<>\"'`\\p{Cntrl}]*";
 
+    /**
+     * 사용자가 쓰는 글 (1:1 문의 제목·내용, 관리자 답변, v2.12): 줄바꿈·탭은 되고 그 밖의 제어 문자는 안 된다
+     * 따옴표·꺾쇠는 받는다(문장에 흔히 쓰임). 화면에는 th:text 로만 내보내 이스케이프한다 (web-escape 의 th:utext 검사)
+     * 반복 그룹 대신 문자 클래스 하나로 써서 긴 글에서도 정규식이 재귀하지 않는다
+     */
+    public static final String MESSAGE_TEXT = "[^\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]*";
+
     /** 계정 이메일 (회원가입 때부터 쓰던 형식) */
     public static final String EMAIL = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
 

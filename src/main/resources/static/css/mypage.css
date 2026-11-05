@@ -299,3 +299,14 @@ footer {
     padding: 20px 16px;
   }
 }
+
+/* 1:1 문의의 새 답변 표시 (마이페이지 요약과 문의 목록, v2.12) */
+.badge-new {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.8em;
+  font-weight: 600;
+  background: #fdecec;
+  color: #c0392b;
+}

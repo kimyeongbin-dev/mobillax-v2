@@ -169,7 +169,7 @@ class MyPageFeatureTests {
             assertThat(hide(paid.getPaymentId())).isEqualTo(302);
 
             String body = mvc.perform(get("/mypage/payments")).andReturn().getResponse().getContentAsString();
-            assertThat(body).doesNotContain("숨길역").contains("남길역", "고객센터로 문의");
+            assertThat(body).doesNotContain("숨길역").contains("남길역", "1:1 문의로 요청");
             PaymentEntity kept = paymentRepository.findByPaymentId(paid.getPaymentId()).orElseThrow();
             assertThat(kept.getHiddenAt()).isNotNull();
             assertThat(kept.getStatus()).isEqualTo(PaymentEntity.PaymentStatus.SUCCESS);

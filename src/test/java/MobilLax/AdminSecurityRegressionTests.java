@@ -9,6 +9,10 @@ import MobilLax.Domain.Admin.AdminAuditLogRepository;
 import MobilLax.Domain.Admin.AdminOtpRepository;
 import MobilLax.Domain.Admin.OtpSecretCipher;
 import MobilLax.Domain.Admin.Totp;
+import MobilLax.Domain.Inquiry.Inquiry;
+import MobilLax.Domain.Inquiry.InquiryForm;
+import MobilLax.Domain.Inquiry.InquiryRepository;
+import MobilLax.Domain.Inquiry.InquiryService;
 import MobilLax.Domain.Payment.PaymentEntity;
 import MobilLax.Domain.Payment.PaymentRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -355,6 +359,96 @@ class AdminSecurityRegressionTests {
                     .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
             assertThat(page).contains("서울 → 대전").contains("사용자가 숨김").contains("21,600원");
             assertThat(auditActions()).contains(AdminAuditLog.Action.USER_DETAIL_VIEWED);
+        }
+    }
+
+    /** 1:1 문의 답변 (v2.12): 이메일 없이 계정 ID 로만, 답변은 OTP 재확인, 한 번만, 감사 로그 */
+    @Nested
+    class Inquiries {
+
+        @Autowired
+        InquiryService inquiryService;
+
+        @Autowired
+        InquiryRepository inquiryRepository;
+
+        private Long memberInquiry() {
+            InquiryForm form = new InquiryForm();
+            form.setCategory(Inquiry.Category.BOOKING);
+            form.setTitle("숨긴 결제를 보고 싶어요");
+            form.setContent("지난주 결제를 내역에서 지웠습니다.");
+            return inquiryService.create(MEMBER, form);
+        }
+
+        private MockHttpSession elevated() throws Exception {
+            MockHttpSession session = login(ADMIN, "/admin/otp");
+            enroll(session);
+            nextStep();
+            return session;
+        }
+
+        @Test
+        void adminSeesAccountIdButNoEmail() throws Exception {
+            Long id = memberInquiry();
+            MockHttpSession admin = elevated();
+            String list = mvc.perform(get("/admin/inquiries").session(admin))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+            assertThat(list).contains("숨긴 결제를 보고 싶어요").doesNotContain(MEMBER);
+            String detail = mvc.perform(get("/admin/inquiries/" + id).session(admin))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+            assertThat(detail).contains("계정 #" + memberId).doesNotContain(MEMBER);
+            assertThat(auditActions()).contains(AdminAuditLog.Action.INQUIRY_LIST_VIEWED, AdminAuditLog.Action.INQUIRY_VIEWED);
+        }
+
+        @Test
+        void answerNeedsTheCurrentCodeAndHappensOnce() throws Exception {
+            Long id = memberInquiry();
+            MockHttpSession admin = elevated();
+            String path = "/admin/inquiries/" + id + "/answer";
+
+            mvc.perform(post(path).with(csrf()).session(admin).param("code", "000000").param("answer", "확인해 드렸습니다."))
+                    .andExpect(redirectedUrl("/admin/inquiries/" + id));
+            assertThat(inquiryRepository.findById(id).orElseThrow().answered()).as("틀린 번호면 답하지 않음").isFalse();
+            assertThat(auditActions()).contains(AdminAuditLog.Action.STEP_UP_FAILED);
+
+            mvc.perform(post(path).with(csrf()).session(admin).param("code", currentCode()).param("answer", "확인해 드렸습니다."))
+                    .andExpect(redirectedUrl("/admin/inquiries/" + id));
+            Inquiry answered = inquiryRepository.findById(id).orElseThrow();
+            assertThat(answered.answered()).isTrue();
+            assertThat(answered.getAnswer()).isEqualTo("확인해 드렸습니다.");
+            assertThat(auditActions()).contains(AdminAuditLog.Action.INQUIRY_ANSWERED);
+
+            nextStep();
+            MvcResult again = mvc.perform(post(path).with(csrf()).session(admin).param("code", currentCode()).param("answer", "바꾼 답변"))
+                    .andReturn();
+            assertThat(String.valueOf(again.getFlashMap().get("error"))).contains("이미 답변한 문의");
+            assertThat(inquiryRepository.findById(id).orElseThrow().getAnswer()).as("보낸 답변은 바뀌지 않음").isEqualTo("확인해 드렸습니다.");
+        }
+
+        @Test
+        void memberSeesTheAnswerAsCustomerCenterAndNewBadgeClearsAfterReading() throws Exception {
+            Long id = memberInquiry();
+            MockHttpSession admin = elevated();
+            mvc.perform(post("/admin/inquiries/" + id + "/answer").with(csrf()).session(admin)
+                    .param("code", currentCode()).param("answer", "확인해 드렸습니다."));
+
+            MockHttpSession member = login(MEMBER, "/home");
+            assertThat(mvc.perform(get("/mypage").session(member)).andReturn().getResponse().getContentAsString())
+                    .contains("새 답변 1건");
+            String page = mvc.perform(get("/mypage/inquiries/" + id).session(member))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+            assertThat(page).contains("확인해 드렸습니다.").contains("MobilLax 고객센터").doesNotContain(ADMIN);
+            assertThat(mvc.perform(get("/mypage").session(member)).andReturn().getResponse().getContentAsString())
+                    .doesNotContain("새 답변");
+        }
+
+        @Test
+        void membersCannotAnswer() throws Exception {
+            Long id = memberInquiry();
+            MockHttpSession member = login(MEMBER, "/home");
+            mvc.perform(post("/admin/inquiries/" + id + "/answer").with(csrf()).session(member)
+                    .param("code", "123456").param("answer", "스스로 답변")).andExpect(status().isForbidden());
+            assertThat(inquiryRepository.findById(id).orElseThrow().answered()).isFalse();
         }
     }
 

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!-- 1:1 문의 보기 (v2.12): 본인 문의만 (S4). 문의·답변 글은 th:text 로 이스케이프하고 줄바꿈은 CSS 로 살린다 (S10) -->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MobilLax - 문의 보기</title>
+  <link th:href="@{/css/mypage.css}" rel="stylesheet" type="text/css">
+  <link th:href="@{/css/inquiry.css}" rel="stylesheet" type="text/css">
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('mypage')}"></header>
+
+<main>
+  <section class="mypage-container">
+    <p class="notice success" th:if="${successMessage}" th:text="${successMessage}"></p>
+    <p class="inquiry-meta">
+      <span class="inquiry-category" th:text="${inquiry.category.label()}">예매·결제</span>
+      <span class="inquiry-status" th:text="${inquiry.status.label()}">답변 대기</span>
+      <small th:text="${#temporals.format(inquiry.createdAt, 'yyyy.MM.dd HH:mm')}">2026.10.21 10:00</small>
+    </p>
+    <h2 th:text="${inquiry.title}">제목</h2>
+    <div class="message-text" th:text="${inquiry.content}">내용</div>
+
+    <div class="inquiry-answer" th:if="${inquiry.answered()}">
+      <p><strong>MobilLax 고객센터</strong>
+        <small th:text="${#temporals.format(inquiry.answeredAt, 'yyyy.MM.dd HH:mm')}">2026.10.21 11:00</small></p>
+      <div class="message-text" th:text="${inquiry.answer}">답변</div>
+    </div>
+    <p class="history-help" th:unless="${inquiry.answered()}">답변을 준비하고 있습니다. 답변이 달리면 마이페이지에 "새 답변"으로 표시됩니다.</p>
+
+    <p><a th:href="@{/mypage/inquiries}" class="cancel-button">← 문의 내역</a></p>
+  </section>
+</main>
+
+<footer>
+  <div>© 2025 MobilLax. All rights reserved.</div>
+</footer>
+</body>
+</html>

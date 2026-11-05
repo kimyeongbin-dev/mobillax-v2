@@ -25,8 +25,15 @@ public final class FormErrors {
         List<String> order = Arrays.asList(fieldOrder);
         return binding.getAllErrors().stream()
                 .min(Comparator.comparingInt(e -> rank(e, order)))
-                .map(ObjectError::getDefaultMessage)
-                .orElse("입력값이 올바르지 않습니다.");
+                .map(FormErrors::message)
+                .orElse(DEFAULT_MESSAGE);
+    }
+
+    private static final String DEFAULT_MESSAGE = "입력값이 올바르지 않습니다.";
+
+    /** 형 변환 실패(없는 enum 값 등)의 기본 문구는 내부 클래스 이름을 담고 있어 내보내지 않는다 (S5) */
+    private static String message(ObjectError error) {
+        return error instanceof FieldError field && field.isBindingFailure() ? DEFAULT_MESSAGE : error.getDefaultMessage();
     }
 
     private static int rank(ObjectError error, List<String> order) {

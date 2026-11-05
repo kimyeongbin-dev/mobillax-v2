@@ -31,6 +31,7 @@ public class AdminController {
 
     private final AdminAccountService accountService;
     private final AdminAuditService auditService;
+    private final AdminInquiryService inquiryService;
 
     /** 열람 이유 최대 길이 (감사 로그 내용 칸 200자 안에 들어가게) */
     static final int REASON_MAX = 100;
@@ -38,6 +39,7 @@ public class AdminController {
     @GetMapping
     public String dashboard(Model model) {
         model.addAttribute("summary", accountService.summary());
+        model.addAttribute("waitingInquiries", inquiryService.waitingCount());
         model.addAttribute("recentLogs", auditService.recent().stream().limit(10).toList());
         return "admin/index";
     }

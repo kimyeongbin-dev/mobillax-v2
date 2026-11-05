@@ -8,6 +8,7 @@
 // 3. 인라인 이벤트 문자열(onclick="...${값}...")에 값을 넣지 않는지
 // 4. 화면이 safe-html.js 를 다른 화면 스크립트보다 먼저 불러오는지
 // 5. 템플릿에 인라인 이벤트 속성(onclick 등)과 본문이 있는 <script> 가 없는지 (v2.8)
+// 6. 템플릿이 th:utext 로 값을 이스케이프 없이 내보내지 않는지 (v2.12, 서버가 그린 QR 만 예외)
 //    이벤트는 화면 스크립트에서 addEventListener 로, 제출 전 확인은 <form data-confirm> (confirm-form.js)
 const fs = require("node:fs");
 const path = require("node:path");
@@ -88,6 +89,8 @@ for (const file of fs.readdirSync(dir).filter((f) => f.endsWith(".js") && f !== 
 // 4. 화면 스크립트를 쓰는 템플릿은 safe-html.js 를 먼저 불러온다
 //    직접 불러오거나, 공통 head 조각(fragments/layout :: head, csrf.js → safe-html.js 포함)을 먼저 넣는다
 const templates = path.join(root, "templates");
+// th:utext 를 써도 되는 화면: 서버가 직접 그린 OTP 등록 QR(SVG) 하나뿐. 사용자가 쓴 글(문의 등)은 th:text 로만 (v2.12)
+const UTEXT_ALLOWED = new Set(["admin/otp.html"]);
 const COMMON = /javascript\/(?:csrf|safe-html|confirm-form|login-link|session-timer)\.js/;
 const layout = fs.readFileSync(path.join(templates, "fragments", "layout.html"), "utf8");
 const headFragment = layout.slice(layout.indexOf('th:fragment="head"'), layout.indexOf("</th:block>"));
@@ -108,6 +111,11 @@ for (const file of htmlFiles(templates).filter((f) => !f.includes(`${path.sep}fr
   check(
     inlineEvents.length === 0,
     `${page}: 인라인 이벤트 속성이 있다 (${inlineEvents.length}곳, addEventListener 를 쓴다)`,
+  );
+  const unescaped = (source.match(/\sth:utext\s*=/g) || []).length;
+  check(
+    unescaped === 0 || UTEXT_ALLOWED.has(page.split(path.sep).join("/")),
+    `${page}: th:utext 로 이스케이프 없이 출력한다 (th:text 를 쓴다)`,
   );
   const inlineScripts = source.match(/<script(?![^>]*\s(?:th:)?src=)[^>]*>\s*\S/gi) || [];
   check(inlineScripts.length === 0, `${page}: 본문이 있는 <script> 가 있다 (화면 스크립트 파일로 옮긴다)`);
