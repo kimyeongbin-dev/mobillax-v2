@@ -2,6 +2,8 @@ package MobilLax.Domain.Route;
 
 import MobilLax.Common.RateLimit.RateLimitPolicy;
 import MobilLax.Common.RateLimit.RateLimited;
+import MobilLax.Common.Usage.CountsUsage;
+import MobilLax.Common.Usage.UsageMetric;
 import MobilLax.Common.Time.KoreaTime;
 import MobilLax.Domain.Health.HealthService;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ public class RouteController {
     private final HealthService healthService;
 
     @RateLimited(RateLimitPolicy.ROUTE_SEARCH)
+    @CountsUsage(UsageMetric.ROUTE_SEARCH)
     @PostMapping(value = "/transit", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> searchTransit(@RequestBody TransitRouteRequest request) {
         // 좌표(국내)·출발 일시 형식은 RequestBodyValidationAdvice 가 TransitRouteRequest 의 제약으로 먼저 검사한다

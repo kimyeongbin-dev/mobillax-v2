@@ -235,3 +235,49 @@ main.admin {
   border-radius: 8px;
   font: inherit;
 }
+
+/* 감사 로그 점검의 조건 폼 (v2.13) */
+.admin-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.admin-filter label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.admin-filter input,
+.admin-filter select,
+.admin-filter button {
+  padding: 8px 10px;
+  font: inherit;
+}
+
+/* 통계 표 (v2.13): 칸이 많아 좁은 화면에서는 표 안에서 옆으로 민다 (.admin-table-wrap) */
+.stats-table th,
+.stats-table td {
+  white-space: nowrap;
+}
+
+.stats-table td {
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-table tfoot td,
+.stats-table tfoot th {
+  font-weight: 700;
+  border-top: 2px solid #ccd3df;
+}
+
+.stats-notes {
+  margin: 16px 0 0;
+  padding-left: 20px;
+  color: #555;
+  font-size: 0.9rem;
+}

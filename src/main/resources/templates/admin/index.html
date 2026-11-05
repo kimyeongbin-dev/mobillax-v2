@@ -20,8 +20,15 @@
       <div>전체 계정<strong th:text="${summary.users()}">0</strong></div>
       <div>정지된 계정<strong th:text="${summary.suspended()}">0</strong></div>
       <div><a th:href="@{/admin/inquiries}">답변 대기 문의</a><strong th:text="${waitingInquiries}">0</strong></div>
+      <div><a th:href="@{/admin/stats}">오늘 방문자</a><strong th:text="${today.visitors()}">0</strong></div>
+      <div>오늘 경로 검색<strong th:text="${today.routeSearches()}">0</strong></div>
+      <div>오늘 결제 완료<strong th:text="${today.payments()}">0</strong></div>
+      <div>
+        <a th:href="@{/admin/audit(month=${lastMonth})}" th:text="${lastMonth} + ' 감사 로그 점검'">지난달 감사 로그 점검</a>
+        <strong th:text="${lastMonthReviewed} ? '완료' : '아직'">아직</strong>
+      </div>
     </div>
-    <p><small>접속·이용 통계는 v2.13 에서 더합니다. 관리자 세션은 10분 동안 아무것도 하지 않으면 끝납니다.</small></p>
+    <p><small>관리자 세션은 10분 동안 아무것도 하지 않으면 끝납니다.</small></p>
   </section>
   <section class="admin-card">
     <h2>최근 관리자 활동</h2>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 감사 로그 (v2.11): 최근 100건. 기록은 추가만 되고 화면에서 고치거나 지울 수 없다 (보안 규칙 S12) -->
+<!-- 감사 로그 정기 점검 (v2.13): 달별 건수와 기록. 기록은 추가만 되고 화면에서 고치거나 지울 수 없다 (보안 규칙 S12) -->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
@@ -11,15 +11,61 @@
 <body>
 <header th:replace="~{fragments/layout :: header('admin')}"></header>
 
-<main class="admin">
+<main class="admin" th:with="month=${review.month()}">
   <nav th:replace="~{fragments/admin-nav :: nav('audit')}"></nav>
+  <p class="notice success" th:if="${successMessage != null}" th:text="${successMessage}"></p>
+  <p class="notice error" th:if="${error != null}" th:text="${error}"></p>
+
   <section class="admin-card">
-    <h2>감사 로그</h2>
+    <h2>감사 로그 점검</h2>
+    <form th:action="@{/admin/audit}" method="get" class="admin-filter">
+      <label>달 <input type="month" name="month" th:value="${month}" required></label>
+      <label>일 종류
+        <select name="action">
+          <option value="">전체</option>
+          <option th:each="a : ${actions}" th:value="${a}" th:text="${a.label()}" th:selected="${a == action}"></option>
+        </select>
+      </label>
+      <label>대상 계정 ID <input type="number" name="target" min="1" th:value="${target}"></label>
+      <button type="submit">보기</button>
+    </form>
+
+    <h3 th:text="${month} + ' 일 종류별 건수'">일 종류별 건수</h3>
+    <div class="admin-table-wrap" th:unless="${review.counts().isEmpty()}">
+      <table class="admin-table">
+        <thead><tr><th>일</th><th>건수</th></tr></thead>
+        <tbody>
+        <tr th:each="c : ${review.counts()}">
+          <td>
+            <a th:href="@{/admin/audit(month=${month},action=${c.action()})}" th:text="${c.action().label()}"></a>
+            <span class="badge danger" th:if="${c.action().attention()}">살펴볼 일</span>
+          </td>
+          <td th:text="${c.total()}"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <p th:if="${review.counts().isEmpty()}">이 달의 기록이 없습니다.</p>
+
+    <p th:if="${review.reviewed()}"><span class="badge admin">점검 완료</span> 이 달은 점검을 마쳤습니다.</p>
+    <p th:if="${!review.reviewed() and !review.reviewable()}"><small>끝난 달만 점검 완료로 남길 수 있습니다.</small></p>
+    <form th:if="${!review.reviewed() and review.reviewable()}" th:action="@{/admin/audit/review}" method="post"
+          autocomplete="off" class="admin-filter">
+      <input type="hidden" name="month" th:value="${month}">
+      <label>지금 OTP 번호
+        <input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="OTP 6자리">
+      </label>
+      <button type="submit" th:text="${month} + ' 점검 완료'">점검 완료</button>
+    </form>
+  </section>
+
+  <section class="admin-card">
+    <h2>기록</h2>
     <div class="admin-table-wrap">
       <table class="admin-table">
         <thead><tr><th>시각</th><th>관리자</th><th>일</th><th>대상 ID</th><th>내용</th><th>IP</th></tr></thead>
         <tbody>
-        <tr th:each="log : ${logs}">
+        <tr th:each="log : ${review.logs().content}">
           <td th:text="${#temporals.format(log.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
           <td th:text="${log.adminEmail}"></td>
           <td th:text="${log.action.label()}"></td>
@@ -30,6 +76,12 @@
         </tbody>
       </table>
     </div>
+    <p th:if="${review.logs().content.isEmpty()}">조건에 맞는 기록이 없습니다.</p>
+    <p class="pager" th:if="${review.logs().totalPages > 1}" th:with="logs=${review.logs()}">
+      <a th:if="${logs.hasPrevious()}" th:href="@{/admin/audit(month=${month},action=${action},target=${target},page=${logs.number - 1})}">이전</a>
+      <span th:text="${logs.number + 1} + ' / ' + ${logs.totalPages}"></span>
+      <a th:if="${logs.hasNext()}" th:href="@{/admin/audit(month=${month},action=${action},target=${target},page=${logs.number + 1})}">다음</a>
+    </p>
   </section>
 </main>
 </body>

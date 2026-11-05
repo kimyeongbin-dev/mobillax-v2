@@ -56,6 +56,8 @@ public class SecurityConfig {
             "/", "/home", "/login", "/register", "/error",
             "/route", "/compare", "/nearby",
             "/css/**", "/javascript/**", "/images/**",
+            // 브라우저가 스스로 요청한다. 막으면 로그인 화면으로 리다이렉트되어 페이지 조회로 한 번 더 세어진다 (S13)
+            "/favicon.ico",
             // 헬스체크: 컨테이너가 로그인 없이 확인한다. 응답은 UP/DOWN 뿐 (보안 규칙 S7)
             "/health", "/health/live"
     };
