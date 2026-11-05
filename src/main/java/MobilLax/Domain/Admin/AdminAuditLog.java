@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -23,7 +24,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @Entity
-@Table(name = "admin_audit_log")
+@Table(name = "admin_audit_log", indexes = @Index(name = "idx_admin_audit_log_created_at", columnList = "created_at"))
 public class AdminAuditLog {
 
     /** 남기는 일의 종류 */
@@ -31,23 +32,37 @@ public class AdminAuditLog {
         OTP_SETUP_STARTED("OTP 등록 시작"),
         OTP_ENABLED("OTP 등록 완료"),
         OTP_VERIFIED("OTP 확인"),
-        OTP_FAILED("OTP 틀림"),
-        RECOVERY_CODE_USED("복구 코드 사용"),
+        OTP_FAILED("OTP 틀림", true),
+        RECOVERY_CODE_USED("복구 코드 사용", true),
         USER_LIST_VIEWED("계정 목록 조회"),
         USER_DETAIL_VIEWED("계정 상세 조회"),
-        PII_REVEALED("개인정보 열람"),
+        PII_REVEALED("개인정보 열람", true),
         USER_SUSPENDED("이용 정지"),
         USER_UNSUSPENDED("정지 해제"),
         LOGIN_UNLOCKED("로그인 잠금 풀기"),
         INQUIRY_LIST_VIEWED("문의 목록 조회"),
         INQUIRY_VIEWED("문의 조회"),
         INQUIRY_ANSWERED("문의 답변"),
-        STEP_UP_FAILED("재확인 OTP 틀림");
+        STEP_UP_FAILED("재확인 OTP 틀림", true),
+        STATS_VIEWED("통계 조회"),
+        AUDIT_VIEWED("감사 로그 조회"),
+        AUDIT_REVIEWED("감사 로그 점검 완료");
 
         private final String label;
+        private final boolean attention;
 
         Action(String label) {
+            this(label, false);
+        }
+
+        Action(String label, boolean attention) {
             this.label = label;
+            this.attention = attention;
+        }
+
+        /** 정기 점검 때 특히 살펴볼 일 (개인정보 열람, 인증 실패, 복구 코드 사용) */
+        public boolean attention() {
+            return attention;
         }
 
         /** 화면에 보이는 이름 (DB 에는 영문 이름으로 저장) */

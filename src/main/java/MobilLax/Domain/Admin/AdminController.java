@@ -32,6 +32,8 @@ public class AdminController {
     private final AdminAccountService accountService;
     private final AdminAuditService auditService;
     private final AdminInquiryService inquiryService;
+    private final AdminStatsService statsService;
+    private final AdminAuditReviewService auditReviewService;
 
     /** 열람 이유 최대 길이 (감사 로그 내용 칸 200자 안에 들어가게) */
     static final int REASON_MAX = 100;
@@ -40,6 +42,9 @@ public class AdminController {
     public String dashboard(Model model) {
         model.addAttribute("summary", accountService.summary());
         model.addAttribute("waitingInquiries", inquiryService.waitingCount());
+        model.addAttribute("today", statsService.today());
+        model.addAttribute("lastMonth", auditReviewService.lastMonth());
+        model.addAttribute("lastMonthReviewed", auditReviewService.reviewed(auditReviewService.lastMonth()));
         model.addAttribute("recentLogs", auditService.recent().stream().limit(10).toList());
         return "admin/index";
     }
@@ -95,12 +100,6 @@ public class AdminController {
                          HttpServletRequest request, RedirectAttributes redirectAttributes) {
         return act(id, redirectAttributes, "로그인 잠금을 풀었습니다.",
                 () -> accountService.unlockLogin(principal.getName(), id, code, request.getRemoteAddr()));
-    }
-
-    @GetMapping("/audit")
-    public String audit(Model model) {
-        model.addAttribute("logs", auditService.recent());
-        return "admin/audit";
     }
 
     private String act(Long id, RedirectAttributes redirectAttributes, String done, Runnable action) {

@@ -1,5 +1,7 @@
 package MobilLax.Domain.Cart;
 
+import MobilLax.Common.Usage.CountsUsage;
+import MobilLax.Common.Usage.UsageMetric;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,6 +27,7 @@ public class CartApiController {
     private final CartService cartService;
 
     /** 고른 구간을 담고 합계 운임을 돌려준다. 구간 수·형식은 RequestBodyValidationAdvice, 운임·이름은 서버가 TAGO 로 확인 (S1·S10) */
+    @CountsUsage(UsageMetric.CART_ADD)
     @PostMapping("/add")
     public ResponseEntity<Integer> addSelectedToCart(@RequestBody CartItemRequestDTO request, Principal principal) {
         return ResponseEntity.ok(cartService.saveCartItems(principal.getName(), request.getSelectedLegs()));
