@@ -1,12 +1,15 @@
 package MobilLax;
 
 import MobilLax.Common.RateLimit.RateLimiter;
+import MobilLax.Common.Time.KoreaTime;
 import MobilLax.Domain.Account.AccountRoles;
 import MobilLax.Domain.Account.UserAccount;
 import MobilLax.Domain.Account.UserAccountRepository;
 import MobilLax.Domain.Admin.AdminAuditLog;
 import MobilLax.Domain.Admin.AdminAuditLogRepository;
+import MobilLax.Domain.Admin.AdminAuditService;
 import MobilLax.Domain.Admin.AdminOtpRepository;
+import MobilLax.Domain.Admin.AdminStatsService;
 import MobilLax.Domain.Admin.OtpSecretCipher;
 import MobilLax.Domain.Admin.Totp;
 import MobilLax.Domain.Inquiry.Inquiry;
@@ -15,6 +18,8 @@ import MobilLax.Domain.Inquiry.InquiryRepository;
 import MobilLax.Domain.Inquiry.InquiryService;
 import MobilLax.Domain.Payment.PaymentEntity;
 import MobilLax.Domain.Payment.PaymentRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -449,6 +454,158 @@ class AdminSecurityRegressionTests {
             mvc.perform(post("/admin/inquiries/" + id + "/answer").with(csrf()).session(member)
                     .param("code", "123456").param("answer", "스스로 답변")).andExpect(status().isForbidden());
             assertThat(inquiryRepository.findById(id).orElseThrow().answered()).isFalse();
+        }
+    }
+
+    /** v2.13: 통계와 감사 로그 정기 점검 */
+    @Nested
+    class StatsAndAuditReview {
+
+        /** 시험 기록과 실제 기록이 겹치지 않는 오래전 달 */
+        private static final String OLD_MONTH = "2001-01";
+
+        @Autowired
+        AdminStatsService statsService;
+
+        @Autowired
+        AdminAuditService auditService;
+
+        @PersistenceContext
+        EntityManager entityManager;
+
+        /** 합계는 네이티브 문장으로 더하므로, 테스트 트랜잭션이 먼저 읽어 둔 엔티티를 비워야 새 값이 보인다 */
+        private AdminStatsService.DayRow freshToday() {
+            entityManager.flush();
+            entityManager.clear();
+            return statsService.today();
+        }
+
+        private MockHttpSession elevated() throws Exception {
+            MockHttpSession session = login(ADMIN, "/admin/otp");
+            enroll(session);
+            nextStep();
+            return session;
+        }
+
+        /** 감사 로그는 별도 트랜잭션으로 커밋된다. 테스트 트랜잭션의 스냅샷 밖에서 화면을 열어 그 기록을 본다 */
+        private String outsideTestTransaction(MockHttpSession session, String path) {
+            TransactionTemplate outside = new TransactionTemplate(transactionManager);
+            outside.setPropagationBehavior(TransactionDefinition.PROPAGATION_NOT_SUPPORTED);
+            return outside.execute(status -> {
+                try {
+                    return mvc.perform(get(path).session(session)).andReturn().getResponse().getContentAsString();
+                } catch (Exception e) {
+                    throw new IllegalStateException(e);
+                }
+            });
+        }
+
+        @Test
+        void membersCannotOpenStatsOrAudit() throws Exception {
+            MockHttpSession member = login(MEMBER, "/home");
+            mvc.perform(get("/admin/stats").session(member)).andExpect(status().isForbidden());
+            mvc.perform(get("/admin/audit").session(member)).andExpect(status().isForbidden());
+            mvc.perform(post("/admin/audit/review").with(csrf()).session(member).param("month", OLD_MONTH).param("code", "123456"))
+                    .andExpect(status().isForbidden());
+            mvc.perform(get("/admin/stats")).andExpect(redirectedUrlPattern("**/login"));
+        }
+
+        @Test
+        void statsShowDailyTotalsWithoutAccountsAndAreAudited() throws Exception {
+            AdminStatsService.DayRow before = statsService.today();
+            paymentRepository.saveAndFlush(PaymentEntity.builder().email(MEMBER).amount(5000).date(KoreaTime.today())
+                    .paymentId("stats-" + java.util.UUID.randomUUID()).transportType("TRAIN").groupId("stats-group")
+                    .status(PaymentEntity.PaymentStatus.SUCCESS).build());
+            paymentRepository.saveAndFlush(PaymentEntity.builder().email(MEMBER).amount(9000).date(KoreaTime.today())
+                    .paymentId("stats-" + java.util.UUID.randomUUID()).transportType("TRAIN").groupId("stats-group")
+                    .status(PaymentEntity.PaymentStatus.PENDING).build());
+
+            AdminStatsService.DayRow after = statsService.today();
+            assertThat(after.payments()).as("완료한 결제만").isEqualTo(before.payments() + 1);
+            assertThat(after.paymentAmount()).isEqualTo(before.paymentAmount() + 5000);
+
+            MockHttpSession admin = elevated();
+            String html = mvc.perform(get("/admin/stats").param("range", "MONTH").session(admin))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+            assertThat(html).contains("최근 30일").doesNotContain(MEMBER);
+            assertThat(auditActions()).contains(AdminAuditLog.Action.STATS_VIEWED);
+
+            mvc.perform(get("/admin/stats").param("range", "FOREVER").session(admin)).andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void adminRequestsAreNotCountedAsUsage() throws Exception {
+            MockHttpSession admin = elevated();
+            AdminStatsService.DayRow before = freshToday();
+            String browser = "Mozilla/5.0 admin-" + java.util.UUID.randomUUID();
+            mvc.perform(get("/admin/stats").header("User-Agent", browser).session(admin)).andExpect(status().isOk());
+            mvc.perform(get("/home").header("User-Agent", browser).session(admin)).andExpect(status().isOk());
+            AdminStatsService.DayRow after = freshToday();
+            assertThat(after.pageViews()).isEqualTo(before.pageViews());
+            assertThat(after.visitors()).isEqualTo(before.visitors());
+        }
+
+        @Test
+        void auditFiltersByMonthActionAndTarget() throws Exception {
+            MockHttpSession admin = elevated();
+            auditService.record(ADMIN, AdminAuditLog.Action.PII_REVEALED, memberId, "사유: 필터 확인용", "127.0.0.1");
+            String month = java.time.YearMonth.from(KoreaTime.today()).toString();
+
+            assertThat(outsideTestTransaction(admin, "/admin/audit?month=" + month + "&action=PII_REVEALED"))
+                    .contains("사유: 필터 확인용");
+            assertThat(outsideTestTransaction(admin, "/admin/audit?month=" + month + "&action=PII_REVEALED&target=" + memberId))
+                    .contains("사유: 필터 확인용");
+            assertThat(outsideTestTransaction(admin, "/admin/audit?month=" + month + "&action=USER_SUSPENDED"))
+                    .doesNotContain("사유: 필터 확인용");
+            assertThat(outsideTestTransaction(admin, "/admin/audit?month=" + OLD_MONTH + "&action=PII_REVEALED"))
+                    .doesNotContain("사유: 필터 확인용");
+            assertThat(auditActions()).contains(AdminAuditLog.Action.AUDIT_VIEWED);
+
+            mvc.perform(get("/admin/audit").param("month", "2026-13").session(admin)).andExpect(status().isBadRequest());
+            mvc.perform(get("/admin/audit").param("action", "NOPE").session(admin)).andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void reviewNeedsCsrfAndTheCurrentCodeAndHappensOnce() throws Exception {
+            MockHttpSession admin = elevated();
+            String path = "/admin/audit/review";
+
+            mvc.perform(post(path).session(admin).param("month", OLD_MONTH).param("code", "123456"))
+                    .andExpect(status().isForbidden());
+
+            mvc.perform(post(path).with(csrf()).session(admin).param("month", OLD_MONTH).param("code", "000000"))
+                    .andExpect(redirectedUrl("/admin/audit?month=" + OLD_MONTH));
+            assertThat(auditActions()).contains(AdminAuditLog.Action.STEP_UP_FAILED)
+                    .doesNotContain(AdminAuditLog.Action.AUDIT_REVIEWED);
+
+            mvc.perform(post(path).with(csrf()).session(admin).param("month", OLD_MONTH).param("code", currentCode()))
+                    .andExpect(redirectedUrl("/admin/audit?month=" + OLD_MONTH));
+            assertThat(auditActions()).contains(AdminAuditLog.Action.AUDIT_REVIEWED);
+
+            nextStep();
+            String code = currentCode();
+            TransactionTemplate outside = new TransactionTemplate(transactionManager);
+            outside.setPropagationBehavior(TransactionDefinition.PROPAGATION_NOT_SUPPORTED);
+            Object error = outside.execute(status -> {
+                try {
+                    return mvc.perform(post(path).with(csrf()).session(admin).param("month", OLD_MONTH).param("code", code))
+                            .andReturn().getFlashMap().get("error");
+                } catch (Exception e) {
+                    throw new IllegalStateException(e);
+                }
+            });
+            assertThat(error).as("두 번은 남기지 않음").isEqualTo("이미 점검을 마친 달입니다.");
+        }
+
+        @Test
+        void onlyFinishedMonthsCanBeReviewed() throws Exception {
+            MockHttpSession admin = elevated();
+            String thisMonth = java.time.YearMonth.from(KoreaTime.today()).toString();
+            Object error = mvc.perform(post("/admin/audit/review").with(csrf()).session(admin)
+                            .param("month", thisMonth).param("code", currentCode()))
+                    .andReturn().getFlashMap().get("error");
+            assertThat(error).isEqualTo("끝난 달만 점검 완료로 남길 수 있습니다.");
+            assertThat(auditActions()).doesNotContain(AdminAuditLog.Action.AUDIT_REVIEWED);
         }
     }
 
