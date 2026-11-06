@@ -138,6 +138,7 @@
 
 /* 비밀번호 재확인 창 (v2.14) */
 .password-dialog {
+  box-sizing: border-box;
   width: min(360px, calc(100vw - 32px));
   border: none;
   border-radius: 8px;
