@@ -10,13 +10,18 @@
 (() => {
   const meta = document.querySelector('meta[name="session-timeout"]');
   const box = document.querySelector("[data-session-timer]");
-  const timeoutMs = Number(meta?.content || 0) * 1000;
-  if (!box || !(timeoutMs > 0)) return;
+  let timeoutMs = Number(meta?.content || 0) * 1000;
+  if (!box) return;
+  const extendButton = box.querySelector("[data-extend]");
+  // 로그인 유지 중(0): 세션이 끝나도 다시 로그인되므로 남은 시간과 연장 버튼을 보이지 않는다 (v2.14, S14)
+  if (!(timeoutMs > 0)) {
+    extendButton.hidden = true;
+    return;
+  }
 
   const KEY = "mobillax.session.lastActivity";
   const WARN_MS = 5 * 60 * 1000;
   const remainingText = box.querySelector("[data-remaining]");
-  const extendButton = box.querySelector("[data-extend]");
   let lastActivity = Date.now();
   let expired = false;
 
@@ -87,7 +92,13 @@
 
   extendButton.addEventListener("click", async () => {
     const response = await fetch("/api/session").catch(() => null);
-    if (!response || !response.ok) markExpired();
+    if (!response || !response.ok) {
+      markExpired();
+    } else {
+      // 로그인 후 최대 4시간(S14)에 가까우면 비활동 시간보다 짧다. 서버가 알려 준 값으로 다시 센다
+      const data = await response.json().catch(() => ({}));
+      if (data.timeoutSeconds > 0) timeoutMs = data.timeoutSeconds * 1000;
+    }
     render();
   });
 

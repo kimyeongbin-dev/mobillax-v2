@@ -1,23 +1,26 @@
 package MobilLax.Config;
 
 import MobilLax.Common.RateLimit.RateLimitInterceptor;
+import MobilLax.Common.Web.RecentPasswordInterceptor;
 import MobilLax.Domain.Stats.UsageInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-/** 컨트롤러 앞뒤에서 도는 공통 처리 등록: 호출 횟수 제한(보안 규칙 S11), 이용 통계(S13) */
+/** 컨트롤러 앞뒤에서 도는 공통 처리 등록: 호출 횟수 제한(보안 규칙 S11), 비밀번호 재확인(S14), 이용 통계(S13) */
 @Configuration
 @RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final RateLimitInterceptor rateLimitInterceptor;
+    private final RecentPasswordInterceptor recentPasswordInterceptor;
     private final UsageInterceptor usageInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(rateLimitInterceptor);
+        registry.addInterceptor(recentPasswordInterceptor);
         registry.addInterceptor(usageInterceptor);
     }
 }

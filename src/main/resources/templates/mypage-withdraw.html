@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MobilLax - 회원 탈퇴</title>
+  <link th:href="@{/css/mypage.css}" rel="stylesheet" type="text/css">
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('mypage')}"></header>
+
+<main>
+  <section class="edit-profile-container">
+    <h2>회원 탈퇴</h2>
+    <p>탈퇴하면 계정을 되돌릴 수 없습니다. 결제 기록은 관련 법령에 따라 보관됩니다.</p>
+    <form th:action="@{/mypage/delete}" method="post" data-confirm="정말 탈퇴하시겠습니까?">
+      <div class="form-buttons">
+        <button type="submit">탈퇴하기</button>
+        <a th:href="@{/mypage}" class="cancel-button">취소</a>
+      </div>
+    </form>
+  </section>
+</main>
+
+<footer>
+  <div>© 2025 MobilLax. All rights reserved.</div>
+</footer>
+</body>
+</html>

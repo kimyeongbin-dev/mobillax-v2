@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MobilLax - 비밀번호 확인</title>
+  <link th:href="@{/css/mypage.css}" rel="stylesheet" type="text/css">
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('mypage')}"></header>
+
+<main>
+  <section class="edit-profile-container">
+    <h2>비밀번호 확인</h2>
+    <p>계정을 보호하기 위해 비밀번호를 한 번 더 확인합니다. 확인하면 5분 동안 다시 묻지 않습니다.</p>
+    <p class="notice error" th:if="${error != null}" th:text="${error}"></p>
+    <form th:action="@{/mypage/confirm-password}" method="post" accept-charset="UTF-8" autocomplete="off">
+      <input type="hidden" name="next" th:value="${next}">
+      <div class="form-group">
+        <label for="password">비밀번호</label>
+        <input type="password" id="password" name="password" required maxlength="64" autocomplete="current-password">
+      </div>
+      <div class="form-buttons">
+        <button type="submit">확인</button>
+        <a th:href="@{/mypage}" class="cancel-button">취소</a>
+      </div>
+    </form>
+  </section>
+</main>
+
+<footer>
+  <div>© 2025 MobilLax. All rights reserved.</div>
+</footer>
+</body>
+</html>

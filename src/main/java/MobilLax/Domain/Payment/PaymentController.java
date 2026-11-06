@@ -1,5 +1,6 @@
 package MobilLax.Domain.Payment;
 
+import MobilLax.Common.Web.RecentPassword;
 import MobilLax.Domain.Cart.CartItemRequestDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +17,7 @@ import java.util.UUID;
  * 결제 준비·완료·실패 API (보안 규칙 S1, docs/SECURITY_RULES.md)
  * - 규칙은 PaymentPreparationService(서버가 금액을 정함)와 PaymentConfirmationService(PortOne 에서 확인)에 있다
  * - 로그인한 사용자(Principal)의 장바구니·결제만 다룬다 (S4). 본문 형식은 RequestBodyValidationAdvice 가 먼저 검사한다 (S10)
+ * - 결제를 시작하려면 비밀번호를 다시 확인해야 한다 (S14). 완료·실패 기록은 이미 시작한 결제이므로 막지 않는다
  */
 @RestController
 @RequestMapping("/payment")
@@ -26,6 +28,7 @@ public class PaymentController {
     private final PaymentConfirmationService confirmationService;
 
     /** 장바구니 묶음 결제 준비: { 교통수단: 결제창 값 } */
+    @RecentPassword
     @PostMapping("/sdk-ready/{groupId}")
     public Map<String, PaymentPreparationService.PaymentWindow> prepareCartGroup(@PathVariable UUID groupId,
                                                                                Principal principal) {
@@ -33,6 +36,7 @@ public class PaymentController {
     }
 
     /** 상세 화면에서 바로 결제 준비 */
+    @RecentPassword
     @PostMapping("/direct-sdk-ready")
     public Map<String, PaymentPreparationService.PaymentWindow> prepareDirect(@RequestBody CartItemRequestDTO request,
                                                                             Principal principal) {

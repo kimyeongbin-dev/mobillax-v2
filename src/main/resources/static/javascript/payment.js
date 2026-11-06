@@ -1,4 +1,4 @@
-/* global collectBookingLegs, loadCartList, selectedGroupIds, showNoRoutePopup -- transport.js, cart.js */
+/* global collectBookingLegs, confirmPassword, loadCartList, selectedGroupIds, showNoRoutePopup -- transport.js, cart.js, password-confirm.js */
 /**
  * payment.js
  *
@@ -73,10 +73,14 @@ function postJson(url, body) {
   return fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 }
 
-/** 결제 준비 요청. 실패하면 서버 안내 문구로 예외 */
+/** 결제 준비 요청. 비밀번호 재확인이 필요하면 창을 열고 다시 요청한다(S14). 실패하면 서버 안내 문구로 예외 */
 async function prepare(url, options) {
   const response = await fetch(url, { method: "POST", ...options });
   const data = await response.json().catch(() => ({}));
+  if (response.status === 403 && data?.reauthRequired) {
+    if (!(await confirmPassword())) throw new Error("비밀번호를 확인해야 결제할 수 있습니다.");
+    return prepare(url, options);
+  }
   if (!response.ok) throw new Error(data?.error || data?.message || "결제를 준비하지 못했습니다.");
   return data;
 }

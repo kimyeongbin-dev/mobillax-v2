@@ -197,7 +197,7 @@ class SecurityRegressionTests {
         @WithMockUser(username = USER_A)
         void cannotPrepareOthersPayment() throws Exception {
             String groupOfB = cartGroupOf(USER_B);
-            mvc.perform(post("/payment/sdk-ready/" + groupOfB).with(csrf()))
+            mvc.perform(post("/payment/sdk-ready/" + groupOfB).with(csrf()).session(TestSessions.recentPassword()))
                     .andExpect(status().isBadRequest());
         }
 
