@@ -103,7 +103,7 @@ class PaymentVerificationRegressionTests {
     }
 
     private ResultActions postJson(String url, String body) throws Exception {
-        return mvc.perform(post(url).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(body));
+        return mvc.perform(post(url).with(csrf()).session(TestSessions.recentPassword()).contentType(MediaType.APPLICATION_JSON).content(body));
     }
 
     private String cartGroupOf(String email, Boolean fareVerified) {
@@ -181,7 +181,7 @@ class PaymentVerificationRegressionTests {
         @WithMockUser(username = USER_A)
         void prepareRecordsPendingPaymentWithServerAmount() throws Exception {
             String groupId = cartGroupOf(USER_A, true);
-            String body = mvc.perform(post("/payment/sdk-ready/" + groupId).with(csrf()))
+            String body = mvc.perform(post("/payment/sdk-ready/" + groupId).with(csrf()).session(TestSessions.recentPassword()))
                     .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
             String paymentId = body.replaceAll(".*\"paymentId\":\"([^\"]+)\".*", "$1");
 
@@ -202,7 +202,7 @@ class PaymentVerificationRegressionTests {
         @WithMockUser(username = USER_A)
         void cartItemWithUnverifiedFareCannotBePaid() throws Exception {
             String groupId = cartGroupOf(USER_A, null);
-            mvc.perform(post("/payment/sdk-ready/" + groupId).with(csrf())).andExpect(status().isBadRequest());
+            mvc.perform(post("/payment/sdk-ready/" + groupId).with(csrf()).session(TestSessions.recentPassword())).andExpect(status().isBadRequest());
         }
     }
 

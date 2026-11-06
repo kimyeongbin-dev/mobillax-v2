@@ -34,13 +34,13 @@ public class LayoutInfo {
         return CurrentUser.email().map(cartService::getCartGroupCount).orElse(0);
     }
 
-    /** 로그인 세션이 비활성으로 유지되는 시간(초). 로그인하지 않았거나 세션이 없으면 0 (타이머를 그리지 않음) */
+    /** 활동이 없을 때 로그인이 끝나기까지 남은 초. 로그인하지 않았거나 세션이 없거나 로그인 유지 중이면 0 (타이머를 그리지 않음) */
     public int sessionTimeoutSeconds() {
         if (!loggedIn() || !(RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attrs)) {
             return 0;
         }
         HttpServletRequest request = attrs.getRequest();
         HttpSession session = request.getSession(false);
-        return session == null ? 0 : Math.max(session.getMaxInactiveInterval(), 0);
+        return session == null || SessionLifetime.keepLoginRequested(request) ? 0 : SessionLifetime.remainingSeconds(session);
     }
 }

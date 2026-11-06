@@ -30,6 +30,7 @@ AI 코딩 도구(Claude Code)가 이 저장소에서 작업할 때 지키는 규
 - 새 API를 만들면 로그인 필요 여부(S2)·CSRF(S3)·소유권(S4)을 확인하고 테스트를 추가한다.
 - 관리자 화면(`/admin/**`)은 OTP까지 확인한 `ROLE_ADMIN`만 연다(S12). 비밀번호 로그인은 `ADMIN_PENDING`만 준다. 관리자 기능을 더하면 감사 로그(`AdminAuditService`)를 남기고, 개인정보는 가려서(`AdminMasking`) 보이며, 상태를 바꾸는 작업, 실제 개인정보 열람, 문의 답변은 OTP를 다시 확인한다(`stepUp`). 개인정보는 계정 하나씩, 이유를 받아 그 응답에서만 보인다. 없는 계정은 반드시 `UsernameNotFoundException`으로 알린다(응답 시간차, S11).
 - 이용 통계는 날짜별 합계만 저장한다(S13). 개인 식별 값을 `daily_usage`에 더하지 않는다. API 이용을 세려면 `@CountsUsage`를 붙이고, 화면은 `UsageInterceptor`가 자동으로 센다.
+- 세션과 재확인(S14): 세션 시간은 `SessionLifetime`, 로그인 유지 규칙은 `KeepLoginTokenService`에만 둔다. 결제, 개인정보 수정, 탈퇴처럼 계정에 큰 영향을 주는 요청에는 `@RecentPassword`를 붙인다. 토큰은 해시만 저장한다.
 - 로그인 없이 여는 API는 `SecurityConfig.ANONYMOUS_API_PATHS`에 넣고 `@RateLimited`를 붙인다(S11, `RateLimitCoverageTests`). 한도 값은 `RateLimitPolicy`에만 둔다.
 - 브라우저에서 오는 값은 모두 서버가 검증한다(S10).
   - 요청 DTO에 `Common/Validation`의 제약 어노테이션을 붙인다. 본문은 `RequestBodyValidationAdvice`가 자동으로 검사한다.

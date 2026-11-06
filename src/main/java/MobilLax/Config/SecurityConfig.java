@@ -1,6 +1,9 @@
 package MobilLax.Config;
 
+import MobilLax.Common.Web.SessionLifetimeFilter;
 import MobilLax.Domain.Account.AccountRoles;
+import MobilLax.Domain.Account.KeepLoginServices;
+import org.springframework.security.web.authentication.rememberme.RememberMeAuthenticationFilter;
 import MobilLax.Domain.Account.LoginRedirect;
 import MobilLax.Domain.Account.UserAccountService;
 import org.springframework.security.core.session.SessionRegistry;
@@ -82,7 +85,8 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, PasswordAttemptGuard passwordAttemptGuard,
-                                                   UserAccountService userAccountService, SessionRegistry sessionRegistry)
+                                                   UserAccountService userAccountService, SessionRegistry sessionRegistry,
+                                                   KeepLoginServices keepLoginServices)
             throws Exception {
         http.csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
@@ -133,6 +137,12 @@ public class SecurityConfig {
                 .maximumSessions(-1)
                 .sessionRegistry(sessionRegistry)
                 .expiredUrl("/login?suspended"));
+
+        // 로그인 유지(v2.14, S14). 세션 최대 시간은 그 앞에서 지킨다: 끝난 세션의 요청이 유효한 쿠키로 바로 다시 로그인된다
+        http.rememberMe(rememberMe -> rememberMe
+                .rememberMeServices(keepLoginServices)
+                .key(keepLoginServices.getKey()));
+        http.addFilterBefore(new SessionLifetimeFilter(sessionRegistry), RememberMeAuthenticationFilter.class);
 
         http.logout(logout -> logout
                 .logoutUrl("/logout")

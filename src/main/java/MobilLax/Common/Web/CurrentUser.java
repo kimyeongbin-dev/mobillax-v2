@@ -33,6 +33,16 @@ public final class CurrentUser {
         return authentication().map(Authentication::getName);
     }
 
+    /** 로그인한 사용자 객체 (세션 등록부에 넣는 값). 로그인하지 않았으면 비어 있다 */
+    static Optional<Object> principal() {
+        return authentication().map(Authentication::getPrincipal);
+    }
+
+    /** 이 요청의 로그인 상태를 지운다 (세션 최대 시간이 지났을 때, S14) */
+    static void clear() {
+        SecurityContextHolder.clearContext();
+    }
+
     /** 지금 사용자가 이 권한(ROLE_ 포함 이름)을 가졌는지 */
     public static boolean hasAuthority(String authority) {
         return authentication().map(auth -> auth.getAuthorities().stream()
