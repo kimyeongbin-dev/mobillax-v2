@@ -65,6 +65,9 @@ button {
 }
 @media (max-width: 480px) {
   .form-box {
+    box-sizing: border-box;
+    width: calc(100% - 32px);
+    max-width: 360px;
     padding: 30px 20px;
     border-radius: 8px;
   }
