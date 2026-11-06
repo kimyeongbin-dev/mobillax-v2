@@ -228,7 +228,7 @@ class MyPageFeatureTests {
         @Test
         @WithMockUser(username = USER)
         void loggedInPagesShowMenuAndSessionTimer() throws Exception {
-            MockHttpSession session = new MockHttpSession();
+            MockHttpSession session = TestSessions.recentPassword();
             session.setMaxInactiveInterval(1800);
             for (String page : new String[]{"/home", "/cart", "/mypage", "/mypage/payments", "/mypage/password", "/mypage/edit"}) {
                 String body = mvc.perform(get(page).session(session)).andReturn().getResponse().getContentAsString();

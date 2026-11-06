@@ -65,6 +65,9 @@ button {
 }
 @media (max-width: 480px) {
   .form-box {
+    box-sizing: border-box;
+    width: calc(100% - 32px);
+    max-width: 360px;
     padding: 30px 20px;
     border-radius: 8px;
   }
@@ -74,4 +77,19 @@ button {
     padding: 10px;
     font-size: 0.95em;
   }
+}
+
+/* 로그인 유지 (v2.14) */
+.keep-login {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 12px;
+  font-size: 14px;
+  text-align: left;
+}
+
+.keep-login input {
+  width: auto;
+  margin: 0;
 }

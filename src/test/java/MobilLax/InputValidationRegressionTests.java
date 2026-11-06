@@ -98,7 +98,7 @@ class InputValidationRegressionTests {
     }
 
     private MvcResult postJson(String url, String body) throws Exception {
-        return mvc.perform(post(url).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(body)).andReturn();
+        return mvc.perform(post(url).with(csrf()).session(TestSessions.recentPassword()).contentType(MediaType.APPLICATION_JSON).content(body)).andReturn();
     }
 
     /** 장바구니 담기·바로 결제: 형식이 틀린 구간은 400 이고 아무것도 저장하지 않는다 */

@@ -86,7 +86,7 @@ class KeyExposureRegressionTests {
             paths.add(url.substring(url.indexOf("/static/") + "/static".length()));
         }
         for (String path : paths) {
-            bodies.put(path, mvc.perform(get(path)).andReturn().getResponse().getContentAsString());
+            bodies.put(path, mvc.perform(get(path).session(TestSessions.recentPassword())).andReturn().getResponse().getContentAsString());
         }
         return bodies;
     }

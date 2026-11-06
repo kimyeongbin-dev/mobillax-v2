@@ -53,6 +53,12 @@
       <!-- 비밀번호 입력 -->
       <input type="password" name="password" placeholder="비밀번호" required class="form-input">
 
+      <!-- 로그인 유지 (v2.14, 보안 규칙 S14). 기본은 꺼짐 -->
+      <label class="keep-login">
+        <input type="checkbox" name="remember-me" value="true">
+        로그인 유지 (공용 PC에서는 켜지 마세요)
+      </label>
+
       <!-- 로그인 버튼 -->
       <button type="submit" class="form-btn">로그인</button>
     </form>

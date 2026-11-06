@@ -102,7 +102,7 @@ class CartFeatureTests {
         String reason = view.get("blockReason").asText();
         assertThat(reason).contains("출발 시각이 지났거나");
 
-        MvcResult prepared = mvc.perform(post("/payment/sdk-ready/" + group).with(csrf())).andReturn();
+        MvcResult prepared = mvc.perform(post("/payment/sdk-ready/" + group).with(csrf()).session(TestSessions.recentPassword())).andReturn();
         assertThat(prepared.getResponse().getStatus()).isEqualTo(400);
         assertThat(prepared.getResponse().getContentAsString()).contains(reason);
     }

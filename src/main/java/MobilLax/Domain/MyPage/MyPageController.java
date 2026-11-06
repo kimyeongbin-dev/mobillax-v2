@@ -3,6 +3,7 @@ package MobilLax.Domain.MyPage;
 import MobilLax.Common.Validation.FormErrors;
 import MobilLax.Common.Validation.PaymentId;
 import MobilLax.Common.Error.UserFacingException;
+import MobilLax.Common.Web.RecentPassword;
 import MobilLax.Domain.Inquiry.InquiryService;
 import MobilLax.Domain.Payment.PaymentHistoryService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,12 +46,14 @@ public class MyPageController {
         return "mypage";
     }
 
+    @RecentPassword(returnTo = "/mypage/edit")
     @GetMapping("/mypage/edit")
     public String editPage(Model model, Principal principal) {
         model.addAttribute("profile", myPageService.getMyPageInfo(principal.getName()));
         return "mypage-edit";
     }
 
+    @RecentPassword(returnTo = "/mypage/edit")
     @PostMapping("/mypage/edit")
     public String updateProfile(@Valid @ModelAttribute ProfileUpdateDto dto, BindingResult binding,
                                 Principal principal, RedirectAttributes redirectAttributes) {
@@ -112,6 +115,14 @@ public class MyPageController {
         return "redirect:/mypage/payments";
     }
 
+    /** 탈퇴 안내 화면. 비밀번호를 다시 확인해야 열린다 (S14) */
+    @RecentPassword(returnTo = "/mypage/withdraw")
+    @GetMapping("/mypage/withdraw")
+    public String withdrawPage() {
+        return "mypage-withdraw";
+    }
+
+    @RecentPassword(returnTo = "/mypage/withdraw")
     @PostMapping("/mypage/delete")
     public String deleteAccount(Principal principal, HttpSession session) {
         myPageService.deleteAccountByEmail(principal.getName());

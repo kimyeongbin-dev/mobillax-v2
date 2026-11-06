@@ -565,6 +565,26 @@ class AdminSecurityRegressionTests {
             mvc.perform(get("/admin/audit").param("action", "NOPE").session(admin)).andExpect(status().isBadRequest());
         }
 
+        /** 기록이 한 쪽을 넘으면 이동 링크가 나오고, 빈 조건이 있어도 링크를 따라갈 수 있다 */
+        @Test
+        void auditPagerLinksWorkWithEmptyFilters() throws Exception {
+            MockHttpSession admin = elevated();
+            for (int i = 0; i <= 50; i++) {
+                auditService.record(ADMIN, AdminAuditLog.Action.USER_LIST_VIEWED, null, "pager", "127.0.0.1");
+            }
+            String month = java.time.YearMonth.from(KoreaTime.today()).toString();
+
+            String first = outsideTestTransaction(admin, "/admin/audit?month=" + month);
+            java.util.regex.Matcher next = java.util.regex.Pattern
+                    .compile("href=\"(/admin/audit\\?[^\"]*page=1[^\"]*)\"[^>]*>다음").matcher(first);
+            assertThat(next.find()).as("다음 링크").isTrue();
+
+            String link = next.group(1).replace("&amp;", "&");
+            String second = outsideTestTransaction(admin, link);
+            assertThat(second).contains("이전").contains(" / ").contains("<table");
+            assertThat(link).startsWith("/admin/audit?month=" + month);
+        }
+
         @Test
         void reviewNeedsCsrfAndTheCurrentCodeAndHappensOnce() throws Exception {
             MockHttpSession admin = elevated();
